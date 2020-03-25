@@ -1,0 +1,36 @@
+import request from '@/utils/request';
+
+/**
+ * 编辑 or 新增
+ * @param {*} params 
+ */
+export async function saveOrUpedata(params) {
+  return request('/lazy-card/bannerSetting/saveOrUpedata',{
+    method: 'POST',
+    data:params
+  });
+}
+
+  /**
+ * 获取轮播列表数据列表
+ * @param {*} params 
+ */
+export async function bannerList(params) {
+  return request('/lazy-card/bannerSetting/bannerSettingList',{
+    method: 'POST',
+    data:params
+  });
+}
+
+ /**
+ * 删除轮播数据
+ * @param {*} params 
+ */
+export async function deleteById(params) {
+  return request('/lazy-card/bannerSetting/deleteById',{
+    method: 'POST',
+    data:params
+  });
+}
+
+

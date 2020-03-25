@@ -1,0 +1,36 @@
+import request from '@/utils/request';
+
+export async function fetchMerchant(params) {
+  return request('/lazy-card/merchInfo/merchInfoList', {
+    method: 'POST',
+    data: params
+  });
+};
+
+// 获取商户详情
+export async function fetchMerchantDetail(params) {
+  return request('/lazy-card/merchInfo/merchInfoDetail', {
+    method: 'POST',
+    data: params
+  });
+};
+
+// general页面查询商户基本信息
+export async function getMerchInfo() {
+  return request('/lazy-card/merchInfo/getMerchInfo');
+};
+
+export async function saveOrUpdateMerchant(params) {
+  return request('/lazy-card/merchInfo/saveOrUpdateMerchInfo', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+export async function isFrozenMerchant(params) {
+  return request(`/lazy-card/merchInfo/modifyState?id=${params.id}&type=${params.type}`);
+};
+
+
+
+

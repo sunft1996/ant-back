@@ -1,0 +1,14 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+export async function saveOperateRecord(params) {
+    return request('/lazy-card/operateRecord/saveOperateRecord',{
+      method: 'POST',
+      data:params
+    });
+  };
+export async function getOperateRecord(params) {
+    return request('/lazy-card/operateRecord/getOperateRecord',{
+      method: 'POST',
+      data:params
+    });
+  };

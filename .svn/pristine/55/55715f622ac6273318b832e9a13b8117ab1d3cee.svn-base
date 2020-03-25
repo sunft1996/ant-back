@@ -1,0 +1,294 @@
+import React, { PureComponent,Fragment } from 'react';
+import { formatMessage, FormattedMessage } from 'umi-plugin-react/locale';
+import { connect } from 'dva';
+import { Radio,Row, Col, Avatar, Badge, Card, Table, Modal, Select, DatePicker, Carousel, Alert, Spin, Skeleton, Divider, Form, Input, Button, List, Progress } from 'antd';
+import DescriptionList from '@/components/DescriptionList';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import PropTypes from 'prop-types';
+import moment from "moment";
+import CryptoJS from 'crypto-js';
+import echarts from 'echarts';
+
+import styles from "./Statistics.less";
+
+const { Description } = DescriptionList;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const FormItem = Form.Item;
+const time=[];
+const successMoney = [];// 刷卡成功金额
+const successNum = [];// 刷卡成功笔数
+const successRateMoney = [];// 刷卡成功笔数
+const failMoney = [];// 刷卡失败金额
+const failNum = [];// 刷卡失败笔数
+const tradeNum = []; // 订单
+const tradeMoney = [];// 订单
+const tradeDeliverNum = [];// 订单
+const optionData ={
+    title: { text: '业务维度（订单）' },
+    tooltip : {
+      trigger: 'axis'
+  },
+  legend: {
+      data:['购物订单数','购物订单金额','购物已发货数']
+  },
+  toolbox: {
+      show : true,
+      feature : {
+          dataView : {show: true, readOnly: false},
+          magicType : {show: true, type: ['line', 'bar']},
+          restore : {show: true},
+          saveAsImage : {
+            show: true,
+            type: 'jpg'
+          }
+      }
+  },
+    xAxis : [
+      {
+          type : 'category',
+          boundaryGap : false,
+          data : time
+      }
+  ],
+  yAxis : [
+      {
+          type : 'value'
+      }
+  ],
+    series : [
+    {
+        name:'购物订单数',
+        type:'line',
+        data: tradeNum,
+        smooth:true,
+        markPoint : {
+            data : [
+              {type : 'max', name: '最大值'},
+              {type : 'min', name: '最小值'}
+            ]
+        },
+        markLine : {
+            data : [
+                {type : 'average', name : '平均值'}
+            ]
+        }
+    },
+    {
+        name:'购物订单金额',
+        type:'line',
+        data: tradeMoney,
+        smooth:true,
+        markPoint : {
+            data : [
+              {type : 'max', name: '最大值'},
+              {type : 'min', name: '最小值'}
+            ]
+        },
+        markLine : {
+            data : [
+                {type : 'average', name : '平均值'}
+            ]
+        }
+    },
+    {
+        name:'购物已发货数',
+        type:'line',
+        data: tradeDeliverNum,
+        smooth:true,
+        markPoint : {
+            data : [
+              {type : 'max', name: '最大值'},
+              {type : 'min', name: '最小值'}
+            ]
+        },
+        markLine : {
+            data : [
+                {type : 'average', name : '平均值'}
+            ]
+        }
+    },
+  ]  
+}
+
+
+/* eslint react/no-multi-comp:0 */
+@connect(({ statistics, loading }) => ({
+    statistics,
+  loading: loading.models.rule,
+}))
+
+@Form.create()
+class CartItemList extends PureComponent {
+  constructor(props) {
+    super(props)
+    this.state = {
+      modalVisible: false,
+      currentRecord: null,
+      pageSize: 10,
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+ 
+    dispatch({
+        type: 'statistics/tranStatistics',
+        payload:{  
+
+        }
+    }).then(()=>{
+        const {statistics} = this.props;
+        this.dataInfo(statistics);
+    });
+
+  }
+
+  // 组装数据
+  dataInfo(statistics){
+    // 清空数组
+    time.splice(0,time.length); 
+    tradeNum.splice(0,tradeNum.length);
+    tradeMoney.splice(0,tradeMoney.length);
+    tradeDeliverNum.splice(0,tradeDeliverNum.length);
+    const tranList = statistics.list.data; 
+    tranList.forEach(item => {
+        time.push(item.tranTime)
+        tradeNum.push(item.tradeNum)
+        tradeMoney.push(item.tradeMoney)
+        tradeDeliverNum.push(item.tradeDeliverNum)
+    })
+const myChart = echarts.init(document.getElementById('main'));
+myChart.setOption(optionData);
+  }
+
+
+
+  // 查询
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+          const value={
+            startTime: fieldsValue.time[0] != null ? fieldsValue.time[0].format('YYYY-MM-DD') : null,
+            endTime: fieldsValue.time[1] != null ? fieldsValue.time[1].format('YYYY-MM-DD') : null,
+          }
+        dispatch({
+          type: 'statistics/tranStatistics',
+          payload: {
+            ...value
+          }
+        }).then(()=>{
+            const {statistics} = this.props;
+            const {successList} = statistics.list.data; 
+            this.dataInfo(statistics);
+        });
+      }
+    })
+  }
+
+ // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    dispatch({
+      type: 'statistics/tranStatistics',
+      payload:{   
+        }
+    }).then(()=>{
+        const {statistics} = this.props;
+        this.dataInfo(statistics);
+    });;
+  };
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const { form} = this.props;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span:4, md: 4 ,lg:8}} wrapperCol={{ span:19,md: 19,lg:16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="日期">
+              {getFieldDecorator('time',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{marginLeft:20}} onClick={this.handleFormReset}>
+                重置
+              </Button>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  render() {
+    const {statistics} = this.props;
+    const tranList = statistics.list.data; 
+    const columns = [
+      {
+        title: '时间',
+        dataIndex: 'tranTime',
+        key: 'tranTime',
+      },
+      {
+        title: '购物订单数',
+        dataIndex: 'tradeNum',
+        key: 'tradeNum',
+      },
+      {
+        title: '购物订单金额',
+        dataIndex: 'tradeMoney',
+        key: 'tradeMoney',
+      },
+      {
+        title: '购物已发货数',
+        dataIndex: 'tradeDeliverNum',
+        key: 'tradeDeliverNum',
+      },
+    ]
+    //设置默认分页(表格自带分页)
+    const pagination ={
+          pageSize:10
+        }
+    return (
+      <PageHeaderWrapper title="业务维度（订单）">
+        <Card>
+          <Row>
+            {this.renderForm()}
+          </Row>
+          <div id="main" style={{ width: '100%', height: 500 }} />
+        </Card>
+        <Card>
+          <Table
+                dataSource={tranList}
+                rowKey="index"
+                className="textCenter"
+                rowClassName="textCenter"
+                columns={columns}
+                bordered={true}
+                pagination={pagination}
+                scroll={{ x: 'max-content' }}
+                onChange={this.handlePageChange}
+                size="small"
+              />
+        </Card>
+      </PageHeaderWrapper>
+    )
+  }
+}
+export default CartItemList;

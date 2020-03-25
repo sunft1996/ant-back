@@ -1,0 +1,47 @@
+import {saveOperateRecord,getOperateRecord} from '@/services/operateRecord';
+import { notification} from 'antd'
+export default {
+    namespace: 'operate',
+
+    state:{
+        loading:false,
+        operateRecordList:{
+            data:{
+              rows:[],
+              total:0
+            }
+          },  
+    },
+
+    effects: {
+        *add({ payload }, { call, put }) {
+            const response = yield call(saveOperateRecord, payload);
+            return response;
+      
+          },
+             //下级代理 商户 店主详情
+        *fetch({ payload }, { call, put } ,) {
+            const response =  yield call(getOperateRecord,payload);
+            yield put({
+            type: 'save',
+            payload:response
+            });
+        },
+    },
+
+    reducers: {
+        loading(state){
+            return {
+              ...state,
+              loading:true
+            };
+          },
+          save(state,action){
+            return{
+              ...state,
+              operateRecordList:action.payload,
+            }
+          }
+    },
+
+};

@@ -1,0 +1,84 @@
+import React, { Fragment } from 'react';
+import { formatMessage, FormattedMessage } from 'umi-plugin-react/locale';
+import { Row, Col, Avatar, Badge, Card, Carousel, Alert, Spin, Skeleton, Divider, Form, Input, Button, List, Progress } from 'antd';
+import moment from "moment";
+import styles from "./test.less";
+
+class Test extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      spinning: true
+    }
+  }
+
+  componentDidMount() {
+  }
+
+
+  render() {
+    const data = [
+      {
+        title: 'Ant Design Title 1',
+        content: '这是内容主体'
+      },
+      {
+        title: 'Ant Design Title 2',
+        content: '这是内容主体'
+      },
+      {
+        title: 'Ant Design Title 3',
+        content: '这是内容主体'
+      },
+      {
+        title: 'Ant Design Title 4',
+        content: '这是内容主体'
+      },
+    ];
+    const ListContent = ({ data: { createdAt } }) => (
+      <div className={styles.listContent}>
+        <div className={styles.listContentItem}>
+          <span>Owner</span>
+          <p>sunft</p>
+        </div>
+        <div className={styles.listContentItem}>
+          <span>开始时间</span>
+          <p>{moment(createdAt).format('YYYY-MM-DD HH:mm')}</p>
+        </div>
+        <div className={styles.listContentItem}>
+          <Progress percent={100} strokeWidth={6} style={{ width: 180 }} />
+        </div>
+      </div>
+    );
+    return (
+      <Card>
+        <Row>
+          <List
+            header="列表"
+            dataSource={data}
+            pagination={{
+              onChange: (page) => {
+              },
+              pageSize: 3,
+            }}
+            itemLayout='horizontal'
+            renderItem={(item) => {
+              return (
+                <List.Item actions={[<a>edit</a>, <a>more</a>]}>
+                  <List.Item.Meta
+                    title={item.title}
+                    avatar={<Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" shape='circle' />}
+                    description={<p>这是一条描述</p>}
+                  />
+                  {/* {item.content} */}
+                  <ListContent data={item} />
+                </List.Item>
+              )
+            }}
+           />
+        </Row>
+      </Card>)
+  }
+}
+
+export default Test;

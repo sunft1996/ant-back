@@ -1,0 +1,909 @@
+import React, { PureComponent, Fragment } from 'react';
+import { connect } from 'dva';
+import { Cascader, Row, Col, Card, Table, Modal, Form, Input, Button } from 'antd';
+import DescriptionList from '@/components/DescriptionList';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import moment from "moment";
+import CryptoJS from 'crypto-js';
+import styles from "./TradeList.less";
+import city from "./Cities.js"
+
+const { Description } = DescriptionList;
+const FormItem = Form.Item;
+/**
+ *      //订单状态：1新增（等待付款），2取消（买家取消），3已付款（等待发货），
+       // 4待退款审核（等待商家审核），5已发货（商家已发货等待买家确认），6已完成（买家确认收货），
+       //7待退货审核（等待商家审核），8退货中（商家审核通过，买家退货中），9退款中（商家已退款）
+ */
+const StatusByName = (props) => {
+  const { status } = props;
+  let value = '';
+  switch (status) {
+    case "1":
+      value = "新增";
+      break;
+    case "2":
+      value = "取消"
+      break;
+    case "3":
+      value = "已付款"
+      break;
+    case "4":
+      value = "待退款审核"
+      break;
+    case "5":
+      value = "已发货"
+      break;
+    case "6":
+      value = "已完成"
+      break;
+    case "7":
+      value = "待退货审核"
+      break;
+    case "8":
+      value = "退货中"
+      break;
+    case "9":
+      value = "退款中"
+      break;
+    default:
+      value = ""
+  }
+  return (
+    <span>{value}</span>
+  )
+}
+// 取消类型 1商家取消 2 买家取消 3 系统取消  
+const CancelType = (props) => {
+  const { cancelType } = props;
+  let value = '';
+  switch (cancelType) {
+    case "1":
+      value = "商家取消";
+      break;
+    case "2":
+      value = "买家取消"
+      break;
+    case "3":
+      value = "系统取消"
+      break;
+    default:
+      value = ""
+  }
+  return (
+    <span>{value}</span>
+  )
+}
+
+@Form.create()
+class DetailsForm extends PureComponent {
+  static defaultProps = {
+    details: () => { },
+    detailsModalVisible: () => { },
+    values: {},
+  };
+
+  render() {
+    const { updateModalVisible, detailsModalVisible, details, values, form, tradeDetail, columnsDetail } = this.props;
+    const okHandle = () => {
+      form.validateFields((err, fieldsValue) => {
+        if (err) return;
+        form.resetFields();
+        if (values.id) {
+          details(fieldsValue, values.id);
+        }
+      });
+    };
+
+    return (
+      <Modal
+        maskClosable={false}
+        width={1000}
+        bodyStyle={{ padding: '32px 40px 48px' }}
+        destroyOnClose
+        title="订单详细信息"
+        visible={updateModalVisible}
+        onOk={okHandle}
+        footer={null}
+        onCancel={() => detailsModalVisible(false, values)}
+        afterClose={() => detailsModalVisible()}
+      >
+        <DescriptionList col={3} layout="horizontal" title="订单基本信息">
+          <Description term="订单号">{values.tradeNo}</Description>
+          <Description term="会员名称">{values.memberName}</Description>
+          <Description term="订单状态"><StatusByName status={values.status} /></Description>
+          <Description term="订单实付款金额">{values.tradeFee}</Description>
+          <Description term="创建时间">{moment(values.created).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="取消时间">{moment(values.cancelTime).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="修改时间">{moment(values.updateTime).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="付款时间">{moment(values.payTime).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="发货时间">{moment(values.confirmTime).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="付款方式">
+            {
+              values.payType === "1" ? "快捷支付" : ""
+            }
+          </Description>
+          <Description term="付款单号">{values.payNo}</Description>
+          <Description term="原订单总金额">{values.unsaleTradeFee}</Description>
+          <Description term="优惠总金额">{values.totalDiscountFee}</Description>
+          <Description term="邮费">{values.postFee}</Description>
+          <Description term="订单退款金额">{values.totalBackMoney}</Description>
+          <Description term="收货人">{values.receiverName}</Description>
+          <Description term="收货人（提货人）的手机号码">{values.receiverMobile}</Description>
+          <Description term="所属代理商名称">{values.agentName}</Description>
+          <Description term="省">{values.receiverState}</Description>
+          <Description term="市">{values.receiverCity}</Description>
+          <Description term="区">{values.receiverDistrict}</Description>
+          <Description term="详细地址">{values.receiverAddress}</Description>
+          <Description term="邮编">{values.receiverZip}</Description>
+          <Description term="买家备注">{values.buyerMemo}</Description>
+          <Description term="卖家备注">{values.sellerMemo}</Description>
+          <Description term="物流方式">{values.shippingType}</Description>
+          <Description term="物流单号">{values.shippingNo}</Description>
+          <Description term="取消类型"><CancelType cancelType={values.cancelType} /></Description>
+          <Description term="取消原因">{values.cancelReason}</Description>
+        </DescriptionList>
+        <DescriptionList col={3} layout="horizontal" title="订单详情信息">
+          <Table
+            dataSource={tradeDetail.data.data}
+            rowKey="id"
+            columns={columnsDetail}
+            pagination={false}
+            // loading={log.loading}
+            bordered={false}
+            style={{ overflowX: "scroll" }}
+          />
+        </DescriptionList>
+      </Modal>
+
+    );
+  }
+}
+@connect(({ trade, loading }) => ({
+  trade,
+  loading: loading.models.rule,
+}))
+
+// 编辑
+@Form.create()
+class ModifyForm extends PureComponent {
+  constructor(props) {
+    super(props)
+    const { trade } = this.props;
+    this.state = {
+      options: [],
+      labels: [],
+    };
+  }
+
+  static defaultProps = {
+    modifyTrade: () => { },
+    modifyByIdModalVisible: () => { },
+    values: {},
+  };
+
+  // 选中事件
+  onChange = (value, selectedOptions) => {
+    const { dispatch } = this.props;
+    if (selectedOptions.length > 0) {
+      // const label = selectedOptions[selectedOptions.length-1];
+      dispatch({
+        type: 'trade/saveLabel',
+        payload: selectedOptions
+      })
+
+    }
+  };
+
+  // 省市级联
+  // areaListInfo = (flag, pid) => {
+  //   const { dispatch } = this.props;
+  //   if (flag) {
+  //     dispatch({
+  //       type: 'trade/area',
+  //       payload: pid
+  //     }).then(()=>{
+  //       const { trade } = this.props;
+  //       this.loadData(trade.areaList);
+  //     });
+  //   }
+  // };
+  loadData = (selectedOptions) => {
+    const targetOption = selectedOptions[selectedOptions.length - 1];
+    targetOption.loading = false;
+    // dispatch({
+    //   type: 'trade/area',
+    //   payload:targetOption.value
+    //   }).then(
+    //     function() {
+    //        areaListChildren = that.props.areaList;
+    //        targetOption.children = areaListChildren;
+    //        that.props.form.setFieldsValue(that.state);
+    //        that.setState({
+    //         options: [...that.state.options],
+    //       });
+    //     }
+    //   );
+  };
+
+
+  render() {
+    const { modifyModalVisible, modifyByIdModalVisible, modifyTrade, values, form } = this.props;
+    const { TextArea } = Input;
+    const okHandle = () => {
+      form.validateFields((err, fieldsValue) => {
+        if (err) return;
+        form.resetFields();
+        if (values.id) {
+          modifyTrade(fieldsValue, values.id);
+        }
+      });
+    };
+    return (
+      <Modal
+        maskClosable={false}
+        width={1000}
+        bodyStyle={{ padding: '32px 40px 48px' }}
+        destroyOnClose
+        title="订单编辑"
+        visible={modifyModalVisible}
+        onOk={okHandle}
+        onCancel={() => modifyByIdModalVisible(false, values)}
+        afterClose={() => modifyByIdModalVisible()}
+      >
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="订单号">
+              {form.getFieldDecorator('tradeNo', {
+                initialValue: values.tradeNo,
+                rules: [],
+              })(<Input disabled />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="会员名称">
+              {form.getFieldDecorator('memberName', {
+                rules: [],
+                initialValue: values.memberName,
+              })(<Input placeholder="请输入" disabled />)}
+            </FormItem>
+          </Col>
+        </Row>
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="收货人手机号">
+              {form.getFieldDecorator('receiverMobile', {
+                initialValue: values.receiverMobile,
+                rules: [],
+              })(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="收货人">
+              {form.getFieldDecorator('receiverName', {
+                rules: [],
+                initialValue: values.receiverName,
+              })(<Input placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+        </Row>
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="省/市/区">
+              {form.getFieldDecorator('areaId', {
+                rules: [],
+                initialValue: [values.receiverStateCode, values.receiverCityCode, values.receiverDistrictCode],// 初始值
+              })(
+                <Cascader
+                  style={{ width: "100%" }}
+                  placeholder="请选择"
+                  // options={this.state.options} 
+                  options={city} // 从js获取数据
+                  loadData={this.loadData}
+                  onChange={this.onChange}
+                  changeOnSelect
+                />
+              )}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="详细地址">
+              {form.getFieldDecorator('receiverAddress', {
+                initialValue: values.receiverAddress,
+                rules: [],
+              })(<Input />)}
+            </FormItem>
+          </Col>
+        </Row>
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="邮编">
+              {form.getFieldDecorator('receiverZip', {
+                rules: [],
+                initialValue: values.receiverZip,
+              })(<Input placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="卖家备注">
+              {form.getFieldDecorator('sellerMemo', {
+                initialValue: values.sellerMemo,
+                rules: [],
+              })(<TextArea placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+        </Row>
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="买家备注">
+              {form.getFieldDecorator('buyerMemo', {
+                rules: [],
+                initialValue: values.buyerMemo,
+              })(<TextArea placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="取消原因">
+              {form.getFieldDecorator('cancelReason', {
+                initialValue: values.cancelReason,
+                rules: [],
+              })(<TextArea placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+        </Row>
+      </Modal>
+
+    );
+  }
+}
+
+
+/* eslint react/no-multi-comp:0 */
+@connect(({ trade, loading }) => ({
+  trade,
+  loading: loading.models.rule,
+}))
+
+@Form.create()
+class TradeList extends PureComponent {
+  constructor(props) {
+    super(props)
+    this.state = {
+      modifyModalVisible: false,
+      pageSize: 10,
+      currentPage: 1,
+      formValues: {}
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+
+    dispatch({
+      type: 'trade/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+
+  }
+
+  // 查询
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        const value = {
+          tradeNo: fieldsValue.tradeNo,
+          payNo: fieldsValue.payNo,
+          receiverMobile: fieldsValue.receiverMobile,
+          shippingNo: fieldsValue.shippingNo,
+        }
+        this.setState({
+          currentPage: 1,
+          formValues: value
+        });
+        dispatch({
+          type: 'trade/fetch',
+          payload: {
+            ...value,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+      }
+    })
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    this.setState({
+      formValues: {},
+      currentPage: 1
+    });
+    dispatch({
+      type: 'trade/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  // 编辑确定
+  modifyTrade = (fields, id) => {
+    const { dispatch } = this.props;
+    const { trade } = this.props;
+    dispatch({
+      type: 'trade/update',
+      payload: {
+        id,
+        receiverStateCode: trade.label[0].value,// 省code
+        receiverState: trade.label[0].label,// 省
+        receiverCityCode: trade.label[1].value,// 市code
+        receiverCity: trade.label[1].label,// 市
+        receiverDistrictCode: trade.label[2].value,// 区code
+        receiverDistrict: trade.label[2].label,// 区
+        ...fields,
+      }
+    });
+    this.modifyByIdModalVisible();
+  };
+
+
+  handleEncrypt = beforePwd => {
+    const secretKey = 'com.vcpay.foo.key';
+    const afterEncrypt = CryptoJS.DES.encrypt(beforePwd, CryptoJS.enc.Utf8.parse(secretKey), {
+      mode: CryptoJS.mode.ECB,
+      padding: CryptoJS.pad.Pkcs7
+    }).toString()
+    return afterEncrypt;
+  }
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="订单号">
+              {getFieldDecorator('tradeNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="付款单号">
+              {getFieldDecorator('payNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="手机号">
+              {getFieldDecorator('receiverMobile',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="物流单号">
+              {getFieldDecorator('shippingNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  // 详情页面
+  detailsModalVisible = (flag, record) => {
+    const { dispatch } = this.props;
+
+    this.setState({
+      updateModalVisible: !!flag,
+      updateFormValues: record || {},
+    });
+    if (flag) {
+      dispatch({
+        type: 'trade/details',
+        payload: {
+          "id": record.id,
+        },
+      });
+
+    }
+
+  };
+
+  // 编辑页面
+  modifyByIdModalVisible = (flag, record) => {
+    this.setState({
+      modifyModalVisible: !!flag,
+      modifyFormValues: record || {},
+    });
+    // this.areaListInfo(flag, "1");
+  };
+
+  // 省市级联
+  // areaListInfo = (flag, pid) => {
+  //   const { dispatch } = this.props;
+  //   if (flag) {
+  //     dispatch({
+  //       type: 'trade/area',
+  //       payload: pid
+  //     });
+  //   }
+  // };
+
+  handlePageChange = (pagination) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current
+    });
+    dispatch({
+      type: 'trade/fetch',
+      payload: {
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+  render() {
+    const { trade } = this.props;
+    const { tradeDetail } = trade;
+    const { areaList } = trade;
+    const { updateModalVisible, updateFormValues, modifyModalVisible, modifyFormValues, currentPage, pageSize } = this.state;
+    const columns = [
+      {
+        title: '订单号',
+        dataIndex: 'tradeNo',
+        key: 'tradeNo',
+      },
+      {
+        title: '会员名称',
+        dataIndex: 'memberName',
+        key: 'memberName',
+      },
+      {
+        title: '订单状态',
+        dataIndex: 'status',
+        key: 'status',
+        render: item => {
+          // 订单状态：1新增（等待付款），2取消（买家取消），3已付款（等待发货），
+          // 4待退款审核（等待商家审核），5已发货（商家已发货等待买家确认），6已完成（买家确认收货），
+          // 7待退货审核（等待商家审核），8退货中（商家审核通过，买家退货中），9退款中（商家已退款）
+          //  return  this.statusByName(item);
+          return <StatusByName status={item} />;
+        }
+      },
+      // {
+      //   title: '订单实付款金额',
+      //   dataIndex: 'tradeFee',
+      //   key: 'tradeFee',
+      // },
+      // {
+      //   title: '创建时间',
+      //   dataIndex: 'created',
+      //   key: 'created',
+      //   render: item => {
+      //     return (
+      //       item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')  
+      //     )
+      //   }
+      // }, 
+      // {
+      //     title: '取消时间',
+      //     dataIndex: 'cancelTime',
+      //     key: 'cancelTime',
+      //     render: item => {
+      //       return (
+      //         item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')  
+      //       )
+      //     }
+      //   },
+      //   {
+      //     title: '修改时间',
+      //     dataIndex: 'updateTime',
+      //     key: 'updateTime',
+      //     render: item => {
+      //       return (
+      //         item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')  
+      //       )
+      //     }
+      //   },
+      //   {
+      //     title: '付款时间',
+      //     dataIndex: 'payTime',
+      //     key: 'payTime',
+      //     render: item => {
+      //       return (
+      //         item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')  
+      //       )
+      //     }
+      //   },
+      //   {
+      //     title: '发货时间',
+      //     dataIndex: 'confirmTime',
+      //     key: 'confirmTime',
+      //     render: item => {
+      //       return (
+      //         item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')  
+      //       )
+      //     }
+      //   },
+      {
+        title: '付款方式',
+        dataIndex: 'payType',
+        key: 'payType',
+        render: item => {
+          // 付款方式：1.快捷支付
+          if (item === "1") {
+            return "快捷支付"
+          }
+          return ""
+
+        }
+      },
+      {
+        title: '付款单号',
+        dataIndex: 'payNo',
+        key: 'payNo',
+      },
+      // {
+      //   title: '原订单总金额',
+      //   dataIndex: 'unsaleTradeFee',
+      //   key: 'unsaleTradeFee',
+      // },
+
+      // {
+      //   title: '优惠总金额',
+      //   dataIndex: 'totalDiscountFee',
+      //   key: 'totalDiscountFee',
+      // },
+      // {
+      //   title: '邮费',
+      //   dataIndex: 'postFee',
+      //   key: 'postFee',
+      // },
+      // {
+      //   title: '订单退款金额',
+      //   dataIndex: 'totalBackMoney',
+      //   key: 'totalBackMoney',
+      // },
+      {
+        title: '收货人',
+        dataIndex: 'receiverName',
+        key: 'receiverName',
+      },
+      {
+        title: '收货人手机号',
+        dataIndex: 'receiverMobile',
+        key: 'receiverMobile',
+      },
+      // {
+      //   title: '所属代理商名称',
+      //   dataIndex: 'agentName',
+      //   key: 'agentName',
+      // },
+      // {
+      //   title: '省',
+      //   dataIndex: 'receiverState',
+      //   key: 'receiverState',
+      // },
+      // {
+      //   title: '市',
+      //   dataIndex: 'receiverCity',
+      //   key: 'receiverCity',
+      // },
+      // {
+      //   title: '区',
+      //   dataIndex: 'receiverDistrict',
+      //   key: 'receiverDistrict',
+      // },
+      // {
+      //   title: '详细地址',
+      //   dataIndex: 'receiverAddress',
+      //   key: 'receiverAddress',
+      //   render: text => <div className={styles.hideClass} title={text}>{text}</div>
+      // },
+      {
+        title: '邮编',
+        dataIndex: 'receiverZip',
+        key: 'receiverZip',
+      },
+      // {
+      //   title: '买家备注',
+      //   dataIndex: 'buyerMemo',
+      //   key: 'buyerMemo',
+      // },
+      // {
+      //   title: '卖家备注',
+      //   dataIndex: 'sellerMemo',
+      //   key: 'sellerMemo',
+      // },
+      {
+        title: '物流方式',
+        dataIndex: 'shippingType',
+        key: 'shippingType',
+      },
+      {
+        title: '物流单号',
+        dataIndex: 'shippingNo',
+        key: 'shippingNo',
+      },
+      // {
+      //   title: '取消类型',
+      //   dataIndex: 'cancelType',
+      //   key: 'cancelType',
+      //   render: item => {
+      //     //取消类型 1商家取消 2 买家取消 3 系统取消  
+      //     if(item === "1"){
+      //         return "商家取消";
+      //     }else if(item === "2"){
+      //         return "买家取消 ";
+      //     }else if(item === "3"){
+      //         return "系统取消 ";
+      //     }else{
+      //         return item;
+      //     }
+      //   }
+      // }, 
+      // {
+      //     title: '取消原因',
+      //     dataIndex: 'cancelReason',
+      //     key: 'cancelReason',
+      // },
+      {
+        title: '操作',
+        render: (text, record) => (
+          <div style={{whiteSpace:"nowrap"}}>
+            <a onClick={() => this.detailsModalVisible(true, record)}>查看</a>&nbsp;&nbsp;&nbsp;&nbsp;
+            <a onClick={() => this.modifyByIdModalVisible(true, record)}>编辑</a>
+          </div>
+        ),
+      },
+    ];
+    // 商品详情列表
+    const columnsDetail = [
+      {
+        title: '商品名称',
+        dataIndex: 'title',
+        key: 'title',
+      },
+      {
+        title: '商品原价',
+        dataIndex: 'price',
+        key: 'price',
+      },
+      {
+        title: '商品数量',
+        dataIndex: 'num',
+        key: 'num',
+      },
+      {
+        title: '子订单实付款金额',
+        dataIndex: 'orderFee',
+        key: 'orderFee',
+      },
+      {
+        title: '商品货号',
+        dataIndex: 'businessNo',
+        key: 'businessNo',
+      },
+      // {
+      //     title: '是否评价',
+      //     dataIndex: 'isEvaluate',
+      //     key: 'isEvaluate', //是否评价：0、否，1、是
+      //     render: item => {
+      //         item === 0 ? "否" : "是"
+      //     }
+
+      // },
+      {
+        title: '商品图片url',
+        dataIndex: 'itemPicUrl',
+        key: 'itemPicUrl',
+
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'created',
+        key: 'created',
+        render: item => {
+          return (
+            item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+          )
+        }
+
+      },
+
+    ];
+    const { total } = trade.list.data;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+    }
+    const updateMethods = {
+      detailsModalVisible: this.detailsModalVisible,
+      details: this.details,
+    };
+
+    // 编辑
+    const detailsMethods = {
+      modifyByIdModalVisible: this.modifyByIdModalVisible,
+      modifyTrade: this.modifyTrade,
+    };
+    return (
+      <PageHeaderWrapper title="">
+        <Card>
+          <Row>
+            {this.renderForm()}
+            {/* <Button icon="plus" type="primary" onClick={() => this.handleModalVisible(true)}>
+                添加
+            </Button> */}
+          </Row>
+          <Row>
+            <Table
+              dataSource={trade.list.data.rows}
+              rowKey="id"
+              columns={columns}
+              pagination={pagination}
+              loading={trade.loading}
+              bordered={false}
+              style={{ overflowX: "scroll" }}
+              onChange={this.handlePageChange}
+            // scroll={{ x: 1200}}
+            />
+          </Row>
+        </Card>
+        <DetailsForm
+          {...updateMethods}
+          updateModalVisible={updateModalVisible}
+          tradeDetail={tradeDetail}
+          columnsDetail={columnsDetail}
+          values={updateFormValues}
+        />
+        <ModifyForm
+          {...detailsMethods}
+          modifyModalVisible={modifyModalVisible}
+          areaList={areaList}
+          values={modifyFormValues}
+        />
+
+      </PageHeaderWrapper>
+    )
+  }
+}
+export default TradeList;

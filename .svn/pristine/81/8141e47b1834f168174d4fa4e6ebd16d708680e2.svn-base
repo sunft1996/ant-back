@@ -1,0 +1,95 @@
+import {operationalStatistics,tranStatistics,memberStatistics,agentStatistics} from '@/services/statistics';
+
+
+export default {
+    namespace: 'statistics',
+    state: {
+        loading:false,
+        list: {
+            data:[]
+           },
+        memberStatisticsList: {
+            data:[]
+
+           },
+        agentStatisticsList: {
+            data:[]
+           },
+      },
+
+    effects: {
+        *fetch({ payload }, { call, put } ,) {
+            yield put({
+              type: 'loading',
+            });
+            const response =  yield call(operationalStatistics,payload);
+            yield put({
+              type: 'save',
+              payload:response
+            });
+          },
+          *tranStatistics({ payload }, { call, put } ,) {
+            yield put({
+              type: 'loading',
+            });
+            const response =  yield call(tranStatistics,payload);
+            yield put({
+              type: 'save',
+              payload:response
+            });
+          },
+        //用户统计维度
+        *memberDimension({ payload }, { call, put } ,) {
+          yield put({
+            type: 'loading',
+          });
+          const response =  yield call(memberStatistics,payload);
+          yield put({
+            type: 'memberSave',
+            payload:response
+          });
+        },
+        *agentDimension({ payload }, { call, put } ,) {
+          yield put({
+            type: 'loading',
+          });
+          const response =  yield call(agentStatistics,payload);
+          yield put({
+            type: 'agentSave',
+            payload:response
+          });
+        },
+    },
+    reducers: {
+        loading(state){
+          return {
+            ...state,
+            loading:true
+          };
+        },
+        save(state, action) {
+          return {
+            ...state,
+            list: action.payload,
+            loading:false
+          };
+        },
+        memberSave(state, action) {
+          return {
+            ...state,
+            memberStatisticsList: action.payload,
+            loading:false
+          };
+        },
+        agentSave(state, action) {
+          return {
+            ...state,
+            agentStatisticsList: action.payload,
+            loading:false
+          };
+        },
+
+
+
+    }
+};

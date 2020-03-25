@@ -1,0 +1,119 @@
+import {incomeList,incomeDetails,incomeSummary} from '@/services/incomeList';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'incomeList',
+  //初始变量
+  state: {
+    loading:false,
+    //列表
+    list: {
+        data:{
+            total:0,
+            rows: [],
+        }
+    },
+    //详情列表
+    details:{
+        data:{
+            total:0,
+            rows: [],
+        }
+
+    },
+    //汇总
+    summary:{
+        data:{
+
+        }
+    },
+    //导出
+    exportIncomeList:{
+        data:{
+
+        }
+       }
+  },
+
+  effects: {
+
+    /**
+     * 请求列表数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *fetch({payload}, { call, put }) {
+      const response =  yield call(incomeList,payload);
+      yield put({
+        type: 'save',
+        payload:response
+      });
+    },
+     /**
+     * 请求详情数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *incomeDetails({payload}, { call, put }) {
+        const response =  yield call(incomeDetails,payload);
+        yield put({
+          type: 'details',
+          payload:response
+        });
+      },
+       /**
+     * 请求汇总数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *incomeSummary({payload}, { call, put }) {
+        const response =  yield call(incomeSummary,payload);
+        yield put({
+          type: 'summary',
+          payload:response
+        });
+      },
+       /**
+     * 请求导出数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *exportIncomeList({payload}, { call, put }) {
+        const response =  yield call(incomeList,payload);
+        yield put({
+          type: 'export',
+          payload:response
+        });
+      },
+  },
+
+  /**
+   * 组装 type  方法类型
+   */
+  reducers: {
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload.data,
+      };
+    },
+    details(state, action) {
+        return {
+          ...state,
+          details: action.payload.data,
+        };
+      },
+      summary(state, action) {
+        return {
+          ...state,
+          summary: action.payload.data,
+        };
+      },
+      export(state, action) {
+        return {
+          ...state,
+          exportIncomeList: action.payload.data,
+        };
+      },
+  },
+};

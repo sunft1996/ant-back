@@ -1,0 +1,124 @@
+@import '~antd/lib/style/themes/default.less';
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.colorWeak {
+  filter: invert(80%);
+}
+
+.ant-layout {
+  min-height: 100vh;
+}
+
+canvas {
+  display: block;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.globalSpin {
+  width: 100%;
+  margin: 40px 0 !important;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+@media (max-width: @screen-xl) {
+  .ant-table-body {
+    overflow-x: scroll;
+  }
+}
+
+@media (max-width: @screen-xs) {
+  .ant-table {
+    width: 100%;
+    overflow-x: auto;
+
+    .ant-table-body {
+      overflow-x: scroll;
+    }
+
+    &-thead > tr,
+    &-tbody > tr {
+      > th,
+      > td {
+        white-space: pre;
+
+        > span {
+          display: block;
+        }
+      }
+    }
+  }
+}
+
+.money {
+  display: inline-block;
+  height: 32px;
+  margin-right: 32px;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 24px;
+  line-height: 32px;
+}
+
+.marginLeft {
+  margin-left: 20px;
+}
+
+.marginBottom {
+  margin-bottom: 20px;
+}
+
+.marginTop {
+  margin-top: 20px;
+}
+
+.textRight {
+  text-align: 'right';
+}
+
+.flexRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.flexCenter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ant-table,.ant-table-body {
+  text-align: center !important;
+}
+
+.ant-table th,.ant-table td {
+  text-align: center !important;
+}
+
+.contentRight {
+  display: flex !important;
+  justify-content: flex-end;
+}
+
+.remark {
+  white-space: nowrap;
+  width: 20em;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  display: inline-block;
+}
+
+

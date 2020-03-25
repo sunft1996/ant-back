@@ -1,0 +1,16 @@
+@import '~antd/lib/style/themes/default.less';
+@import '~@/utils/utils.less';
+
+.centered {
+  padding-left: 30px;
+}
+
+.qrCode {
+  height: 250px;
+  width : 250px;
+}
+
+.inviteInfo {
+  margin   : 1em 0;
+  font-size: 18px;
+}

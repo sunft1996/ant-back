@@ -1,0 +1,219 @@
+import {saveOrUpedata,payChannelList,deleteById,saveOrUpdataPayChannelDetails,
+  payChannelDetailsList,updataTypeChannelDetails,memberChannelList,getChanneBankAll,
+  toExamineAuth} from '@/services/payChannel';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'payChannel',
+  //初始变量
+  state: {
+    list: [],
+    payDetailsList:[],
+    memberChannelList:[],
+    channeBankList:[],
+    channelLoading:false,
+  },
+
+  effects: {
+    /**
+     * 编辑 or 更新
+     * @param {*} param0 
+     * @param {*} param1 
+     */
+    *add({ payload }, { call, put }) {
+      const response = yield call(saveOrUpedata, payload);
+      if (response.code === 'SUCCESS') { //成功刷新
+        const newFetch = yield call(payChannelList,payload);
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+
+    /**
+     * 请求数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *fetch({payload}, { call, put }) {
+      const response =  yield call(payChannelList,payload);
+      yield put({
+        type: 'save',
+        payload:response
+      });
+    },
+
+    /**
+     * 删除分类数据
+     * @param {*} param0 
+     * @param {*} param1 
+     */
+    *remove({ payload, callback }, { call, put }) {
+      const response = yield call(deleteById,payload);
+      if (response.code === 'SUCCESS'){
+        const newFetch = yield call(payChannelList,{});
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      }else{
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      if (callback) callback();
+    },
+
+    *addDetails({ payload }, { call, put }) {
+      const response = yield call(saveOrUpdataPayChannelDetails, payload);
+      if (response.code === 'SUCCESS') { //成功刷新
+        const newFetch = yield call(payChannelDetailsList,payload);
+        yield put({
+          type: 'saveList',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+
+    *detailsList({payload}, { call, put }) {   
+      const response =  yield call(payChannelDetailsList,payload);
+      yield put({
+        type: 'saveList',
+        payload:response
+      });
+    },
+    *bankALL({payload}, { call, put }) {   
+      const response =  yield call(getChanneBankAll);
+      yield put({
+        type: 'bankList',
+        payload:response
+      });
+    },
+    *updataType({ payload }, { call, put }) {
+      const response = yield call(updataTypeChannelDetails, payload);
+      if (response.code === 'SUCCESS') { //成功刷新
+        const newFetch = yield call(payChannelDetailsList,payload);
+        yield put({
+          type: 'saveList',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    /*****   通道报备  */
+    /**
+     * 列表数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *memberChannelList({payload}, { call, put }) {
+      const response =  yield call(memberChannelList,payload);
+      yield put({
+        type: 'channelList',
+        payload:response
+      });
+    },
+
+    //会员资质提交通道审核
+    *toExamineAuth({ payload }, { call, put }) {
+    yield put({
+        type: 'setChannelLoading',
+        payload:true,
+    });
+    const response = yield call(toExamineAuth, payload);
+    if (response.code === 'SUCCESS') {
+        notification.success({
+            message: response.code,
+            description: response.msg,
+        });
+        //刷新列表数据
+        const res = yield call(memberChannelList, {});
+        yield put({
+          type: 'channelList',
+          payload:res
+        });
+    } else {
+        notification.error({
+            message: response.code,
+            description: response.msg,
+        });
+    }
+    yield put({
+        type: 'setChannelLoading',
+        payload:false,
+    });
+    return response;
+  },
+
+  },
+
+  /**
+   * 组装 type  方法类型
+   */
+  reducers: {
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload.data.rows,
+      };
+
+
+    },
+    saveList(state, action) {
+      return {
+        ...state,
+        payDetailsList: action.payload.data.rows,
+      };
+    },
+    bankList(state, action) {
+      return {
+        ...state,
+        channeBankList: action.payload.data,
+      };
+    },
+    channelList(state, action) {
+      return {
+        ...state,
+        memberChannelList: action.payload.data,
+      };
+    },
+    setChannelLoading(state,action) {
+      return {
+          ...state,
+          channelLoading: action.payload
+      }
+  },
+  },
+};

@@ -1,0 +1,883 @@
+import React, { PureComponent, Fragment } from 'react';
+import { connect } from 'dva';
+import { Row, Col, Card, Table, Modal, Select, Form, Input, Button,Tag,DatePicker,Alert, } from 'antd';
+import DescriptionList from '@/components/DescriptionList';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+// import ExportJsonExcel from 'js-export-excel';
+import moment from "moment";
+import CryptoJS from 'crypto-js';
+import styles from "./TradeList.less";
+
+const { Description } = DescriptionList;
+const { Option } = Select;
+const FormItem = Form.Item;
+const { RangePicker } = DatePicker;
+/**
+ *      //订单状态：1新增（等待付款），2取消（买家取消），3已付款（等待发货），
+       // 4待退款审核（等待商家审核），5已发货（商家已发货等待买家确认），6已完成（买家确认收货），
+       //7待退货审核（等待商家审核），8退货中（商家审核通过，买家退货中），9退款中（商家已退款）
+ */
+const StatusByName = (props) => {
+  let value = '';
+  switch (props) {
+    case "1":
+      value = "待付款";
+      break;
+    case "2":
+      value = "取消"
+      break;
+    case "3":
+      value = "已付款"
+      break;
+    case "4":
+      value = "待退款审核"
+      break;
+    case "5":
+      value = "已发货"
+      break;
+    case "6":
+      value = "已完成"
+      break;
+    case "7":
+      value = "待退货审核"
+      break;
+    case "8":
+      value = "退货中"
+      break;
+    case "9":
+      value = "退款中"
+      break;
+    default:
+      value = ""
+  }
+  return value
+  
+}
+// 委托状态 0 成功 1 失败 2 付款中  
+const EntrustStatus = (props) => {
+  const { entrustStatus } = props;
+  let value = '';
+  switch (entrustStatus) {
+    case "0":
+      value = "成功";
+      break;
+    case "1":
+      value = "失败"
+      break;
+    case "2":
+      value = "付款中"
+      break;
+    default:
+      value = ""
+  }
+  return (
+    <span>{value}</span>
+  )
+}
+
+@Form.create()
+class DetailsForm extends PureComponent {
+  static defaultProps = {
+    details: () => { },
+    detailsModalVisible: () => { },
+    values: {},
+  };
+
+  render() {
+    const { updateModalVisible, detailsModalVisible, details, values, form } = this.props;
+    const { getFieldDecorator } = this.props.form;
+    const okHandle = () => {
+      form.validateFields((err, fieldsValue) => {
+        if (err) return;
+        form.resetFields();
+        if (values.id) {
+          details(fieldsValue, values.id);
+        }
+      });
+    };
+
+     // 商品详情列表
+     const columnsDetail = [
+      {
+        title: '商品名称',
+        dataIndex: 'name',
+        key: 'name',
+      },
+      {
+        title: '商品原价',
+        dataIndex: 'price',
+        key: 'price',
+      },
+      {
+        title: '商品数量',
+        dataIndex: 'num',
+        key: 'num',
+      },
+      {
+        title: '子订单实付款金额',
+        dataIndex: 'orderFee',
+        key: 'orderFee',
+      },
+      {
+        title: '商品货号',
+        dataIndex: 'productNo',
+        key: 'productNo',
+      },
+      {
+        title: '商品图片url',
+        dataIndex: 'itemPicUrl',
+        key: 'itemPicUrl',
+
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        render: item => {
+          return (
+            item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+          )
+        }
+
+      },
+
+    ];
+
+    return (
+      <Modal
+        maskClosable={false}
+        width={1000}
+        bodyStyle={{ padding: '32px 40px 48px' }}
+        destroyOnClose
+        title="进货详细信息"
+        visible={updateModalVisible}
+        onOk={okHandle}
+        footer={null}
+        onCancel={() => detailsModalVisible(false, values)}
+        afterClose={() => detailsModalVisible()}
+      >
+        <DescriptionList col={3} layout="horizontal" title="会员进货信息">
+          <Description term="订单号">{values.tradeNo}</Description>
+          <Description term="交易流水号">{values.payNo}</Description>
+          <Description term="会员名称">{values.memberName}</Description>
+          <Description term="订单状态">{StatusByName(values.status)}</Description>
+          <Description term="订单实付款金额">{values.tradeFee == null ? "" : values.tradeFee}</Description>
+          <Description term="交易手续费">{values.rateFee == null?"" :values.rateFee}</Description>
+          <Description term="结算手续费">{values.withdrawFee == null?"" :values.withdrawFee}</Description>
+          <Description term="创建时间">{values.created == null? "" : moment(values.created).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="完成时间">{values.updateTime == null? "" : moment(values.updateTime).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="付款时间">{values.payTime == null? "" : moment(values.payTime).format('YYYY-MM-DD HH:mm:ss')}</Description>
+          <Description term="付款方式">
+            {
+              values.payType === "1" ? "快捷支付" : ""
+            }
+          </Description>
+          <Description term="银行名称">{values.bankName == null ? "" : values.bankName}</Description>
+          <Description term="交易卡号">{values.payCard == null ? "" : values.payCard}</Description>
+          {/* <Description term="结算委托状态"><EntrustStatus entrustStatus={values.entrustStatus} /></Description>
+          <Description term="结算备注">{values.ecancelReason}</Description>
+          <Description term="结算上游付款单号">{values.entrustPayNo}</Description> */}
+        </DescriptionList>
+        
+        
+        <DescriptionList col={3} layout="horizontal" title="订单详情信息">
+          <Table
+            dataSource={values.goods}
+            rowKey="id"
+            columns={columnsDetail}
+            pagination={false}
+            bordered={false}
+            style={{ overflowX: "scroll" }}
+          />
+        </DescriptionList>
+      </Modal>
+
+    );
+  }
+}
+@connect(({ trade, loading }) => ({
+  trade,
+  loading: loading.models.rule,
+}))
+
+// 编辑
+@Form.create()
+class ModifyForm extends PureComponent {
+
+  static defaultProps = {
+    modifyTrade: () => { },
+    modifyByIdModalVisible: () => { },
+    values: {},
+  };
+
+  render() {
+    const { modifyModalVisible, modifyByIdModalVisible, modifyTrade, values, form } = this.props;
+    const okHandle = () => {
+      form.validateFields((err, fieldsValue) => {
+        if (err) return;
+        form.resetFields();
+        if (values.id) {
+          modifyTrade(fieldsValue, values.id);
+        }
+      });
+    };
+    return (
+      <Modal
+        maskClosable={false}
+        width={1000}
+        bodyStyle={{ padding: '32px 40px 48px' }}
+        destroyOnClose
+        title="进货编辑"
+        visible={modifyModalVisible}
+        onOk={okHandle}
+        onCancel={() => modifyByIdModalVisible(false, values)}
+        afterClose={() => modifyByIdModalVisible()}
+      >
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="订单号">
+              {form.getFieldDecorator('tradeNo', {
+                initialValue: values.tradeNo,
+                rules: [],
+              })(<Input disabled />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="会员名称">
+              {form.getFieldDecorator('memberName', {
+                rules: [],
+                initialValue: values.memberName,
+              })(<Input placeholder="请输入" disabled />)}
+            </FormItem>
+          </Col>
+        </Row>
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="付款单号">
+              {form.getFieldDecorator('payNo', {
+                initialValue: values.payNo,
+                rules: [],
+              })(<Input disabled />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="订单实付款金额">
+              {form.getFieldDecorator('tradeFee', {
+                rules: [],
+                initialValue: values.tradeFee,
+              })(<Input placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+        </Row>
+        <Row gutter={{ md: 8, lg: 24, xl: 48 }}>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="订单状态">
+              {form.getFieldDecorator('status', {
+                rules: [],
+                initialValue: values.status,
+              })(
+                /**
+*      //订单状态：1新增（等待付款），2取消（买家取消），3已付款（等待发货），
+     // 4待退款审核（等待商家审核），5已发货（商家已发货等待买家确认），6已完成（买家确认收货），
+     //7待退货审核（等待商家审核），8退货中（商家审核通过，买家退货中），9退款中（商家已退款）
+*/
+                <Select placeholder="请选择" style={{ width: '100%' }}>
+                  <Option value="1">待付款</Option>
+                  <Option value="2">取消</Option>
+                  <Option value="3">已付款</Option>
+                  <Option value="4">待退款审核</Option>
+                  <Option value="5">已发货</Option>
+                  <Option value="6">已完成</Option>
+                  <Option value="7">待退货审核</Option>
+                  <Option value="8">退货中</Option>
+                  <Option value="9">退款中</Option>
+                </Select>)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={12}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="快捷支付">
+              {form.getFieldDecorator('payType', {
+                initialValue: values.payType,
+                rules: [],
+              })(
+                <Select placeholder="请选择" style={{ width: '100%' }}>
+                  <Option value="1">快捷支付</Option>
+                </Select>
+              )}
+            </FormItem>
+          </Col>
+        </Row>
+      </Modal>
+
+    );
+  }
+}
+
+
+/* eslint react/no-multi-comp:0 */
+@connect(({ trade, loading }) => ({
+  trade,
+  loading: loading.models.rule,
+}))
+
+@Form.create()
+class TradeList extends PureComponent {
+  constructor(props) {
+    super(props)
+    this.state = {
+      currentPage: 1,
+      pageSize: 10,
+    }
+  }
+
+  // 初始化
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+
+    dispatch({
+      type: 'trade/tradeInfoList',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+
+    // 交易金额汇总
+    dispatch({
+      type: 'trade/tradeInfoSummary',
+      payload: {}
+    });
+
+
+  }
+
+  // 查询
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        const value = {
+          tradeNo: fieldsValue.tradeNo?fieldsValue.tradeNo.trim():fieldsValue.tradeNo,
+          payNo: fieldsValue.payNo?fieldsValue.payNo.trim():fieldsValue.payNo,
+          liquidationFlag: fieldsValue.liquidationFlag?fieldsValue.liquidationFlag.trim():fieldsValue.liquidationFlag,
+          status: fieldsValue.status?fieldsValue.status.trim():fieldsValue.status,
+          memberName:fieldsValue.memberName?fieldsValue.memberName.trim():fieldsValue.memberName,
+          startCreated: fieldsValue.created != null ? fieldsValue.created[0].format('YYYY-MM-DD 00:00:00') : null,
+          endCreated: fieldsValue.created != null ? fieldsValue.created[1].format('YYYY-MM-DD 23:59:59') : null,
+          startUpdateTime:fieldsValue.updateTime != null ? fieldsValue.updateTime[0].format('YYYY-MM-DD 00:00:00') : null,
+          endUpdateTime:fieldsValue.updateTime != null ? fieldsValue.updateTime[1].format('YYYY-MM-DD 23:59:59') : null,
+        }
+        this.setState({
+          currentPage: 1,
+          formValues: value
+        });
+        dispatch({
+          type: 'trade/tradeInfoList',
+          payload: {
+            ...value,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+        dispatch({
+          type: 'trade/tradeInfoSummary',
+          payload: {
+            ...value,
+          }
+        });
+      }
+    })
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    this.setState({
+      formValues: {},
+      currentPage: 1
+    });
+    dispatch({
+      type: 'trade/tradeInfoList',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  // 导出会员进货列表
+  exportTradeInfoList = (e) =>{
+    const { dispatch, form } = this.props;
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        const value = {
+          tradeNo: fieldsValue.tradeNo?fieldsValue.tradeNo.trim():fieldsValue.tradeNo,
+          payNo: fieldsValue.payNo?fieldsValue.payNo.trim():fieldsValue.payNo,
+          status: fieldsValue.status?fieldsValue.status.trim():fieldsValue.status,
+          memberName:fieldsValue.memberName?fieldsValue.memberName.trim():fieldsValue.memberName,
+          startCreated: fieldsValue.created != null ? fieldsValue.created[0].format('YYYY-MM-DD 00:00:00') : null,
+          endCreated: fieldsValue.created != null ? fieldsValue.created[1].format('YYYY-MM-DD 23:59:59') : null,
+          startUpdateTime:fieldsValue.updateTime != null ? fieldsValue.updateTime[0].format('YYYY-MM-DD 00:00:00') : null,
+          endUpdateTime:fieldsValue.updateTime != null ? fieldsValue.updateTime[1].format('YYYY-MM-DD 23:59:59') : null,
+        }
+  
+        dispatch({
+          type: 'trade/exportTradeInfoList',
+          payload: {
+            ...value
+          }
+        }).then(() => {
+          const { trade } = this.props;
+          const option = {};
+          const data =  trade.exportTradeInfoList.data.rows
+          if(data){
+            const dataTable = data.map(item => {
+            return {
+              '订单号': item.tradeNo,
+              '交易流水号': item.payNo,
+              '订单状态': StatusByName(item.status),
+              '订单实付款金额': item.tradeFee == null ? "0":item.tradeFee,
+              '交易手续费': item.rateFee==null ? "0":item.rateFee,
+              '结算手续费': item.withdrawFee == null ? "0" :item.withdrawFee,
+              '银行名称': item.bankName == null?  "" :item.bankName,
+              '交易卡号': item.payCard == null ?  "" : item.payCard,
+              '付款方式': item.payType === "1" ? "快捷支付" : "",
+              '创建时间': item.created == null? "" : moment(item.created).format('YYYY-MM-DD HH:mm:ss'),
+              '完成时间': item.updateTime == null? "" : moment(item.updateTime).format('YYYY-MM-DD HH:mm:ss'),
+              '付款时间': item.payTime == null? "" : moment(item.payTime).format('YYYY-MM-DD HH:mm:ss'),
+            }
+        });
+        option.fileName = 'APP会员进货记录';
+        const sheetHeader = ['订单号', '交易流水号', '订单状态', '订单实付金额', '交易手续费',
+          '结算手续费', '银行名称', '交易卡号', '付款方式', '创建时间', '完成时间', '付款时间']
+          option.datas = [
+            {
+              sheetData: dataTable,
+              sheetName: 'sheet',
+              // sheetFilter: ['组织ID', '组织代码', '组织名称'],
+              sheetHeader,
+            }
+          ];
+          import('js-export-excel').then((module) => {
+            const toExcel = module.default(option)
+            // const toExcel = ExportJsonExcel(option);
+            toExcel.saveExcel();
+
+          })
+          }
+        });
+      
+      }
+    })
+  };
+
+  // 编辑确定
+  modifyTrade = (fields, id) => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'trade/updateInfo',
+      payload: {
+        id,
+        ...fields,
+      }
+    });
+    this.modifyByIdModalVisible();
+  };
+
+  renderForm = () => {
+    const { form } = this.props;
+    const { getFieldDecorator } = form;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="订单号">
+              {getFieldDecorator('tradeNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="交易流水号">
+              {getFieldDecorator('payNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="清算状态">
+              {getFieldDecorator('liquidationFlag',
+              )(
+                <Select placeholder="请选择" style={{ width: '100%' }}>     
+                 <Option value="0">未清算</Option>     
+                  <Option value="1">已清算</Option>
+                </Select>)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="订单状态">
+              {getFieldDecorator('status',
+                {
+                  rules: []
+                }
+              )(
+                <Select placeholder="请选择" style={{ width: '100%' }}>
+                  <Option value="">全部</Option>
+                  <Option value="1">待付款</Option>
+                  <Option value="2">取消</Option>
+                  <Option value="3">已付款</Option>
+                  <Option value="4">待退款审核</Option>
+                  <Option value="5">已发货</Option>
+                  <Option value="6">已完成</Option>
+                  <Option value="7">待退货审核</Option>
+                  <Option value="8">退货中</Option>
+                  <Option value="9">退款中</Option>
+                </Select>)}
+            </FormItem>
+          </Col>
+          
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="会员名称">
+              {getFieldDecorator('memberName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="创建时间">
+              {form.getFieldDecorator('created',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem labelCol={{ span: 7 }} wrapperCol={{ span: 15 }} label="完成时间">
+              {form.getFieldDecorator('updateTime',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+          
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+              <Button type="primary" icon="download" onClick={this.exportTradeInfoList} style={{ marginLeft: 20 }}>
+                导出
+              </Button>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  // 详情页面
+  detailsModalVisible = (flag, record) => {
+    const { dispatch } = this.props;
+
+    this.setState({
+      updateModalVisible: !!flag,
+      updateFormValues: record || {},
+    });
+    if (flag) {
+      dispatch({
+        type: 'trade/details',
+        payload: {
+          "id": record.id,
+        },
+      });
+
+    }
+
+  };
+
+  // 编辑页面
+  modifyByIdModalVisible = (flag, record) => {
+    this.setState({
+      modifyModalVisible: !!flag,
+      modifyFormValues: record || {},
+    });
+    // this.areaListInfo(flag, "0");
+  };
+
+  handlePageChange = (pagination) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current,
+      pageSize:pagination.pageSize
+    });
+    dispatch({
+      type: 'trade/tradeInfoList',
+      payload: {
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pagination.pageSize,
+      }
+    });
+  }
+
+  
+  // 补单操作
+  handlErepairOdd = (record) => {
+    const { dispatch } = this.props;
+   // const title = `你确定要设置单号:${  record.orderNumber  }进行补单吗`;
+    // confirm({
+    //   title,
+    //   onOk() {
+    //     // dispatch({
+    //     //   type: 'member/seMemberRate',
+    //     //   payload: record,
+    //     //   callback: () => {
+    //     //     this.setState({
+    //     //       selectedRows: [],
+    //     //     });
+    //     //   },
+    //     // })
+
+    //   },
+    //   onCancel() { },
+    // });
+    dispatch({
+      type: 'trade/handlErepairTradeInfo',
+      payload: record,
+    }).then((res)=>{
+      console.log(res);
+
+    })
+
+
+  };
+
+  render() {
+    const { trade } = this.props;
+    // const tradeDetail = trade.tradeDetail;
+    // const areaList = trade.areaList;
+    const { updateModalVisible, updateFormValues, modifyModalVisible, modifyFormValues, currentPage, pageSize } = this.state;
+    const columns = [
+      {
+        title: '商城订单号',
+        dataIndex: 'tradeNo',
+        key: 'tradeNo',
+        render : (item,record) =>{
+          return item = <a onClick={() => this.detailsModalVisible(true, record)}> {item} </a>
+      }
+      },
+      {
+        title: '会员名称',
+        dataIndex: 'memberName',
+        key: 'memberName',
+      },
+      {
+        title: '交易状态',
+        dataIndex: 'status',
+        key: 'status',
+        render: item => {
+          // 订单状态：1新增（等待付款），2取消（买家取消），3已付款（等待发货），
+          // 4待退款审核（等待商家审核），5已发货（商家已发货等待买家确认），6已完成（买家确认收货），
+          // 7待退货审核（等待商家审核），8退货中（商家审核通过，买家退货中），9退款中（商家已退款）
+          //  return  this.statusByName(item);
+          return StatusByName (item);
+        }
+      },
+      // {
+      //   title: '付款方式',
+      //   dataIndex: 'payType',
+      //   key: 'payType',
+      //   render: item => {
+      //     // 付款方式：1.快捷支付
+      //     if (item === "1") {
+      //       return "快捷支付"
+      //     }
+      //     return ""
+
+      //   }
+      // },
+      {
+        title: '清算状态',
+        dataIndex: 'liquidationFlag',
+        key: 'liquidationFlag',
+        render: item => {
+          // 订单状态：1新增（等待付款），2取消（买家取消），3已付款（等待发货），
+          // 4待退款审核（等待商家审核），5已发货（商家已发货等待买家确认），6已完成（买家确认收货），
+          // 7待退货审核（等待商家审核），8退货中（商家审核通过，买家退货中），9退款中（商家已退款）
+          //  return  this.statusByName(item);
+          return item == 1?"已清算":"未清算";
+        }
+      },
+      {
+        title: '交易流水号',
+        dataIndex: 'payNo',
+        key: 'payNo',
+      },
+      // {
+      //   title: '结算卡号',
+      //   dataIndex: 'bankNo',
+      //   key: 'bankNo',
+      // },
+
+      {
+        title: '金额',
+        dataIndex: 'tradeFee',
+        key: 'tradeFee',
+        render: val => val
+      },
+
+      {
+        title: '交易手续费',
+        dataIndex: 'rateFee',
+        key: 'rateFee',
+        render: val => val == null ?"0" : val 
+      },
+      {
+        title: '结算手续费',
+        dataIndex: 'withdrawFee',
+        key: 'withdrawFee',
+        render: val => val == null ?"0" : val 
+      },
+      // {
+      //   title: '交易卡号',
+      //   dataIndex: 'payCard',
+      //   key: 'payCard',
+      // },
+      // {
+      //   title: '结算委托状态',
+      //   dataIndex: 'entrustStatus',
+      //   key: 'entrustStatus',
+      //   // 委托状态 0 成功 1 失败 2 付款中
+      //   render: item => {
+      //     if (item === "0") {
+      //       return "成功"
+      //     } if (item === "1") {
+      //       return "失败"
+      //     } if (item === "2") {
+      //       return "付款中"
+      //     }
+      //     return ""
+
+      //   }
+      // },
+      // {
+      //   title: '结算上游付款单号',
+      //   dataIndex: 'entrustPayNo',
+      //   key: 'entrustPayNo',
+      // },
+      {
+        title: '创建时间',
+        dataIndex: 'created',
+        key: 'created',
+        render: item => {
+          return (
+            item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+          )
+        }
+      },
+      {
+        title: '完成时间',
+        dataIndex: 'updateTime',
+        key: 'updateTime',
+        render: item => {
+          return (
+            item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+          )
+        }
+      },
+      {
+        title: '操作',
+        render: (text, record) => (
+          <div style={{whiteSpace:"nowrap"}}>
+            {/* <a onClick={() => this.detailsModalVisible(true, record)}>查看</a>&nbsp;&nbsp;&nbsp;&nbsp; */}
+            {/* <a onClick={() => this.modifyByIdModalVisible(true, record)}>编辑</a> */}
+            {record.status == "1"?<a onClick={() => this.handlErepairOdd(record)}>补单</a>:""}
+          </div>
+        ),
+      },
+    ];
+    const { total } = trade.tradeInfoList.data;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+      showTotal:()=>"共 " + total + " 条", //显示总条数
+      showQuickJumper: true, //显示跳转指定页框
+      showSizeChanger:true //显示指定条数
+    }
+    const updateMethods = {
+      detailsModalVisible: this.detailsModalVisible,
+      details: this.details,
+    };
+
+    // 编辑
+    const detailsMethods = {
+      modifyByIdModalVisible: this.modifyByIdModalVisible,
+      modifyTrade: this.modifyTrade,
+    };
+    return (
+      <PageHeaderWrapper title="">
+        <Card>
+          <Row>
+            {this.renderForm()}
+            {/* <Button icon="plus" type="primary" onClick={() => this.handleModalVisible(true)}>
+                添加
+            </Button> */}
+          </Row>
+          <Row style={{marginBottom:20}}> 
+         
+            <Alert message={`交易汇总：订单金额￥${trade.tradeInfoSummary.tradeFee}, 交易手续费￥${trade.tradeInfoSummary.rateFee}, 结算手续费￥${trade.tradeInfoSummary.withdrawFee}, 进货笔数 ${total}`} type="success" showIcon />
+           
+          </Row>
+          <Row>
+            <Table
+              dataSource={trade.tradeInfoList.data.rows}
+              rowKey="id"
+              columns={columns}
+              pagination={pagination}
+              loading={trade.loading}
+              bordered={false}
+              style={{ overflowX: "scroll" }}
+              onChange={this.handlePageChange}
+            // scroll={{ x: 1200}}
+            />
+          </Row>
+        </Card>
+        <DetailsForm
+          {...updateMethods}
+          updateModalVisible={updateModalVisible}
+          values={updateFormValues}
+        />
+        <ModifyForm
+          {...detailsMethods}
+          modifyModalVisible={modifyModalVisible}
+          //   areaList={areaList}
+          values={modifyFormValues}
+        />
+
+      </PageHeaderWrapper>
+    )
+  }
+}
+export default TradeList;

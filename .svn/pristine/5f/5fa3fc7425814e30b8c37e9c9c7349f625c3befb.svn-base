@@ -1,0 +1,76 @@
+import request from '@/utils/request';
+
+/**
+ * 编辑 or 新增
+ * @param {*} params 
+ */
+export async function saveOrUpedata(params) {
+  return request('/lazy-card/payChannel/saveOrUpedata',{
+    method: 'POST',
+    data:params
+  });
+}
+
+  /**
+ * 获取分类数据列表
+ * @param {*} params 
+ */
+export async function payChannelList(params) {
+  return request('/lazy-card/payChannel/payChannelList',{
+    method: 'POST',
+    data:params
+  });
+}
+
+ /**
+ * 删除分类数据
+ * @param {*} params 
+ */
+export async function deleteById(params) {
+  return request('/lazy-card/payChannel/deleteById',{
+    method: 'POST',
+    data:params
+  });
+}
+export async function saveOrUpdataPayChannelDetails(params) {
+  return request('/lazy-card/payChannel/saveOrUpdataPayChannelDetails',{
+    method: 'POST',
+    data:params
+  });
+}
+export async function payChannelDetailsList(params) {    
+  return request('/lazy-card/payChannel/payChannelDetailsList',{
+    method: 'POST',
+    data:params
+  });
+}
+
+export async function updataTypeChannelDetails(params) {
+  const aid = encodeURIComponent(params.id);
+  const type = encodeURIComponent(params.type);
+  return request(`/lazy-card/payChannel/updataType?id=${aid}&type=${type}`);
+};
+
+//通道报备 - 通道报备列表
+export async function memberChannelList(params) {    
+  return request('/lazy-card/payChannel/memberChannelList',{
+    method: 'POST',
+    data:params
+  });
+}
+
+//通道报备会员资质提交通道审核
+export async function toExamineAuth(params) {
+  return request('/lazy-card/member/toExamineAuth',{
+    method: 'POST',
+    data: params,
+  });
+}
+
+export async function getChanneBankAll(params) {
+  return request(`/lazy-card/payChannel/getChanneBankAll`,{
+    method: 'GET',
+  });
+};
+
+

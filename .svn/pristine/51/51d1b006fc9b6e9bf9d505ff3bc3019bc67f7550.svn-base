@@ -1,0 +1,10 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+
+export async function queryLogs(params) {
+  return request('/lazy-card/log/getLogInfoPage',{
+    method: 'POST',
+    data:params
+  });
+};
+

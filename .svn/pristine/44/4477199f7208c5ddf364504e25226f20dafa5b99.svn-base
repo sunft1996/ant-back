@@ -1,0 +1,323 @@
+import React, { PureComponent, Fragment } from 'react';
+import { connect } from 'dva';
+import moment from 'moment';
+import { Card, Form, Input, Button, Modal, Row, Col, Descriptions, Table, Alert, Select, Radio, InputNumber, notification, } from 'antd';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+// import ExportJsonExcel from 'js-export-excel';
+
+import TextArea from 'antd/lib/input/TextArea';
+import styles from './AccountReconciliationList.less';
+import { judgePageAuth } from '@/global.js';
+/**
+ * 请求组件 需放在主class 上面
+ */
+@connect(({ financial,menu: { pagePermissions }  }) => ({
+  financial,
+  pagePermissions
+}))
+@Form.create()
+class AccountInfoList extends PureComponent {
+  state = {
+    formValues: {},
+    isRadioValue: '5',
+    amountValue: '0', // 操作金额
+    trueValue: '0', // 实到金额
+    serviceValue: '0',// 手续费
+    reasonValue: '',// 原因,
+  };
+
+  /**
+   * 初始化数据
+   */
+  static defaultProps = {
+
+  };
+  componentDidMount() {
+    const { dispatch } = this.props;
+    //页面权限
+    dispatch({
+      type: 'menu/fetchButton',
+    });
+  }
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商户编号">
+              {getFieldDecorator('merchNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  // 查询
+  handleSearch = (e) => {
+    const { dispatch, form ,financial} = this.props;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+    
+        const value = {
+          merchNo: fieldsValue.merchNo ? fieldsValue.merchNo.trim() : fieldsValue.merchNo,
+        }
+       
+        dispatch({
+          type: 'financial/queryAccountInfo',
+          payload: value
+        })
+        const accountiInfoItem = financial.merchaAccountInfoItem == null ?{}:financial.merchaAccountInfoItem;
+        this.setState({
+          formValues: accountiInfoItem
+        });
+     
+    })
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    form.resetFields();
+    this.setState({
+      formValues: {},
+      currentPage: 1
+    });
+    dispatch({
+      type: 'financial/queryAccountInfo',
+      payload: { },
+    });
+  };
+
+  // 调账类型事件
+  onChange = e => {
+    console.log('radio checked', e.target.value);
+    const inputVisible = e.target.value === 7;
+    this.setState({
+      isRadioValue: e.target.value,
+      inputVisible
+    });
+  };
+
+  // 操作金额事件
+  amountChange = e => {
+    const {isRadioValue, serviceValue } = this.state;
+    const amountValue = e.target.value;
+    this.setState({
+      amountValue,
+      trueValue : amountValue
+    });
+    if(isRadioValue == '7'){
+      const serviceVal = parseFloat(serviceValue);
+      const amountVal = parseFloat(amountValue);
+      if(amountVal > serviceVal){
+        if(serviceValue != '0'){
+          this.setState({
+            trueValue : (amountVal - serviceVal).toFixed(2)
+          })
+      }
+      }
+    }
+  }
+
+  // 实到金额事件
+  trueChange = e => {
+    this.setState({
+      trueValue: e.target.value,
+    });
+  }
+
+  // 手续费事件
+  serviceChange = e => {
+    const { amountValue } = this.state;
+    const serviceValue = e.target.value;
+  
+    this.setState({
+      serviceValue,
+    });
+
+    const serviceVal = parseFloat(serviceValue);
+    const amountVal = parseFloat(amountValue);
+
+    if( serviceVal > amountVal ){
+      notification.error({
+        message: "FAILD",
+        description: "手续费不能大于操作金额",
+      });
+      this.setState({
+        serviceValue:0,
+        trueValue:0
+      });
+      return;
+    }
+    
+      if(amountValue != '0'){
+        this.setState({
+          trueValue : (amountVal - serviceVal).toFixed(2)
+        })
+      }
+  }
+
+  // 操作原因事件
+  reasonChange = e => {
+    this.setState({
+      reasonValue: e.target.value,
+    });
+  }
+
+  // 增加记录事件
+  saveAccountInfo = () => {
+    const {dispatch,financial } = this.props;
+    if (!financial.merchaAccountInfoItem) {
+      notification.error({
+        message: "FAILD",
+        description: "商户id不能为空",
+      });
+      return;
+    }
+    if(this.state.trueValue <= 0){
+      notification.error({
+        message: "FAILD",
+        description: "操作金额不能为空！",
+      });
+      return;
+    }
+    if(!this.state.reasonValue){
+      notification.error({
+        message: "FAILD",
+        description: "操作原因不能为空！",
+      });
+      return;
+    }
+   
+    const values = {
+      id:financial.merchaAccountInfoItem.id,
+      accountType:this.state.isRadioValue,
+      amount:this.state.amountValue,
+      trueAmount:this.state.trueValue,
+      serviceAmount:this.state.serviceValue,
+      reason:this.state.reasonValue,
+      merchType:financial.merchaAccountInfoItem.merchType == "会员"?"member":"agent"
+    }
+    Modal.confirm({
+      title: `确定要操作该商户账户吗?`,
+      okText: "确定",
+      cancelText: "取消",
+      onOk: () => {
+        dispatch({
+          type: 'financial/saveAccountInfoHistory',
+          payload:values,
+        }).then(
+          (res)=>{
+            if(res.code === "SUCCESS"){ //请空页面所有数据
+              dispatch({
+                type: 'financial/queryAccountInfo',
+                payload: { },
+              });
+              // this.handleFormReset();
+            }
+          }
+        );
+      }
+    })
+   
+  }
+
+
+
+  render() {
+    const { financial,pagePermissions } = this.props;
+    const { inputVisible } = this.state;
+    const accountiInfoItem = financial.merchaAccountInfoItem == null ?{}:financial.merchaAccountInfoItem;
+    return (
+      <PageHeaderWrapper title="账户调账">
+        <Card bordered={false}>
+          <Row>
+            {this.renderForm()}
+          </Row>
+
+          <Descriptions title="商户详情信息" bordered column={1} size='small'>
+            <Descriptions.Item label="商户编号">{accountiInfoItem.merchNo}</Descriptions.Item>
+            <Descriptions.Item label="商户名称">{accountiInfoItem.nickname}</Descriptions.Item>
+            <Descriptions.Item label="商户手机号">{accountiInfoItem.phone}</Descriptions.Item>
+            <Descriptions.Item label="商户等级">{accountiInfoItem.levelName}</Descriptions.Item>
+            <Descriptions.Item label="商户类型">{accountiInfoItem.merchType}</Descriptions.Item>
+            <Descriptions.Item label="余额">{accountiInfoItem.enableBalance}</Descriptions.Item>
+            <Descriptions.Item label="冻结金额">{accountiInfoItem.disableBalance}</Descriptions.Item>
+            <Descriptions.Item label="调账类型">
+              <Radio.Group onChange={this.onChange} defaultValue={5}>
+                <Radio value={5}>调增</Radio>
+                <Radio value={6}>调减</Radio>
+                <Radio value={7}>增加提现记录</Radio>
+              </Radio.Group>
+            </Descriptions.Item>
+            <Descriptions.Item label="操作金额">
+              <Col span={8}>
+                <Input placeholder="请输入金额" type="number" min={1} max={100000} maxLength={10} onChange={this.amountChange} />
+              </Col>
+            </Descriptions.Item>
+            {inputVisible &&
+              <Descriptions.Item label="手续费">
+                <Col span={8}>
+                  <Input placeholder="请输入金额" type="number" value={this.state.serviceValue} min={1} max={100000} maxLength={10} onChange={this.serviceChange} />
+                </Col>
+              </Descriptions.Item>}
+            {inputVisible &&
+              <Descriptions.Item label="实到金额">
+                <Col span={8}>
+                  <Input placeholder="请输入金额" type="number" min={1} max={100000} maxLength={10} onChange={this.trueChange} value={this.state.trueValue} disabled />
+                </Col>
+              </Descriptions.Item>}
+           
+
+            <Descriptions.Item label="备注">
+              <Col span={16}>
+                <TextArea placeholder="请输入原因" type="text" onChange={this.reasonChange} />
+              </Col>
+            </Descriptions.Item>
+          </Descriptions>
+          {/* {accountiInfoItem.merchNo &&
+            <Row>
+              <Button type="primary" onClick={this.saveAccountInfo} style={{ float: "right", marginTop: 10 }}>
+                增加记录
+              </Button>
+            </Row>
+          } */}
+          {accountiInfoItem.merchNo && judgePageAuth("saveAccountInfo", pagePermissions) &&
+            (<Row>
+              <Button type="primary" onClick={this.saveAccountInfo} style={{ float: "right", marginTop: 10 }}>
+                增加记录
+              </Button>
+            </Row>)
+          }
+
+        </Card>
+
+      </PageHeaderWrapper>
+
+
+
+    );
+  }
+
+}
+
+export default AccountInfoList;

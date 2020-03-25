@@ -1,0 +1,73 @@
+import {toSystemSettingDetails,saveOrUpedata} from '@/services/systemSetting';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'systemSetting',
+  // 初始变量
+  state: {
+    list: {},
+  },
+
+  effects: {
+    /**
+     * 编辑 or 更新
+     * @param {*} param0 
+     * @param {*} param1 
+     */
+    *add({ payload }, { call, put }) {
+      const response = yield call(saveOrUpedata, payload);
+      if (response.code === 'SUCCESS') { // 成功刷新
+        const newFetch = yield call(toSystemSettingDetails);
+        yield put({
+          type: 'save',
+          payload,
+        });
+        yield put({
+          type: 'query',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+
+    /**
+     * 请求数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *fetch(_, { call, put }) {
+      const response =  yield call(toSystemSettingDetails);
+      yield put({
+        type: 'save',
+        payload:response.data
+      });
+      return response;
+    },
+  },
+
+  /**
+   * 组装 type  方法类型
+   */
+  reducers: {
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload,
+      };
+    },
+    query(state, action) {
+      return {
+        ...state,
+        list: action.payload.data,
+      };
+    },
+  },
+};

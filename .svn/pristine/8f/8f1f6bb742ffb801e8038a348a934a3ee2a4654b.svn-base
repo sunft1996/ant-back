@@ -1,0 +1,27 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+
+export async function operationalStatistics(params) {
+  return request('/lazy-card/tradeInfo/tradeInfoStatistics',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function tranStatistics(params) {
+  return request('/lazy-card/trade/tranStatistics',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function memberStatistics(params) {
+  return request('/lazy-card/member/memberStatistics',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function agentStatistics(params) {
+  return request('/lazy-card/agent/agentStatistics',{
+    method: 'POST',
+    data:params
+  });
+};

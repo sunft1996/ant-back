@@ -1,0 +1,208 @@
+import React, { PureComponent } from 'react';
+import { connect } from 'dva';
+import { Row, Col, Card, Table, Form, Input, Button } from 'antd';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import styles from "./CartItemList.less";
+
+
+/* eslint react/no-multi-comp:0 */
+@connect(({ cartItem, loading }) => ({
+  cartItem,
+  loading: loading.models.rule,
+}))
+
+@Form.create()
+class CartItemList extends PureComponent {
+  constructor(props) {
+    super(props)
+    this.state = {
+      pageSize: 10,
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+
+    dispatch({
+      type: 'cartItem/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+  //
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        const value = {
+          productNo: fieldsValue.productNo,
+          productName: fieldsValue.productName,
+        }
+        this.setState({
+          currentPage: 1,
+          formValues: value
+        });
+        dispatch({
+          type: 'cartItem/fetch',
+          payload: {
+            ...value,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+      }
+    })
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    this.setState({
+      formValues: {},
+      currentPage: 1
+    });
+    dispatch({
+      type: 'cartItem/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  handlePageChange = (pagination) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current
+    });
+    dispatch({
+      type: 'cartItem/fetch',
+      payload: {
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+  renderForm = () => {
+    const { form } = this.props;
+    const { getFieldDecorator } = form;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商品编号">
+              {getFieldDecorator('productNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商品名称">
+              {getFieldDecorator('productName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  render() {
+    const { cartItem } = this.props;
+    const { currentPage, pageSize } = this.state;
+    const columns = [
+      {
+        title: '用户名',
+        dataIndex: 'userName',
+        key: 'userName',
+      },
+      {
+        title: '商品编号',
+        dataIndex: 'productNo',
+        key: 'productNo',
+      },
+      {
+        title: '商品名称',
+        dataIndex: 'productName',
+        key: 'productName',
+      },
+      {
+        title: '商品价格',
+        dataIndex: 'price',
+        key: 'price',
+      },
+      {
+        title: '商品图片url',
+        dataIndex: 'urls',
+        key: 'urls',
+      },
+
+      // {
+      //   title: '操作',
+      //   render: (text, record) => (
+      //     <Fragment>
+      //       <a onClick={() => this.handleUpdateModalVisible(true, record)}>编辑</a>&nbsp;&nbsp;&nbsp;&nbsp;
+      //       {record.status === "0" ?
+      //             <a onClick={() => this.isProhibit(record.encryptionId)}>禁用</a>
+      //             :<a onClick={() => this.isEnable(record.encryptionId)}>启用</a>}
+      //     </Fragment>
+      //   ),
+      // },
+    ];
+    const { total } = cartItem.list.data;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+    }
+    return (
+      <PageHeaderWrapper title="">
+        <Card>
+          <Row>
+            {this.renderForm()}
+          </Row>
+          <Row>
+            <Table
+              dataSource={cartItem.list.data.rows}
+              rowKey="id"
+              columns={columns}
+              pagination={pagination}
+              loading={cartItem.loading}
+              bordered={false}
+              style={{ overflowX: "scroll" }}
+              onChange={this.handlePageChange}
+            />
+          </Row>
+        </Card>
+      </PageHeaderWrapper>
+    )
+  }
+}
+export default CartItemList;

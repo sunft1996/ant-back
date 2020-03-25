@@ -1,0 +1,209 @@
+import { queryCode, getMerchInfoRAS, updateMerchInfoRAS, againMerchInfoRAS, downloadRAS, sendApp, queryAppList,regenerateKey} from '@/services/MerchShare';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'seting',
+  state: {
+    // list: [],
+    loading: false,
+    merchInfoRAS: [],
+    merchInfoAgain: [],
+    appUrl: '',
+    appList: {
+      rows:[]
+    },
+    invitationCode:{
+      data:{
+        url:'',
+        qrUrl:'',
+        code:''
+      }
+    }
+  },
+
+  effects: {
+    *fetch({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryCode, payload);
+      yield put({
+        type: 'save',
+        payload: response
+      });
+    },
+    *fetchRAS({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(getMerchInfoRAS, payload);
+      yield put({
+        type: 'saveRAS',
+        payload: response
+      });
+    },
+    *addRAS({ payload }, { call, put }) {
+      const response = yield call(updateMerchInfoRAS, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(getMerchInfoRAS, {
+        });
+        yield put({
+          type: 'saveRAS',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    *fetchKEY({ payload }, { call, put }) {
+      const response = yield call(regenerateKey, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(getMerchInfoRAS, {
+        });
+        yield put({
+          type: 'saveRAS',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    *againRAS({ payload }, { call, put }) {
+      const response = yield call(againMerchInfoRAS, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(getMerchInfoRAS, {
+        });
+        yield put({
+          type: 'again',
+          payload: response,
+        });
+        yield put({
+          type: 'saveRAS',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    *download({ payload }, { call, put }, ) {
+
+      const response = yield call(downloadRAS, payload);
+
+    },
+    // 上传app包时，保存上传包的url
+    *saveNewAppUrl({ payload }, { put }) {
+      yield put({
+        type: 'saveAppUrl',
+        payload: payload.url
+      });
+
+    },
+    // 发布app更新包
+    *sendNewApp({ payload,callBack }, { call, put }) {
+      const response = yield call(sendApp, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryAppList, {
+        });
+        yield put({
+          type: 'saveAppList',
+          payload: newFetch.data,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+        callBack();
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+
+    },
+    // 获取app版本列表
+    *fetchAppList({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryAppList, payload);
+      if (response.code === 'SUCCESS') {
+        yield put({
+          type: 'saveAppList',
+          payload: response.data,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+
+    },
+
+  },
+  reducers: {
+    loading(state) {
+      return {
+        ...state,
+        loading: true
+      };
+    },
+
+    save(state, action) {
+      return {
+        ...state,
+        invitationCode: action.payload,
+        loading: false
+      };
+    },
+    saveRAS(state, action) {
+      return {
+        ...state,
+        merchInfoRAS: action.payload,
+        loading: false
+      };
+    },
+    again(state, action) {
+      return {
+        ...state,
+        merchInfoAgain: action.payload,
+        loading: false
+      };
+    },
+    saveAppUrl(state, action) {
+      return {
+        ...state,
+        appUrl: action.payload,
+      };
+    },
+    saveAppList(state, action) {
+      return {
+        ...state,
+        appList: action.payload,
+        loading: false
+      };
+    },
+  }
+};

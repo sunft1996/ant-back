@@ -1,0 +1,397 @@
+import React from 'react';
+import { connect } from 'dva';
+import { Row, Col, Card, Table, Select, DatePicker, Form, Badge, Button,Input, } from 'antd';
+// import ExportJsonExcel from 'js-export-excel';
+import Yuan from '@/utils/Yuan';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import moment from "moment";
+import PropTypes from 'prop-types';
+import styles from "../OutMerchantTran/Log.less";
+import { judgePageAuth } from '@/global.js';
+
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const statusMap = ['default', 'warning', 'success', 'error'];
+const status = ['创建', '发送中', '发送成功', '发送失败'];
+const auth = sessionStorage.getItem('auth');
+@Form.create()
+/* eslint react/no-multi-comp:0 */
+//页面权限
+@connect(({ outMerchantTrans, loading,menu: { pagePermissions }}) => ({
+  outMerchantTrans,
+  pagePermissions,
+  loading: loading.models.rule,
+}))
+class MessageOrder extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      pageSize: 10,
+      currentPage: 1,
+      formValues: {}
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+    //页面权限
+    dispatch({
+      type: 'menu/fetchButton',
+    });
+    dispatch({
+      type: 'outMerchantTrans/messageOrderList',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+
+  downloadExcel = () => {
+    const { dispatch, form,pagePermissions } = this.props;
+    form.validateFields((err, fieldsValue) => {
+      const createdStart = fieldsValue.createTime ? fieldsValue.createTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const createdEnd = fieldsValue.createTime ? fieldsValue.createTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      const finishStart = fieldsValue.finishTime ? fieldsValue.finishTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const finishdEnd = fieldsValue.finishTime ? fieldsValue.finishTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      fieldsValue.createTime = null;
+      fieldsValue.finishTime = null;
+      fieldsValue.createdStart = createdStart;
+      fieldsValue.createdEnd = createdEnd;
+      fieldsValue.finishStart = finishStart;
+      fieldsValue.finishdEnd = finishdEnd;
+      dispatch({
+        type: 'outMerchantTrans/messageOrderList',
+        payload: {
+          ...fieldsValue,
+        }
+      }).then(() => {
+        const { outMerchantTrans } = this.props;
+        const data = outMerchantTrans.list ? outMerchantTrans.list : '';// 表格数据
+        const option = {};
+        if (data) {
+          // const dataTable = auth === "root" || auth === "operate" ? data.map(item => {
+          //页面权限
+          const dataTable = (data.rows.map(item => {
+            return {
+              '商户编号': item.merchNo,
+              '商户名称': item.merchName,
+              '交易流水号': item.orderNo,
+              '接收短信手机号码': item.phone,
+              '短信内容': item.content,
+              '状态': status[item.status],
+              '创建时间': moment(item.createTime).format('YYYY-MM-DD HH:mm:ss'),
+              '完成时间': moment(item.finishTime).format('YYYY-MM-DD HH:mm:ss'),
+            }
+          }));
+        
+          //页面权限
+          const sheetHeader =(['商户编号', '商户名称', '交易流水号', '接收短信手机号码', '短息内容', '状态', '创建时间','完成时间']);
+          option.fileName = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss') + '短信订单'
+          option.datas = [
+            {
+              sheetData: dataTable,
+              sheetName: 'sheet',
+              sheetHeader,
+            }
+          ];
+          import('js-export-excel').then((module) => {
+            const toExcel = module.default(option)
+            toExcel.saveExcel();
+          })
+        }
+      })
+    })
+  }
+
+  // from表单确认事件
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      const createdStart = fieldsValue.createTime ? fieldsValue.createTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const createdEnd = fieldsValue.createTime ? fieldsValue.createTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      const finishStart = fieldsValue.finishTime ? fieldsValue.finishTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const finishdEnd = fieldsValue.finishTime ? fieldsValue.finishTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      fieldsValue.createTime = null;
+      fieldsValue.finishTime = null;
+      fieldsValue.createdStart = createdStart;
+      fieldsValue.createdEnd = createdEnd;
+      fieldsValue.finishStart = finishStart;
+      fieldsValue.finishdEnd = finishdEnd;
+      if (!err) {
+        this.setState({
+          currentPage: 1,
+          formValues: fieldsValue
+        });
+        dispatch({
+          type: 'outMerchantTrans/messageOrderList',
+          payload: {
+            ...fieldsValue,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+      };
+
+    }
+    )
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    this.setState({
+      currentPage: 1,
+      formValues: {}
+    });
+    dispatch({
+      type: 'outMerchantTrans/messageOrderList',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const { pagePermissions } = this.props;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+
+
+        <Col span={24} md={24} lg={8}>
+                <FormItem label='商户编号'>
+                  {getFieldDecorator('merchNo',
+                                {
+                                    rules: []
+                                }
+                            )(<Input />)}
+                </FormItem>
+              </Col>
+
+              <Col span={24} md={24} lg={8}>
+                <FormItem label='商户名称'>
+                  {getFieldDecorator('merchName',
+                                {
+                                    rules: []
+                                }
+                            )(<Input />)}
+                </FormItem>
+              </Col>
+
+              <Col span={24} md={24} lg={8}>
+                <FormItem label='交易流水号'>
+                  {getFieldDecorator('orderNo',
+                                {
+                                    rules: []
+                                }
+                            )(<Input />)}
+                </FormItem>
+              </Col>
+
+              <Col span={24} md={24} lg={8}>
+                <FormItem label='接收短信手机号'>
+                  {getFieldDecorator('phone',
+                                {
+                                    rules: []
+                                }
+                            )(<Input />)}
+                </FormItem>
+              </Col>
+
+        <Col span={24} md={24} lg={8}>
+            <FormItem label="状态">
+              {getFieldDecorator('status',
+                {
+                  rules: [],
+                }
+              )(
+                <Select>
+                  <Option value="">全部</Option>
+                  <Option value="0">创建</Option>
+                  <Option value="1">发送中</Option>
+                  <Option value="2">发送成功</Option>
+                  <Option value="3">发送失败</Option>
+                </Select>
+              )}
+            </FormItem>
+          </Col>
+
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="创建时间">
+              {getFieldDecorator('createTime',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="完成时间">
+              {getFieldDecorator('finishTime',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+         
+        </Row>
+        <Col span={24}>
+          <FormItem className={styles.btnContainer}>
+            <Button type="primary" htmlType="submit">
+              查询
+            </Button>
+            <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+              重置
+            </Button>
+            {
+             
+                <Button style={{ marginLeft: 20 }} onClick={this.downloadExcel}>导出</Button>
+              
+
+            }
+            {/* <Button style={{ marginLeft: 20 }} onClick={this.downloadExcel}>导出</Button> */}
+          </FormItem>
+        </Col>
+      </Form>
+    )
+  }
+
+  handleModalVisible = (flag, record) => {
+    this.setState({
+      modalVisible: !!flag,
+      currentRecord: record,
+    });
+  };
+
+  renderCell = (text, width) => (
+    <div style={{ width: `${width}`, overflow: "hidden", display: "inline-block", whiteSpace: 'nowrap', textOverflow: "ellipsis" }}>
+      {text}
+    </div>
+  )
+
+  handlePageChange = (pagination, filters, sorter) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current,
+      pageSize: pagination.pageSize
+    });
+    formValues.timeOrderBy = sorter.columnKey == 'createTime' ? sorter.order == "descend" ? "desc" : "asc" : null
+    formValues.finishTimeOrderBy = sorter.columnKey == 'finishTime' ? sorter.order == "descend" ? "desc" : "asc" : null
+    dispatch({
+      type: 'outMerchantTrans/messageOrderList',
+      payload: {
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pagination.pageSize,
+      }
+    });
+  }
+
+  render() {
+    const { outMerchantTrans,pagePermissions } = this.props;
+    const { currentPage, pageSize } = this.state;
+    // 权限是root则显示商户编号、商户名称列 
+    // const columns = auth === "root" || auth === "operate" ? [
+    //页面权限
+    const columns = ([
+      {
+        title: '商户编号',
+        dataIndex: 'merchNo',
+        key: 'merchNo',
+      },
+      {
+        title: '商户名称',
+        dataIndex: 'merchName',
+        key: 'merchName',
+      },
+      {
+        title: '交易流水号',
+        dataIndex: 'orderNo',
+        key: 'orderNo',
+      },
+      {
+        title: '接收短信手机号',
+        dataIndex: 'phone',
+        key: 'phone',
+      },
+      {
+        title: '短信内容',
+        dataIndex: 'content',
+        key: 'content',
+        render: (text) => <a title={text} style={{ width: '80px', overflow: "hidden", display: "inline-block", whiteSpace: 'nowrap', textOverflow: "ellipsis" }}> {text}</a>,
+      },
+      {
+        title: '状态',
+        dataIndex: 'status',
+        key: 'status',
+        render(val) {
+          return <Badge status={statusMap[val]} text={status[val]} />;
+        },
+      },
+      
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        sorter: true,
+        render: val => val && <span>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</span>,
+      },
+      {
+        title: '完成时间',
+        dataIndex: 'finishTime',
+        key: 'finishTime',
+        sorter: true,
+        render: val => val && <span>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</span>,
+      },
+
+    ]);
+
+    const { total } = outMerchantTrans.list;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+      showTotal: () => `共 ${total} 条`, // 显示总条数
+      showQuickJumper: true, // 显示跳转指定页框
+      showSizeChanger: true // 显示指定条数
+    }
+
+    return (
+      <PageHeaderWrapper title="短信订单">
+        <Card>
+          <Row>
+            {this.renderForm()}
+          </Row>
+          <Row>
+            <Table
+              dataSource={outMerchantTrans.list.rows}
+              rowKey="id"
+              rowClassName="textCenter"
+              columns={columns}
+              pagination={pagination}
+              loading={outMerchantTrans.loading}
+              bordered={false}
+              scroll={{ x: 'max-content' }}
+              onChange={this.handlePageChange}
+            />
+          </Row>
+        </Card>
+      </PageHeaderWrapper>
+    )
+  }
+}
+export default MessageOrder;

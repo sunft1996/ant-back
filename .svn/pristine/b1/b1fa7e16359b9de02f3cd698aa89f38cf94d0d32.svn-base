@@ -1,0 +1,22 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+
+export async function queryLogs(params) {
+  return request('/lazy-card/member/memberBudgetDetailed',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function statisticsProfit(params) {
+  return request('/lazy-card/profitDetail/statisticsProfit',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function downloadMember(params) {
+  return request('/lazy-card/member/memberBudgetDetailedExcel',{
+    method: 'POST',
+    data:params
+  });
+};
+

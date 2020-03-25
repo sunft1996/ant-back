@@ -1,0 +1,48 @@
+import {cartItemList} from '@/services/CartItemList';
+
+
+export default {
+    namespace: 'cartItem',
+    state: {
+        loading:false,
+        list: {
+            data:{
+             total:0,
+             rows: [],
+             totalPage: 5
+            }
+           },
+      },
+
+    effects: {
+        *fetch({ payload }, { call, put } ,) {
+            yield put({
+              type: 'loading',
+            });
+            const response =  yield call(cartItemList,payload);
+            yield put({
+              type: 'save',
+              payload:response
+            });
+          },
+
+
+    },
+    reducers: {
+        loading(state){
+          return {
+            ...state,
+            loading:true
+          };
+        },
+    
+        save(state, action) {
+          return {
+            ...state,
+            list: action.payload,
+            loading:false
+          };
+        },
+
+    }
+};

@@ -1,0 +1,23 @@
+.myInfoHeader {
+    padding-bottom: 20px;
+}
+
+.myInfoCont{
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column;
+    height: 115px;
+}
+
+.todayData {
+    text-align: right;
+    position: relative;
+    padding: 0 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cashText{
+    margin-left: 10px;
+}

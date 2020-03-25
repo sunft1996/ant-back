@@ -1,0 +1,243 @@
+import {tradeList,toTradeDetail,areaListInfo,saveOrUpdate,tradeInfoList,saveOrUpdateInfo,tradeInfoSummary,
+  exportTradeInfoList,handlErepairTradeInfo} from '@/services/TradeList';
+
+
+export default {
+    namespace: 'trade',
+    state: {
+        loading:false,
+        list: {
+            data:{
+             total:0,
+             rows: [],
+             totalPage: 5
+            }
+           },
+        tradeDetail: {
+          data:{
+            total:0,
+            data: [],
+            totalPage: 5
+           }
+        },
+        areaList:[],
+        label:[],
+       /********************会员进货模块Start************************/
+        tradeInfoList: {
+          data:{
+           total:0,
+           rows: [],
+           totalPage: 5
+          }
+         },
+         tradeInfoSummary:{
+           data:{
+
+           }
+
+         },
+         exportTradeInfoList:{
+          data:{
+
+          }
+         }
+        /********************会员进货模块end************************/
+      },
+
+    effects: {
+        *fetch({ payload }, { call, put } ,) {
+            yield put({
+              type: 'loading',
+            });
+            const response =  yield call(tradeList,payload);
+            yield put({
+              type: 'save',
+              payload:response
+            });
+          },
+
+        *details({ payload }, { call, put } ,) {
+            yield put({
+              type: 'loading',
+            });
+            const response =  yield call(toTradeDetail,payload);
+            yield put({
+              type: 'query',
+              payload:response
+            });
+        },
+        *area({ payload }, { call, put } ,) {
+          const response =  yield call(areaListInfo,payload);
+          yield put({
+            type: 'queryList',
+            payload:response
+          });
+      },
+
+      *update({ payload }, { call, put }) {
+        const response = yield call(saveOrUpdate, payload);
+        if (response.code === 'SUCCESS') {
+          const newFetch = yield call(tradeList, {
+            pageNo: 1,
+            pageSize: 10
+          });
+          yield put({
+            type: 'save',
+            payload: newFetch,
+          });
+          notification.success({
+            message: response.code,
+            description: response.msg,
+          });
+        } else {
+          notification.error({
+            message: response.code,
+            description: response.msg,
+          });
+        }
+      },
+
+      *saveLabel({ payload }, { put }) {
+        yield put({
+          type: 'saveLabel1',
+          payload,
+        });
+      },
+      /****************************************会员进货模块Start******************************************************/
+      *tradeInfoList({ payload }, { call, put } ,) {
+          yield put({
+            type: 'loading',
+          });
+          const response =  yield call(tradeInfoList,payload);
+          yield put({
+            type: 'purchase',
+            payload:response     
+          });
+      },
+
+      *updateInfo({ payload }, { call, put }) {
+        const response = yield call(saveOrUpdateInfo, payload);
+        if (response.code === 'SUCCESS') {
+          const newFetch = yield call(tradeInfoList, {
+            pageNo: 1,
+            pageSize: 10
+          });
+          yield put({
+            type: 'purchase',
+            payload: newFetch,
+          });
+          notification.success({
+            message: response.code,
+            description: response.msg,
+          });
+        } else {
+          notification.error({
+            message: response.code,
+            description: response.msg,
+          });
+        }
+      },
+
+      *tradeInfoSummary({ payload }, { call, put } ,) {
+        yield put({
+          type: 'loading',
+        });
+        const response =  yield call(tradeInfoSummary,payload);
+        yield put({
+          type: 'summary',
+          payload:response     
+        });
+    },
+
+    *exportTradeInfoList({ payload }, { call, put } ,) {
+      yield put({
+        type: 'loading',
+      });
+      const response =  yield call(exportTradeInfoList,payload);
+      yield put({
+        type: 'exprotList',
+        payload:response     
+      });
+  },
+
+  
+  *handlErepairTradeInfo({ payload }, { call, put }) { //补单
+    const response = yield call(handlErepairTradeInfo, payload);
+    if (response.code === 'SUCCESS') {
+      const newFetch = yield call(tradeInfoList, {
+        pageNo: 1,
+        pageSize: 10
+      });
+    yield put({
+        type: 'purchase',
+        payload: newFetch,
+    });
+    } else {
+        notification.error({
+            message: response.code,
+            description: response.msg,
+        });
+    }
+},
+
+      /****************************************会员进货模块end******************************************************/
+    },
+    reducers: {
+        loading(state){
+          return {
+            ...state,
+            loading:true
+          };
+        },
+        save(state, action) {
+          return {
+            ...state,
+            list: action.payload,
+            loading:false
+          };
+        },
+        saveLabel1(state, action) {
+          return {
+            ...state,
+            label: action.payload,
+          };
+        },
+        query(state, action) {
+          return {
+            ...state,
+            tradeDetail: action.payload,
+            loading:false
+          };
+        },
+        queryList(state, action) {
+          return {
+            ...state,
+            areaList: action.payload,
+            loading:false
+          };
+        },
+      /***********************************会员进货模块Start**************************************/
+      purchase(state, action) {
+        return {
+          ...state,
+          tradeInfoList: action.payload,
+          loading:false
+        };
+      },
+      summary(state, action) {
+        return {
+          ...state,
+          tradeInfoSummary: action.payload.data,
+          loading:false
+        };
+      },
+      exprotList(state, action) {
+        return {
+          ...state,
+          exportTradeInfoList: action.payload,
+          loading:false
+        };
+      },
+
+    }
+};

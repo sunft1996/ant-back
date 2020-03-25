@@ -1,0 +1,887 @@
+import memoizeOne from 'memoize-one';
+import isEqual from 'lodash/isEqual';
+import { formatMessage, getLocale } from 'umi-plugin-react/locale';
+import Authorized from '@/utils/Authorized';
+import { menu } from '../defaultSettings';
+import { notification } from 'antd';
+import { queryMenus, updateMenus, queryAllMenus, addMenu, deleteMenus, queryMenuItem,getMenuButtonList } from '@/services/menu';
+
+
+const { check } = Authorized;
+
+// Conversion router to menu.
+function formatter(data, parentAuthority, parentName) {
+  if (!data) {
+    return undefined;
+  }
+  return data
+    .map(item => {
+      if (!item.name || !item.path) {
+        return null;
+      }
+
+      let locale = 'menu';
+      // 改了这里
+      // if (parentName && parentName !== '/') {
+      //   locale = `${parentName}.${item.name}`;
+      // } else {
+      //   locale = `menu.${item.name}`;
+      // }
+      locale = item.name;
+
+      // if enableMenuLocale use item.name,
+      // close menu international
+      const name = menu.disableLocal
+        ? item.name
+        : formatMessage({ id: locale, defaultMessage: item.name });
+      const result = {
+        ...item,
+        name,
+        locale,
+        authority: item.authority || parentAuthority,
+      };
+
+      if (item.routes) {
+        const children = formatter(item.routes, item.authority, locale);
+        // Reduce memory usage
+        result.children = children;
+      }
+      delete result.routes;
+      return result;
+    })
+    .filter(item => item);
+}
+
+const memoizeOneFormatter = memoizeOne(formatter, isEqual);
+
+/**
+ * get SubMenu or Item
+ */
+const getSubMenu = item => {
+  // doc: add hideChildrenInMenu
+  if (item.children && !item.hideChildrenInMenu && item.children.some(child => child.name)) {
+    return {
+      ...item,
+      children: filterMenuData(item.children), // eslint-disable-line
+    };
+  }
+  return item;
+};
+
+/**
+ * filter menuData
+ */
+const filterMenuData = menuData => {
+  if (!menuData) {
+    return [];
+  }
+  return menuData
+    .filter(item => item.name && !item.hideInMenu)
+    .map(item => check(item.authority, getSubMenu(item)))
+    .filter(item => item);
+};
+/**
+ * 获取面包屑映射
+ * @param {Object} menuData 菜单配置
+ */
+const getBreadcrumbNameMap = menuData => {
+  if (!menuData) {
+    return {};
+  }
+  const routerMap = {};
+
+  const flattenMenuData = data => {
+    data.forEach(menuItem => {
+      if (menuItem.children) {
+        flattenMenuData(menuItem.children);
+      }
+      // Reduce memory usage
+      routerMap[menuItem.path] = menuItem;
+    });
+  };
+  flattenMenuData(menuData);
+  return routerMap;
+};
+
+const memoizeOneGetBreadcrumbNameMap = memoizeOne(getBreadcrumbNameMap, isEqual);
+
+const test = {
+  "path": "/",
+  "authority": ["merch"],
+  "routes": [
+    { path: '/', redirect: '/general'},
+    {
+      authority: ["merch"],
+      component: "./General/General",
+      icon: null,
+      name: "首页",
+      path: "/general",
+      routes: null
+    }, {
+      authority: ["merch"],
+      icon: null,
+      name: "交易管理",
+      path: "/tran",
+      routes: [{
+        authority: ["merch"],
+        path: '/outMerchant/outMerchantTran',
+        name: '对外商户交易记录',
+        icon: null,
+        component: './OutMerchantTran/OutMerchantTran',
+        redirect: null,
+        routes: null,
+      },],
+    }, {
+      authority: ["merch"],
+      icon: null,
+      name: "商户管理 ",
+      path: "/merchant",
+      redirect: null,
+      routes: [{
+        component: "/merchant/subMerchantInfo",
+        icon: null,
+        name: "子商户列表",
+        path: "/merchant/subMerchantInfo",
+        redirect: null,
+        routes: null,
+      }]
+    }
+  ]
+}
+
+
+// const routeData = {
+//   path: '/',
+//   // authority: ['root', 'user'],
+//   routes: [
+//     // dashboard
+//     { path: '/', redirect: '/general', },
+//     // 新路由写这里
+//     {
+//       path: '/general',
+//       name: 'general',
+//       icon: 'dashboard',
+//       authority: ['user', 'root',],
+//       component: './General/General',
+//     },
+//     {
+//       path: '/transaction',
+//       name: 'transaction',
+//       icon: 'dashboard',
+//       authority: ['user'],
+//       routes: [
+//         {
+//           path: '/transaction/realtime',
+//           name: 'realtime',
+//           component: './Transaction/RealTime',
+//         },
+//         {
+//           path: '/transaction/statistics',
+//           name: '交易统计查询',
+//           routes: [{
+//             path: '/transaction/statistics/translist',
+//             name: '交易统计汇总',
+//             component: './Transaction/Translist',
+//           }, {
+//             path: '/transaction/statistics/cycletransList',
+//             name: '周期交易统计汇总',
+//             component: './Transaction/CycleTransList',
+//           }]
+//         },
+//         {
+//           path: '/transaction/account-info',
+//           name: '调账信息查询',
+//           component: './Transaction/AccountInfo',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/account-enquiry',
+//       name: '账务查询',
+//       icon: 'dashboard',
+//       authority: ['user'],
+//       routes: [
+//         {
+//           path: '/account-enquiry/settlement',
+//           name: '结算信息查询',
+//           routes: [{
+//             path: '/account-enquiry/settlement/settlement-list',
+//             name: '结算交易汇总',
+//             component: './AccountEnquiry/SettlementList',
+//           }, {
+//             path: '/account-enquiry/settlement/cycle-settlement-list',
+//             name: '周期结算信息汇总',
+//             component: './AccountEnquiry/CycleSettlementList',
+//           }]
+//         },
+//         {
+//           path: '/account-enquiry/no-settlement-list',
+//           name: '未结算信息查询',
+//           component: './AccountEnquiry/NoSettlementList',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/assignfunds',
+//       name: '划款信息查询',
+//       icon: 'dashboard',
+//       authority: ['user'],
+//       component: './AssignFunds/AssignFunds.js',
+//     },
+//     {
+//       path: '/accountstatement',
+//       name: 'accountstatement',
+//       icon: 'dashboard',
+//       authority: ['user'],
+//       routes: [
+//         {
+//           path: '/accountstatement/subscribe',
+//           name: 'subscribe',
+//           icon: 'dashboard',
+//           component: './Accountstatement/Subscribe',
+//         }
+//       ]
+//     },
+//     {
+//       path: '/authoritycontrol',
+//       name: '权限控制',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/authoritycontrol/authoritycontrol',
+//           name: '权限控制',
+//           icon: 'dashboard',
+//           component: './AuthorityControl/AuthorityControl',
+//         },
+//         {
+//           path: '/authoritycontrol/usercontrol',
+//           name: '用户管理',
+//           icon: 'dashboard',
+//           component: './AuthorityControl/UserControl',
+//         },
+//         {
+//           path: '/authoritycontrol/menucontrol',
+//           name: '菜单管理',
+//           icon: 'dashboard',
+//           authority: ['root', 'user'],
+//           component: './AuthorityControl/MenuControl',
+//         }
+//       ]
+//     },
+//     {
+//       path: '/Log',
+//       name: '日志查询',
+//       icon: 'user',
+//       authority: ['root'],
+//       component: './Log/Log',
+//       // hideInMenu:true
+//     },
+//     {
+//       path: '/TimingTasks',
+//       name: '定时任务',
+//       icon: 'user',
+//       authority: ['root'],
+//       component: './TimingTasks/TimingTasks',
+//       // hideInMenu:true
+//     },
+//     {
+//       path: '/EditPassword',
+//       name: '修改密码',
+//       icon: 'user',
+//       hideInMenu: true,
+//       component: './Account/Settings/EditPassword',
+//       // hideInMenu:true
+//     },
+//     // forms
+//     {
+//       path: '/form',
+//       icon: 'form',
+//       name: 'form',
+//       authority: ['root'],
+//       hideInMenu: true,
+//       routes: [
+//         {
+//           path: '/form/basic-form',
+//           name: 'basicform',
+//           component: './Forms/BasicForm',
+//         },
+//         {
+//           path: '/form/step-form',
+//           name: 'stepform',
+//           component: './Forms/StepForm',
+//           hideChildrenInMenu: false,
+//           routes: [
+//             {
+//               path: '/form/step-form',
+//               redirect: '/form/step-form/info',
+//             },
+//             {
+//               path: '/form/step-form/info',
+//               name: 'info',
+//               component: './Forms/StepForm/Step1',
+//             },
+//             {
+//               path: '/form/step-form/confirm',
+//               name: 'confirm',
+//               component: './Forms/StepForm/Step2',
+//             },
+//             {
+//               path: '/form/step-form/result',
+//               hideInMenu: true,
+//               name: 'result',
+//               component: './Forms/StepForm/Step3',
+//             },
+//           ],
+//         },
+//         {
+//           path: '/form/advanced-form',
+//           name: 'advancedform',
+//           authority: ['root'],
+//           component: './Forms/AdvancedForm',
+//         },
+//       ],
+//     },
+//     {
+//       name: 'exception',
+//       icon: 'warning',
+//       path: '/exception',
+//       hideInMenu: true,
+//       routes: [
+//         // exception
+//         {
+//           path: '/exception/403',
+//           name: 'not-permission',
+//           component: './Exception/403',
+//         },
+//         {
+//           path: '/exception/404',
+//           name: 'not-find',
+//           component: './Exception/404',
+//         },
+//         {
+//           path: '/exception/500',
+//           name: 'server-error',
+//           component: './Exception/500',
+//         },
+//         {
+//           path: '/exception/trigger',
+//           name: 'trigger',
+//           component: './Exception/TriggerException',
+//         },
+//       ],
+//     },
+//     {
+//       name: 'account',
+//       icon: 'user',
+//       path: '/account',
+//       routes: [
+//         {
+//           path: '/account/settings',
+//           name: 'settings',
+//           component: './Account/Settings/Info',
+//           routes: [
+//             {
+//               path: '/account/settings',
+//               redirect: '/account/settings/base',
+//             },
+//             {
+//               path: '/account/settings/base',
+//               component: './Account/Settings/BaseView',
+//             },
+//             {
+//               path: '/account/settings/security',
+//               component: './Account/Settings/SecurityView',
+//             },
+//           ],
+//         },
+//         {
+//           path: '/account/merchant-conctrol',
+//           name: '商户号管理',
+//           authority: ['user'],
+//           component: './Account/MerchantConctrol',
+//         },
+//         {
+//           path: '/account/sub-account-control',
+//           name: '子账号管理',
+//           authority: ['user'],
+//           component: './Account/SubAccountControl',
+//         },
+//       ],
+//     },
+//     {
+//       path: '/tran',
+//       name: '交易管理',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/tran/transactionRecord',
+//           name: '商户交易记录',
+//           icon: 'dashboard',
+//           component: './Tran/TransactionRecord',
+//         },
+//         {
+//           path: '/tran/profitDetai',
+//           name: '商户分润明细',
+//           icon: 'dashboard',
+//           component: './Tran/ProfitDetai',
+//         },
+//       ]
+//     },
+//     // 对外商户交易查询
+//     {
+//       path: '/outMerchant',
+//       name: '商户交易管理',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/outMerchant/outMerchantTran',
+//           name: '对外商户交易记录',
+//           icon: 'dashboard',
+//           component: './OutMerchantTran/OutMerchantTran',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/agent',
+//       name: '代理商管理',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/agent/agentInfo',
+//           name: '代理商列表',
+//           icon: 'dashboard',
+//           component: './Agent/AgentInfo',
+//         },
+//         {
+//           path: '/agent/salesmanList',
+//           name: '业务员',
+//           icon: 'dashboard',
+//           component: './Agent/SalesmanList',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/merchant',
+//       name: '商户管理',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/merchant/merchantInfo',
+//           name: '商户列表',
+//           icon: 'dashboard',
+//           component: './MerchantInfo/MerchantInfo',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/cash',
+//       name: '分润提现',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/cash/ICashWithdrawal',
+//           name: '分润提现',
+//           icon: 'dashboard',
+//           component: './Cash/ICashWithdrawal',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/membe',
+//       name: '会员模块',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/Membe/MemberAddressList',
+//           name: '会员地址列表',
+//           icon: 'dashboard',
+//           component: './Membe/MemberAddressList',
+//         },
+//         {
+//           path: '/Membe/MemberCollectionList',
+//           name: '会员收藏列表',
+//           icon: 'dashboard',
+//           component: './Membe/MemberCollectionList',
+//         },
+//         {
+//           path: '/Membe/MemberList',
+//           name: '会员列表',
+//           icon: 'dashboard',
+//           component: './Membe/MemberList',
+//         },
+
+//       ]
+//     },
+//     {
+//       path: '/cartItem',
+//       name: '购物车',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/CartItem/CartItemList',
+//           name: '购物车列表',
+//           icon: 'dashboard',
+//           component: './CartItem/CartItemList',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/masterCard',
+//       name: '结算卡',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/MasterCard/MasterCardList',
+//           name: '结算卡列表',
+//           icon: 'dashboard',
+//           component: './MasterCard/MasterCardList',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/trade',
+//       name: '订单商城',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/Trade/TradeList',
+//           name: '会员商城列表',
+//           icon: 'dashboard',
+//           component: './Trade/TradeList',
+//         },
+//         {
+//           path: '/Trade/tradeInfoList',
+//           name: '会员进货列表',
+//           icon: 'dashboard',
+//           component: './Trade/TradeInfoList',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/statistics',
+//       name: '业务维度',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/statistics/Statistics',
+//           name: '刷卡维度',
+//           icon: 'dashboard',
+//           component: './Statistics/Statistics',
+//         },
+//         {
+//           path: '/statistics/OrderDimension',
+//           name: '订单维度',
+//           icon: 'dashboard',
+//           component: './Statistics/OrderDimension',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/userDimension',
+//       name: '用户维度',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/userDimension/userDimension',
+//           name: '用户维度',
+//           icon: 'dashboard',
+//           component: './UserDimension/UserDimension',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/seting',
+//       name: '设置',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/seting/MerchShare',
+//           name: '商户分享注册',
+//           icon: 'dashboard',
+//           component: './Seting/MerchShare',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/goods',
+//       name: '商品管理',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/goods/goodsControl',
+//           name: '商品管理',
+//           icon: 'dashboard',
+//           component: './Goods/GoodsControl',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/SystemSetting',
+//       name: '系统设置',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/SystemSetting/SystemSetting',
+//           name: '系统基础配置',
+//           icon: 'dashboard',
+//           component: './SystemSetting/SystemSetting',
+//         },
+//         {
+//           path: '/SystemSetting/newbie/newbie',
+//           name: '新手指南',
+//           icon: 'dashboard',
+//           component: './SystemSetting/newbie/newbie',
+//         },
+//         {
+//           path: '/SystemSetting/bannerSetting/bannerSetting',
+//           name: '首页轮播设置',
+//           icon: 'dashboard',
+//           component: './SystemSetting/bannerSetting/bannerSetting',
+//         },
+//         {
+//           path: '/SystemSetting/payChannel/payChannel',
+//           name: '通道配置',
+//           icon: 'dashboard',
+//           component: './SystemSetting/payChannel/payChannel',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/product',
+//       name: '商品设置',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/product/productCategory',
+//           name: '商品分类',
+//           icon: 'dashboard',
+//           component: './product/productCategory',
+//         },
+//       ]
+//     },
+
+//     // {
+//     //   path: '/test',
+//     //   name: 'test',
+//     //   icon: 'dashboard',
+//     //   authority: ['root'],
+//     //   routes:[
+//     //     {
+//     //       path: '/test/test',
+//     //       name: '商品分类',
+//     //       icon: 'dashboard',
+//     //       component:'./test/test',
+//     //     },
+//     //   ]
+//     // },
+
+//     {
+//       path: '/test',
+//       name: 'test',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/test/test',
+//           name: '商品分类',
+//           icon: 'dashboard',
+//           component: './test/test',
+//         },
+//       ]
+//     },
+
+//     {
+//       path: '/news',
+//       name: '消息管理',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/news/newsControl',
+//           name: '消息管理',
+//           icon: 'dashboard',
+//           component: './News/NewsControl',
+//         },
+//       ]
+//     },
+//     {
+//       path: '/test',
+//       name: 'test',
+//       icon: 'dashboard',
+//       authority: ['root'],
+//       routes: [
+//         {
+//           path: '/test/test',
+//           name: '商品分类',
+//           icon: 'dashboard',
+//           component: './test/test',
+//         },
+//       ]
+//     },
+
+
+//     {
+//       component: '404',
+//     },
+
+
+
+//   ],
+// }
+
+export default {
+  namespace: 'menu',
+
+  state: {
+    menuData: [],
+    routerData: [],
+    breadcrumbNameMap: {},
+    pagePermissions:[]
+  },
+
+  effects: {
+    *getMenuData({ payload }, { call, put }) {
+      const lang = getLocale();
+      // const response = yield call(queryMenuItem, payload, lang);
+      const menu = JSON.parse(localStorage.getItem('menu'));
+      console.log("menu",menu)
+      const { routes, authority, path } = menu;
+      // const { routes, authority, path } = test;
+      const originalMenuData = memoizeOneFormatter(routes, authority, path);
+      const menuData = filterMenuData(originalMenuData);
+      const breadcrumbNameMap = memoizeOneGetBreadcrumbNameMap(originalMenuData);
+      yield put({
+        type: 'save',
+        payload: { menuData, breadcrumbNameMap, routerData: routes },
+      });
+    },
+    *fetchAll(_, { call, put }) {
+      const response = yield call(queryAllMenus);
+      yield put({
+        type: 'save',
+        payload: { allmenus: response }
+      });
+    },
+    *fetch({ payload }, { call, put }) {
+      const response = yield call(queryMenus, payload);
+      yield put({
+        type: 'save',
+        payload: response
+      });
+    },
+    *add({ payload }, { call, put }) {
+      const response = yield call(addMenu, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryMenus, {
+          pageNo: 1,
+          pageSize: 10,
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      return response;
+    },
+    *remove({ payload, callback }, { call, put }) {
+      const response = yield call(deleteMenus, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryMenus, {
+          pageNo: 1,
+          pageSize: 10,
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      if (callback) callback();
+    },
+    *update({ payload, callback }, { call, put }) {
+      const response = yield call(updateMenus, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryMenus, {
+          pageNo: 1,
+          pageSize: 10,
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      if (callback) callback();
+    },
+
+    // 查询当前页面权限
+    *fetchButton({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(getMenuButtonList, payload);
+      yield put({
+        type: 'pageAuth',
+        payload: response.data
+      });
+    },
+
+  },
+
+  reducers: {
+    save(state, action) {
+      return {
+        ...state,
+        ...action.payload,
+      };
+    },
+    pageAuth(state, action) {
+      return {
+        ...state,
+       pagePermissions: action.payload,
+        loading: false
+      };
+    },
+  },
+};

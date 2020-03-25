@@ -1,0 +1,106 @@
+import React, { Fragment } from 'react';
+import { formatMessage, FormattedMessage } from 'umi-plugin-react/locale';
+import { Row, Col, Avatar, Badge, Card, Carousel, Alert, Spin, Skeleton, Divider, Button } from 'antd';
+import styles from "./test.less";
+import Result from '@/components/Result';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+// import 'react-quill/dist/quill.snow.css';
+
+class Test extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      spinning: true,
+      value: ''
+    }
+  }
+
+  componentDidMount() {
+    this.delay()
+    console.log(this.props)
+  }
+
+  delay() {
+    setTimeout(() => {
+      this.setState({
+        spinning: false
+      })
+    }, 2000)
+  }
+
+  handleChange = value => {
+    this.setState({
+      value,
+    });
+    console.log(value);
+
+  };
+
+  render() {
+    const name = this.props.match.params.name || "name";
+    const modules = {
+      toolbar: [
+        [{ 'header': [1, 2, false] }],
+        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+        [{ 'align': [] }],
+        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
+        ['link', 'image'],
+        ['clean']
+      ],
+    }
+
+    const formats = [
+      'header',
+      'bold', 'italic', 'underline', 'strike', 'blockquote',
+      'align',
+      'list', 'bullet', 'indent',
+      'link', 'image'
+    ]
+    return (
+      <Card>
+       
+        {/* <Row><Col span={3} className={styles.test_col}>{name}</Col></Row>
+            <Divider />
+            <Row>
+              <select>
+                <option>nihao</option>
+              </select>
+            </Row>
+            <Divider />
+            <Badge count={99} dot>
+              <a href="#" className="head-example">
+                <Avatar src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png" shape='circle' />
+              </a>
+            </Badge>
+            <Divider /> */}
+        {/* <Row>
+              <Spin spinning={this.state.spinning}><Alert message="Success Text" type="success" closable /></Spin> */}
+        {/* <Carousel autoplay>
+                    <div>
+                        <h1>1</h1>
+                    </div>
+                    <div>
+                        <h1>2</h1>
+                    </div>
+                    <div>
+                        <h1>3</h1>
+                    </div>
+                    <div>
+                        <h1>4</h1>
+                    </div>
+                    <div>
+                        <h1>5</h1>
+                    </div>
+                </Carousel> */}
+        {/* </Row> */}
+        {/* <Divider />
+            <Row>
+              <Skeleton avatar paragraph={{ rows: 4 }} />
+            </Row> */}
+        {/* <Row /> */}
+
+      </Card>)
+  }
+}
+
+export default Test;

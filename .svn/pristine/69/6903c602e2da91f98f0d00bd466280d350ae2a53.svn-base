@@ -1,0 +1,275 @@
+import React, { Fragment } from 'react';
+import { formatMessage, FormattedMessage } from 'umi-plugin-react/locale';
+import ReactHTMLTableToExcel from 'react-html-table-to-excel';
+import { connect } from 'dva';
+import { Row, Col, Card, Table, Modal, Select, DatePicker, Form, Input, Button, Divider, InputNumber } from 'antd';
+import DescriptionList from '@/components/DescriptionList';
+import PropTypes from 'prop-types';
+import moment from "moment";
+import styles from "../Log/Log.less";
+
+const { Description } = DescriptionList;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+@Form.create()
+/* eslint react/no-multi-comp:0 */
+@connect(({ log, loading }) => ({
+  log,
+  loading: loading.models.rule,
+}))
+class AccountInfo extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      modalVisible: false,
+      currentRecord: null,
+      pageSize: 10,
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+    dispatch({
+      type: 'log/fetch',
+      payload: {
+        "currentPage": 1,
+        "pageSize": pageSize,
+      }
+    });
+    const table = document.getElementsByTagName('table')[0];
+    table.setAttribute('id', 'realtime-trans-table');
+  }
+
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        const value = {
+          requestURI: fieldsValue.requestURI,
+          classMethod: fieldsValue.classMethod,
+          method: fieldsValue.method,
+          returnType: fieldsValue.returnType,
+          startTime: fieldsValue.time[0].format('YYYY-MM-DD 00:00:00'),
+          endTime: fieldsValue.time[1].format('YYYY-MM-DD 23:59:59'),
+        }
+        dispatch({
+          type: 'log/fetch',
+          payload: {
+            ...value,
+            "currentPage": 1,
+            "pageSize": pageSize,
+          }
+        });
+      }
+    })
+  }
+
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    dispatch({
+      type: 'log/fetch',
+      payload: {
+        "currentPage": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商户号">
+              {getFieldDecorator('num')(<Input placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="终端号">
+              {getFieldDecorator('name')(<Input placeholder="请输入" />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="调账日期">
+              {getFieldDecorator('date')(
+                <RangePicker style={{ width: '100%' }} />
+              )}
+            </FormItem>
+          </Col>
+        </Row>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="调账类型">
+              {getFieldDecorator('status4')(
+                <Select placeholder="请选择" style={{ width: '100%' }}>
+                  <Option value="0">普通调账</Option>
+                  <Option value="1">手工调账</Option>
+                  <Option value="2">短款调账</Option>
+                  <Option value="3">长款调账</Option>
+                  <Option value="4">发卡行退单</Option>
+                  <Option value="5">商户请款</Option>
+                  <Option value="6">例外长款</Option>
+                  <Option value="7">其他</Option>
+                </Select>
+              )}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+            </FormItem>
+          </Col>
+        </Row>
+
+      </Form>
+    )
+  }
+
+  renderCell = (text, width) => (
+    <div style={{ width: `${width}`, overflow: "hidden", display: "inline-block", whiteSpace: 'nowrap', textOverflow: "ellipsis" }}>
+      {text}
+    </div>
+  )
+
+  handleModalVisible = (flag, record) => {
+    this.setState({
+      modalVisible: !!flag,
+      currentRecord: record,
+    });
+  };
+
+  handlePageChange = (pagination) => {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+    dispatch({
+      type: 'log/fetch',
+      payload: {
+        "currentPage": pagination.current,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+  render() {
+    const { log } = this.props;
+    const { modalVisible, currentRecord } = this.state;
+    const columns = [
+      {
+        title: '序号',
+        dataIndex: 'num',
+      },
+      {
+        title: '商户号',
+        dataIndex: 'num1',
+      },
+      {
+        title: '商户名称',
+        dataIndex: 'desc1',
+      },
+      {
+        title: '终端号',
+        dataIndex: 'num2',
+      },
+      {
+        title: '调账日期',
+        dataIndex: 'date2',
+        render: val => <span>{moment(val).format('YYYY-MM-DD HH:MM')}</span>
+      },
+      {
+        title: '调账类型',
+        dataIndex: 'desc3'
+      },
+      {
+        title: '调账金额',
+        dataIndex: 'num4'
+      },
+      {
+        title: '备注',
+        dataIndex: 'num5'
+      },
+    ];
+
+    const total = log.list.totalCount;
+    const pagination = {
+      total
+    }
+
+    return (
+      <Card>
+        <Row>
+          {this.renderForm()}
+        </Row>
+        <Divider />
+        <Row>
+          <ReactHTMLTableToExcel
+            className={`ant-btn ant-btn-primary ${styles.marginBottom}`}
+            table="realtime-trans-table"
+            filename="实时交易"
+            sheet="实时交易"
+            buttonText="导出"
+          />
+          <Table
+            className='realTimeTable'
+            dataSource={log.list.rows}
+            rowKey="id"
+            columns={columns}
+            pagination={pagination}
+            loading={log.loading}
+            bordered={false}
+            style={{ overflowX: "scroll" }}
+            onChange={this.handlePageChange}
+          />
+        </Row>
+        <Modal maskClosable={false}
+          destroyOnClose
+          title="请求详情"
+          visible={modalVisible}
+          width={700}
+          okText="确定"
+          cancelText="取消"
+          onCancel={() => this.handleModalVisible()}
+          onOk={() => this.handleModalVisible()}
+        >
+          {currentRecord &&
+            <DescriptionList col={1} layout="vertical">
+              <Description term="请求时间">{currentRecord.insertTime}</Description>
+              <Description term="请求路径">{currentRecord.requestURI}</Description>
+              <Description term="查询字符串">{currentRecord.queryString}</Description>
+              <Description term="请求方式">{currentRecord.method}</Description>
+              <Description term="日志类型">{currentRecord.returnType}</Description>
+              <Description term="错误">{currentRecord.error}</Description>
+              <Description term="返回信息">{currentRecord.response}</Description>
+            </DescriptionList>
+          }
+        </Modal>
+      </Card>
+    )
+  }
+}
+
+AccountInfo.propTypes = {
+  log: PropTypes.object
+};
+
+AccountInfo.defaultProps = {
+  log: {
+    list: {
+      rows: [],
+      totalPage: 5
+    }
+  }
+};
+
+export default AccountInfo;

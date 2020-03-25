@@ -1,0 +1,37 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+
+export async function queryLogs(params) {
+  return request('/lazy-card/tran/transactionRecordList',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function downloadTransactionRecord(params) {
+  return request('/lazy-card/tran/downloadTransactionRecordList',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function sumTransactionRecord(params) {
+  return request('/lazy-card/tran/sumTransactionRecord',{
+    method: 'POST',
+    data:params
+  });
+};
+//商户交易汇总
+export async function transactionRecordSum(params) {
+  return request('/lazy-card/tran/transactionRecordSum',{
+    method: 'POST',
+    data:params
+  });
+};
+
+//商户交易补单
+export async function handlErepairOdd(params) {
+  return request('/lazy-card/tran/handlErepairOdd',{
+    method: 'POST',
+    data:params
+  });
+};
+

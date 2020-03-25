@@ -1,0 +1,491 @@
+import React, { PureComponent, Fragment } from 'react';
+import { connect } from 'dva';
+import moment from 'moment';
+import { Card, Form, Input, Button, Modal,Row,Col,DatePicker,Table,Alert,Badge } from 'antd';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+// import ExportJsonExcel from 'js-export-excel';
+
+import styles from '../OutMerchantTran/IncomeList.less';
+import { judgePageAuth } from '@/global.js';
+
+import { notification } from 'antd';
+
+const { RangePicker } = DatePicker;
+
+/**
+ * 请求组件 需放在主class 上面
+ */
+//页面权限
+@connect(({ outMerchantTrans,menu: { pagePermissions } }) => ({
+  outMerchantTrans,
+  pagePermissions
+}))
+@Form.create()
+class MerchMessageHistory extends PureComponent {
+  state = {
+    modalVisible: false,
+    pageSize: 10,
+    currentPage: 1,
+    formValues: {}
+  };
+
+   /**
+   * 初始化加载数据
+   */
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+    //页面权限
+    dispatch({
+      type: 'menu/fetchButton',
+    });
+    dispatch({
+      type: 'outMerchantTrans/merchMessageHistoryList',
+    payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+  }
+  
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const { pagePermissions } = this.props;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商户编号">
+              {getFieldDecorator('merchNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商户名称">
+              {getFieldDecorator('merchName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商户手机号">
+              {getFieldDecorator('phone',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+   // 查询
+   handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+       
+        this.setState({
+          currentPage: 1,
+          formValues: fieldsValue
+        });
+        dispatch({
+          type: 'outMerchantTrans/merchMessageHistoryList',
+          payload: {
+            ...fieldsValue  ,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+      }
+    })
+  }
+
+    // 重置
+    handleFormReset = () => {
+      const { form, dispatch } = this.props;
+      const { pageSize } = this.state;
+      form.resetFields();
+      this.setState({
+        formValues: {},
+        currentPage: 1
+      });
+      dispatch({
+        type: 'outMerchantTrans/merchMessageHistoryList',
+        payload: {
+          "pageNo": 1,
+          "pageSize": pageSize,
+        },
+      });
+    };
+ 
+
+   // 详情页面
+   detailsModalVisible = (flag, record) => {
+    const { dispatch } = this.props;
+
+    this.setState({
+      updateModalVisible: !!flag,
+      updateFormValues: record || {},
+    });
+    if (flag) {
+      if(!record.messageId){
+        notification.error({
+          message: "FAILD",
+          description: "商户异常！",
+        });
+        return;
+      }
+      dispatch({
+        type: 'outMerchantTrans/merchMessageHistoryDatails',
+        payload: {
+          "messageId": record.messageId,
+          "pageNo": 1,
+          "pageSize": 10,
+        },
+      });
+
+    }
+
+  };
+
+  // 分页
+  handlePageChange = (pagination, filters, sorter) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current,
+      pageSize:pagination.pageSize
+    });
+    dispatch({
+      type: 'outMerchantTrans/merchMessageHistoryList',
+      payload: {
+        "pageNo": pagination.current,
+        "pageSize": pagination.pageSize,
+      }
+    });
+  }
+
+  /**
+   * 添加短信弹框
+   */
+  handleModalVisible = (flag, record) => {
+    this.setState({
+      modalVisible: !!flag,
+      record
+    });
+  };
+
+   /**
+   * 添加短信记录
+   */
+  handleAdd = (fields,form) => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'outMerchantTrans/addMessageHistory',
+      payload: fields,
+    }).then((res) => {
+      console.log(res);
+      if (res.code === "SUCCESS") {
+        form.resetFields();
+        this.handleModalVisible();
+      }
+    });
+
+  };
+
+  render() {
+    const { outMerchantTrans,pagePermissions,dispatch } = this.props;
+    const tradeIncomeList = outMerchantTrans.list.rows;
+    const incomeDetailsList = outMerchantTrans.merchMessageList.rows;//详情数据
+    
+    const {updateModalVisible,updateFormValues,currentPage,pageSize,modalVisible,record} = this.state;
+    
+    const parentMethods = {
+      handleAdd: this.handleAdd,
+      handleModalVisible: this.handleModalVisible,
+    }
+
+    const columns = [
+      {
+        title: '商户编号',
+        dataIndex: 'merchNo',
+        key: 'merchNo',
+      },
+      {
+        title: '商户名称',
+        dataIndex: 'merchName',
+        key: 'merchName',
+      },
+      {
+        title: '商户手机号',
+        dataIndex: 'phone',
+        key: 'phone',
+      },
+      {
+        title: '短信开关',
+        dataIndex: 'messageSwitch',
+        key: 'messageSwitch',
+        render(val){
+          return val == '1'?<Badge status='success' text='已开通' />:<Badge status='warning' text='未开通' /> 
+        }
+      },
+     
+      {
+        title: '可用条数',
+        dataIndex: 'enableNum',
+        key: 'enableNum',
+      },
+
+      {
+        title: '已用条数',
+        dataIndex: 'alreadyNum',
+        key: 'alreadyNum',
+        render(val,record){
+          const num = record.alreadyNum - record.enableNum;
+          return num;
+        }
+      },
+      
+      
+      {
+        title: '操作',
+        render: (text, record) => (
+          <Fragment> 
+            {record.messageSwitch == '1'? <a onClick={() => this.handleModalVisible(true, record)}>添加条数</a>:""} 
+            
+            &nbsp;&nbsp;&nbsp;&nbsp;
+        
+                <a onClick={() => this.detailsModalVisible(true, record)}>查看详情</a>
+          </Fragment>
+        ),
+      },
+    ];
+
+    
+   
+
+    const { total } = outMerchantTrans.list;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+      showTotal:()=>"共 " + total + " 条", //显示总条数
+      showQuickJumper: true, //显示跳转指定页框
+      showSizeChanger:true //显示指定条数
+    }
+
+    const updateMethods = {
+      detailsModalVisible: this.detailsModalVisible,
+      details: this.details,
+    };
+  
+    return (
+      <PageHeaderWrapper title="商户短信记录">
+        <Card bordered={false}>
+          <Row>
+            {this.renderForm()}
+          </Row>
+
+          <Row>
+            <Table
+              dataSource={tradeIncomeList}
+              rowKey="id"
+              rowClassName="textCenter"
+              columns={columns}
+              pagination={pagination}
+              loading={outMerchantTrans.loading}
+              bordered={false}
+              style={{ overflowX: "scroll" }}
+              onChange={this.handlePageChange}
+            />
+          </Row>
+        </Card>
+        <DetailsForm
+          {...updateMethods}
+          updateModalVisible={updateModalVisible}
+          incomeDetails={incomeDetailsList}
+          outMerchantTrans={outMerchantTrans}
+          values={updateFormValues}
+          dispatch={dispatch}
+        />
+         <CreateForm {...parentMethods} 
+         modalVisible={modalVisible} 
+          values={record} 
+          dispatch={dispatch} />
+      </PageHeaderWrapper>
+    );
+  }
+
+}
+
+
+/**
+ * 短信调整详情
+ */
+@Form.create()
+class DetailsForm extends PureComponent {
+  static defaultProps = {
+    details: () => { },
+    detailsModalVisible: () => { },
+    values: {},
+  };
+  state = {
+    pageSize: 10,
+    currentPage: 1,
+    formValues: {}
+  };
+
+
+  // 分页
+  handlePageChange = (pagination, filters, sorter) => {
+    const { dispatch,values } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current,
+      pageSize:pagination.pageSize
+    });
+    formValues.timeOrderBy = sorter.columnKey == 'createTime'?sorter.order=="descend"?"desc":"asc":null,
+    dispatch({
+      type: 'outMerchantTrans/merchMessageHistoryDatails',
+      payload:{
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pagination.pageSize,
+      }
+    });
+  }
+
+  
+
+  render() {
+    const { updateModalVisible, detailsModalVisible, outMerchantTrans,values, incomeDetails } = this.props;
+    const {currentPage,pageSize} = this.state;
+    const  total  = outMerchantTrans.merchMessageList.total;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+      showTotal:()=>"共 " + total + " 条", //显示总条数
+      showQuickJumper: true, //显示跳转指定页框
+      showSizeChanger:true //显示指定条数
+    }
+    const detailsColumns = [
+     
+      {
+        title: '新增短信条数',
+        dataIndex: 'enableNum',
+        key: 'enableNum',
+      },
+
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        sorter:true,
+        render: val => val && <span>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</span>
+      },  
+    ];
+
+    return (
+      <Modal
+        maskClosable={false}
+        width={1000}
+        bodyStyle={{ padding: '32px 40px 48px' }}
+        destroyOnClose
+        title="收益详细信息"
+        visible={updateModalVisible}
+        footer={null}
+        onCancel={() => detailsModalVisible(false, values)}
+      >
+
+        <Table
+          dataSource={incomeDetails}
+          rowKey="id"
+          size="small"
+          columns={detailsColumns}
+          pagination={pagination}
+          loading={outMerchantTrans.loading}
+          bordered={false}
+          style={{ overflowX: "scroll" }}
+          onChange={this.handlePageChange}
+        />
+      </Modal>
+
+    );
+  }
+}
+
+//添加弹框
+@Form.create()
+class CreateForm extends React.Component {
+  // CreateForm 主件 传入
+  constructor(props) {
+    super(props)
+    this.state = {
+    }
+  }
+
+  render() {
+    const { modalVisible, form, handleAdd, handleModalVisible,values  } = this.props;
+    const okHandle = () => {
+      form.validateFields((err, fieldsValue) => {
+        if (err) return;
+        if (values) { // 编辑
+          fieldsValue.id = values.id
+        }
+        const addValue = {
+          ...fieldsValue
+        }
+        handleAdd(addValue,form);
+      });
+    };
+    const title = "添加短信条数";
+
+    return (
+      <Modal
+        maskClosable={false}
+        destroyOnClose
+        width={840}
+        title={title}
+        visible={modalVisible}
+        onOk={okHandle}
+        onCancel={() => handleModalVisible()}
+      >
+        <Form.Item labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="短信条数">
+          {form.getFieldDecorator('enableNum', {
+            rules: [{ required: true, message: '请输入正确的值!' }],
+          })(
+            <Input type="number"  style={{ width: 200 }} placeholder="请输入正确的值" />
+          )}
+        </Form.Item>
+      </Modal>
+    );
+  }
+}
+
+
+export default MerchMessageHistory;

@@ -1,0 +1,22 @@
+import request from '@/utils/request';
+
+/**
+ * 请求初始数据
+ */
+export async function toSystemSettingDetails() {
+  return request('/lazy-card/systemSetting/toSystemSettingDetails',{
+    method: 'GET'
+  });
+}
+/**
+ * 编辑 or 新增
+ * @param {*} params 
+ */
+export async function saveOrUpedata(params) {
+  return request('/lazy-card/systemSetting/saveOrUpedata',{
+    method: 'POST',
+    data:params
+  });
+}
+
+

@@ -1,0 +1,339 @@
+import React, { Fragment } from 'react';
+import { connect } from 'dva';
+import { Row, Col, Badge, Card, Table, Select, DatePicker, Form, Button, } from 'antd';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+// import ExportJsonExcel from 'js-export-excel';
+import PropTypes from 'prop-types';
+import moment from "moment";
+import styles from "./Log.less";
+
+// lazy load ExportJsonExcel
+const ExportJsonExcel = React.lazy(() => import('js-export-excel'));
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const statusMap = ['error', 'warning', 'success', 'processing'];
+// 1、提现 2、手续费分润 3、结算费分润 4、转账扣款
+const status = ['提现', '手续费分润', '结算费分润', '转账扣款'];
+@Form.create()
+/* eslint react/no-multi-comp:0 */
+@connect(({ profit, loading }) => ({
+  profit,
+  loading: loading.models.rule,
+}))
+class ProfitDetai extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      pageSize: 10,
+      currentPage: 1,
+      formValues: {}
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    dispatch({
+      type: 'profit/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+  // from表单确认事件
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        // debugger;
+        const value = {
+          dateStart: fieldsValue.time != null ? fieldsValue.time[0].format('YYYY-MM-DD 00:00:00') : null,
+          dateEnd: fieldsValue.time != null ? fieldsValue.time[1].format('YYYY-MM-DD 23:59:59') : null,
+          tradeType: fieldsValue.tradeType
+        }
+        this.setState({
+          currentPage: 1,
+          formValues: value
+        });
+        dispatch({
+          type: 'profit/fetch',
+          payload: {
+            ...value,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+      }
+    })
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    this.setState({
+      formValues: {},
+      currentPage: 1
+    });
+    dispatch({
+      type: 'profit/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  downloadExcel = () => {
+    const { dispatch, form } = this.props;
+    form.validateFields((err, fieldsValue) => {
+      dispatch({
+        type: 'profit/download',
+        payload: {
+          ...fieldsValue,
+          dateStart: fieldsValue.time != null ? fieldsValue.time[0].format('YYYY-MM-DD 00:00:00') : null,
+          dateEnd: fieldsValue.time != null ? fieldsValue.time[1].format('YYYY-MM-DD 23:59:59') : null,
+          tradeType: fieldsValue.tradeType
+        }
+      }).then(() => {
+        const { profit } = this.props;
+        const data = profit.downloadList ? profit.downloadList : '';// 表格数据
+        // const auth = sessionStorage.getItem("auth");
+        const option = {};
+        if (data) {
+          const dataTable = data.map(item => {
+            // 交易类型：1、提现 2、手续费分润 3、结算费分润 4、转账扣款
+            let status = "";
+            if (item.tradeType === 1) {
+              status = "提现"
+            } else if (item.tradeType === 2) {
+              status = "手续费分润"
+            } else if (item.tradeType == 3) {
+              status = "结算费分润"
+            } else if (item.tradeType === 4) {
+              status = "转账扣款"
+            }
+            return {
+              '会员名称': item.username,
+              '会员手机号': item.phone,
+              '订单号': item.transactionNo,
+              '金额': item.amount / 100,
+              '交易类型': status,
+              '交易金额': item.tradeFee,
+              '变动后余额': item.afterBalance,
+              '时间': moment(item.createTime).format('YYYY-MM-DD HH:mm:ss'),
+            }
+          });
+          option.fileName = 'APP会员交易记录';
+          const sheetHeader = ['会员名称', "会员手机号",'订单号', '金额', '交易类型','交易金额', '变动后余额', '时间'
+          ]
+          option.datas = [
+            {
+              sheetData: dataTable,
+              sheetName: 'sheet',
+              // sheetFilter: ['组织ID', '组织代码', '组织名称'],
+              sheetHeader,
+            }
+          ];
+          const toExcel = new ExportJsonExcel(option);
+          toExcel.saveExcel();
+        }
+      })
+    })
+
+  }
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const FormItem = Form.Item;
+    const { profit } = this.props;
+    const profitCount = profit.profitCount1;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="交易时间">
+              {getFieldDecorator('time',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="交易状态">
+              {getFieldDecorator('tradeType',
+                {
+                  rules: []
+                }
+              )(
+                // 交易类型：1、提现 2、手续费分润 3、结算费分润 4、转账扣款
+                <Select>
+                  <Option value={null}>全部</Option>
+                  <Option value={1}>提现</Option>
+                  <Option value={2}>手续费分润</Option>
+                  <Option value={3}>结算费分润</Option>
+                  <Option value={4}>转账扣款</Option>
+                </Select>
+              )}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.downloadExcel}>导出</Button>
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  renderCell = (text, width) => (
+    <div style={{ width: `${width}`, overflow: "hidden", display: "inline-block", whiteSpace: 'nowrap', textOverflow: "ellipsis" }}>
+      {text}
+    </div>
+  )
+
+  handleModalVisible = (flag, record) => {
+    this.setState({
+      modalVisible: !!flag,
+      currentRecord: record,
+    });
+  };
+
+  handlePageChange = (pagination) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current
+    });
+    dispatch({
+      type: 'profit/fetch',
+      payload: {
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+  render() {
+    const { profit } = this.props;
+    const { currentPage, pageSize } = this.state;
+    const columns = [
+      {
+        title: '会员名称',
+        dataIndex: 'username',
+        key: 'username',
+      },
+      {
+        title: '会员手机号',
+        dataIndex: 'phone',
+        key: 'phone',
+      },
+      {
+        title: '订单号',
+        dataIndex: 'transactionNo',
+        key: 'transactionNo',
+      },
+      {
+        title: '金额',
+        dataIndex: 'amount',
+        key: 'amount',
+        render(val, record) {
+          if (record.direction === 1 || record.direction === '1') {
+            return <div style={{ color: "red" }}>+<span style={{ color: "#000" }}>&nbsp;{val / 100}</span></div>
+          }
+          return <div style={{ color: "green" }}>-<span style={{ color: "#000" }}>&nbsp;{val / 100}</span></div>
+        }
+      },
+      {
+        title: '交易类型',
+        dataIndex: 'tradeType',
+        key: 'tradeType',
+        render(val) {
+          return <Badge status={statusMap[val - 1]} text={status[val - 1]} />;
+        },
+      },
+      {
+        title: '交易金额',
+        dataIndex: 'tradeFee',
+        key: 'tradeFee',
+      },
+      {
+        title: '变动后余额',
+        dataIndex: 'afterBalance',
+        key: 'afterBalance',
+      },
+      {
+        title: '时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        render: item => {
+          return (
+            item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+          )
+        }
+      },
+    ];
+
+    const { total } = profit.list;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+    }
+
+    return (
+      <PageHeaderWrapper title="交易记录查询">
+        <Card>
+          <Row>
+            {this.renderForm()}
+          </Row>
+          <Row>
+            <Table
+              dataSource={profit.list.rows}
+              rowKey="id"
+              columns={columns}
+              pagination={pagination}
+              loading={profit.loading}
+              bordered={false}
+              style={{ overflowX: "scroll" }}
+              onChange={this.handlePageChange}
+            />
+          </Row>
+        </Card>
+      </PageHeaderWrapper>
+    )
+  }
+}
+ProfitDetai.propTypes = {
+  profit: PropTypes.object
+};
+
+ProfitDetai.defaultProps = {
+  profit: {
+    list: {
+      rows: [],
+      totalPage: 5
+    },
+    profitCount1: {
+      // sumProfit :0,
+      // stockMoney :0,
+      // transactionNum :0,
+      // stockSumProfit:0,
+    }
+  }
+};
+export default ProfitDetai;

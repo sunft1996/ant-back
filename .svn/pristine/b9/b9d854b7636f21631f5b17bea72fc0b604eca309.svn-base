@@ -1,0 +1,90 @@
+import {saveOrUpedata,memberLevelList,deleteById} from '@/services/memberLevel';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'memberLevel',
+  // 初始变量
+  state: {
+    list: [],
+    memberLevelList:[]
+  },
+
+  effects: {
+    /**
+     * 编辑 or 更新
+     * @param {*} param0 
+     * @param {*} param1 
+     */
+    *add({ payload }, { call, put }) {
+      const response = yield call(saveOrUpedata, payload);
+      if (response.code === 'SUCCESS') { // 成功刷新
+        const newFetch = yield call(memberLevelList,payload);
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      return response;
+    },
+
+    /**
+     * 请求数据
+     * @param {*} _ 
+     * @param {*} param1 
+     */
+    *fetch({payload}, { call, put }) {
+      const response =  yield call(memberLevelList,payload);
+      yield put({
+        type: 'save',
+        payload:response
+      });
+    },
+
+    /**
+     * 删除分类数据
+     * @param {*} param0 
+     * @param {*} param1 
+     */
+    *remove({ payload, callback }, { call, put }) {
+      const response = yield call(deleteById,payload);
+      if (response.code === 'SUCCESS'){
+        const newFetch = yield call(memberLevelList,{});
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      }else{
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      if (callback) callback();
+    },
+  },
+
+  /**
+   * 组装 type  方法类型
+   */
+  reducers: {
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload.data.rows,
+      };
+    },
+  },
+};

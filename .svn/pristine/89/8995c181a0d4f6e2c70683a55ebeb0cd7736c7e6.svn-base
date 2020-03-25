@@ -1,0 +1,40 @@
+import {  queryLogs, } from '@/services/log';
+
+export default {
+  namespace: 'log',
+
+  state: {
+    list: [],
+    loading:false
+  },
+
+  effects: {
+    *fetch({ payload }, { call, put } ,) {
+      yield put({
+        type: 'loading',
+      });
+      const response =  yield call(queryLogs,payload);
+      yield put({
+        type: 'save',
+        payload:response
+      });
+    },
+  },
+
+  reducers: {
+    loading(state){
+      return {
+        ...state,
+        loading:true
+      };
+    },
+
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload,
+        loading:false
+      };
+    },
+}
+};

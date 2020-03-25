@@ -1,0 +1,221 @@
+import React from 'react';
+import { Row, notification, Tooltip, Icon, Card, Alert, Divider, Form, Input, Button, message, Modal, InputNumber } from 'antd';
+import DescriptionList from '@/components/DescriptionList';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import Yuan from "@/utils/Yuan";
+import { connect } from 'dva';
+
+const { confirm } = Modal;
+const { Description } = DescriptionList;
+const FormItem = Form.Item;
+@Form.create()
+@connect(({ outMerchantTrans }) => ({
+  currentMerchant: outMerchantTrans.currentMerchant
+}))
+class MerchantCashOut extends React.PureComponent {
+  constructor(props) {
+    super(props)
+    this.state = {
+      visible: false,
+      captcha: '',
+      money: 0
+    };
+    this.showConfirm = this.showConfirm.bind(this);
+  }
+
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+
+    // dispatch({
+    //   type: 'cash/fetch',
+    // });
+    dispatch({
+      type: 'outMerchantTrans/fetchMerchantInfo',
+    });
+  }
+
+  componentDidUpdate(_, prevState) {
+    const { visible } = this.state;
+    // 当模态框打开时请求验证码
+    if (!prevState.visible && visible) {
+      this.getCaptcha();
+    }
+  }
+
+  // handleEncrypt = beforePwd => {
+  //   const secretKey = 'com.vcpay.foo.key';
+  //   const afterEncrypt = CryptoJS.DES.encrypt(beforePwd, CryptoJS.enc.Utf8.parse(secretKey), {
+  //     mode: CryptoJS.mode.ECB,
+  //     padding: CryptoJS.pad.Pkcs7
+  //   }).toString()
+  //   return afterEncrypt;
+  // }
+
+  // showConfirm(){
+
+  // }
+  showCaptchaModal = (flag) => {
+    this.setState({
+      visible: !!flag
+    });
+    // dispatch({
+    //   type: 'outMerchantTrans/getMoney',
+    //   payload: {
+    //     mainCustomerNo: currentMerchant.merchNo,
+    //     receiveCardNo:currentMerchant.bankCard,
+    //     receiveName:currentMerchant.openAccountName,
+    //     ...fieldsValue
+    //   }
+    // })
+  }
+
+  showConfirm = (e) => {
+    const { form, currentMerchant } = this.props;
+    e.preventDefault();
+    const that = this;
+    form.validateFields((err, fieldsValue) => {
+      const money = fieldsValue.amount - (fieldsValue.amount * 0.006 + 3);
+      this.setState({
+        money:fieldsValue.amount,
+      });
+      const content =
+        <section>
+          <p>提现金额：￥{fieldsValue.amount}，银行卡号：{currentMerchant.bankCard}</p>
+          <p>实际到账金额：<span>￥{money}</span><Tooltip title="实际到账金额 = 提现金额 - ( 提现金额 × 税率 + 提现手续费 )"><Icon type="question-circle" theme="twoTone" twoToneColor="#52c41a" style={{ marginLeft: 20 }} /></Tooltip></p>
+        </section>
+      if (!err) {
+        confirm({
+          title: '确认提现',
+          content,
+          onOk() {
+            that.showCaptchaModal(true);
+          },
+          onCancel() { },
+        });
+      }
+    })
+  }
+
+  getCaptcha = () => {
+    const { dispatch,currentMerchant } = this.props;
+    dispatch({
+      type: 'financial/fetchMessage',
+      payload: {
+        mobile: currentMerchant.phone,
+        type:'WITHDRAW'
+      },
+    });
+  }
+
+  confirmCashOut = () => {
+    const { dispatch } = this.props;
+    const { captcha, money } = this.state;
+    if (captcha === '') {
+      notification.error({
+        message: '请输入验证码!',
+      });
+      return;
+    }
+    dispatch({
+      type: 'financial/cashOut',
+      payload: {
+        amount: money,
+        validCode: captcha
+      },
+    }).then((res) => {
+      if (res.code === 'SUCCESS') {
+        this.setState({
+          visible: false
+        });
+      }
+    });
+
+  }
+
+  setCaptcha = e => {
+    this.setState({
+      captcha: e.target.value
+    });
+  }
+
+
+  render() {
+    const { form, currentMerchant } = this.props;
+    const { captcha, visible } = this.state;
+    return (
+      <PageHeaderWrapper title="提现">
+        <Card>
+          {/* <Alert message="提现金额最低200元，最高50000元。" type="info" showIcon /> */}
+          <Alert message="提现金额最低200元" type="info" showIcon />
+          <Row style={{ marginTop: "20px" }}>
+            <DescriptionList size="large" title="余额信息" layout="horizontal" col={3}>
+              <Description term="可提现余额">
+                <span className="money" style={{ fontSize: '18px' }}><Yuan>{currentMerchant.enableBalance}</Yuan></span>
+              </Description>
+              <Description term="税率">
+                <span className="money" style={{ fontSize: '18px' }}>
+                  {currentMerchant.taxRate}
+                </span>
+              </Description>
+              <Description term="手续费">
+                <span className="money" style={{ fontSize: '18px' }}><Yuan>{currentMerchant.poundageRate}</Yuan></span>
+              </Description>
+              <Description term="户名">
+                {currentMerchant.openAccountName}
+              </Description>
+              <Description term="银行卡号">
+                {currentMerchant.bankCard}
+              </Description>
+              <Description term="行别">
+                {currentMerchant.bankName}
+              </Description>
+              <Description term="绑定手机">
+                {currentMerchant.phone}
+              </Description>
+            </DescriptionList>
+            <Divider dashed />
+          </Row>
+          <Row>
+            <Form layout="inline" onSubmit={this.showConfirm}>
+              <FormItem label="提现金额">
+                {form.getFieldDecorator('amount', {
+                  rules: [{ pattern: /^[1-9]\d{0,4}(\.\d{1,2})?$/, required: true, message: "请输入正确的提现金额！", max: 8, }],
+                })(<InputNumber min={200} max={50000} autoFocus step="1" />)}
+              </FormItem>
+              {/* <FormItem label="验证码">
+                {form.getFieldDecorator('sendCode', {
+                      rules: [{ required: true, message: "请输入验证码", max: 8, }],
+                    })(<Input placeholder="" />)}
+              </FormItem> */}
+              <FormItem>
+                <Button type='primary' htmlType="submit" style={{ marginLeft: 20 }}>提现</Button>
+              </FormItem>
+            </Form>
+          </Row>
+        </Card>
+        <Modal
+          maskClosable={false}
+          title='确认提现'
+          visible={visible}
+          onOk={this.confirmCashOut}
+          onCancel={() => {
+            this.setState({
+              visible: false
+            })
+          }}
+        >
+          <span>请输入{currentMerchant.phone}收到的验证码</span>
+          <Form layout="inline">
+            <FormItem label="验证码">
+              {form.getFieldDecorator('captcha', {
+                rules: [{ message: "请输入验证码", max: 8, }],
+              })(<Input placeholder="" value={captcha} onChange={this.setCaptcha} />)}
+            </FormItem>
+          </Form>
+        </Modal>
+      </PageHeaderWrapper>)
+  }
+}
+
+export default MerchantCashOut;

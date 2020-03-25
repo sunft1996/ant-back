@@ -1,0 +1,125 @@
+import request from '@/utils/request';
+
+export async function queryAllMember(params) {
+    return request('/lazy-card/member/memberAllList', {
+        method: 'POST',
+        data: params
+    });
+}
+
+export async function query(params) {
+    return request('/lazy-card/member/memberList', {
+        method: 'POST',
+        data: params,
+    });
+}
+
+export async function queryMemberType() {
+    return request('/lazy-card/message/memberLevelList', {
+        method: 'GET',
+    });
+}
+
+export async function saveOrUpdateMember(params) {
+    return request('/lazy-card/member/saveOrUpdateMember', {
+        method: 'POST',
+        data: params,
+    });
+}
+
+export async function saveOrUpdateAgentInfo(params) {
+    return request('/lazy-card/agent/saveOrUpdateAgentInfo',{
+      method: 'POST',
+      data: params,
+    });
+  }
+export async function modifyMemberOrMemberCard(params) {
+    return request('/lazy-card/member/modifyMemberOrMemberCard',{
+      method: 'POST',
+      data: params,
+    });
+  }
+export async function isProhibitOrEnable(params) {
+    return request('/lazy-card/member/isProhibitOrEnable',{
+      method: 'POST',
+      data: params,
+    });
+  }
+export async function inviteRecordList(params) {
+    return request('/lazy-card/member/inviteRecordList',{
+      method: 'POST',
+      data: params,
+    });
+  }
+  export async function seMemberRate(params) {
+    return request('/lazy-card/member/setMemberRate',{
+      method: 'POST',
+      data: params,
+    });
+  }
+//获取下级会员数  下级商户数  下级店主数
+  export async function queryMemberNum(params) {
+    return request('/lazy-card/member/queryMemberNum',{
+      method: 'POST',
+      data: params,
+    });
+  }
+
+  //获取上级 代理 会员详情
+  export async function queryParentDetails(params) {
+    return request('/lazy-card/member/queryParentDetails',{
+      method: 'POST',
+      data: params,
+    });
+  }
+
+  //获取会员等级列表
+  export async function levelList(params) {
+    return request('/lazy-card/member/levelList',{
+      method: 'POST',
+      data: params,
+    });
+  }
+
+  
+  //获取会员详情
+  export async function memberDetalis(params) {
+    return request('/lazy-card/member/memberDetalis',{
+      method: 'POST',
+      data: params,
+    });
+  }
+
+  
+  //会员资质审核
+  export async function examineIsAuth(params) {
+    return request('/lazy-card/member/examineIsAuth',{
+      method: 'POST',
+      data: params,
+    });
+  }
+
+  //会员通道信息
+  export async function queryMemberChannelList(params) {
+    return request('/lazy-card/member/queryMemberChannelList',{
+      method: 'POST',
+      data: params,
+    });
+  }
+
+   //会员资质提交通道审核
+   export async function toExamineAuth(params) {
+    return request('/lazy-card/member/toExamineAuth',{
+      method: 'POST',
+      data: params,
+    });
+  }
+
+
+
+  
+
+  
+
+
+

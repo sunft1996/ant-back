@@ -1,0 +1,35 @@
+import request from '@/utils/request';
+
+  /**
+ * 获取收益列表数据列表
+ * @param {*} params 
+ */
+export async function incomeList(params) {
+    return request('/lazy-card/tradeProfit/list',{
+      method: 'POST',
+      data:params
+    });
+  }
+ /**
+ * 获取收益详情
+ * @param {*} params 
+ */
+  export async function incomeDetails(params) {
+    return request('/lazy-card/tradeProfit/detail',{
+      method: 'POST',
+      data:params
+    });
+  }
+
+  /**
+ * 获取收益汇总
+ * @param {*} params 
+ */
+export async function incomeSummary(params) {
+    return request('/lazy-card/tradeProfit/tradeProfitSummary',{
+      method: 'POST',
+      data:params
+    });
+  }
+  
+  

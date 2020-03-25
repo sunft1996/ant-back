@@ -1,0 +1,15 @@
+import React from 'react';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+
+import imgUrl from '@/global.js';
+
+function DataSourceControl(props) {
+  return(
+    <PageHeaderWrapper title="数据源管理">
+    <iframe src={`${imgUrl}/lazy-card/druid/sql`} width="100%" height="800px" frameborder="0"/>  
+    </PageHeaderWrapper>
+  )
+} 
+
+
+export default DataSourceControl;

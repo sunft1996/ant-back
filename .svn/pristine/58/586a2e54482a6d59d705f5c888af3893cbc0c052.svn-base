@@ -1,0 +1,88 @@
+import { query as queryNews, saveOrUpdateNews, deleteNews } from '@/services/news';
+import { notification } from 'antd';
+
+export default {
+    namespace: 'news',
+
+    state: {
+        list: {},
+        richText:''
+    },
+
+    effects: {
+        *fetch({ payload }, { call, put }) {
+            const response = yield call(queryNews, payload);
+            yield put({
+                type: 'save',
+                payload: response.data,
+            });
+        },
+        *saveRichText({ payload }, { put }) {
+            yield put({
+                type: 'saveRich',
+                payload:payload.richText
+            });
+        },
+        *saveOrUpdate({ payload }, { call, put }) {
+            const response = yield call(saveOrUpdateNews, payload);
+            if (response.code === 'SUCCESS') {
+                const newFetch = yield call(queryNews, {
+                    pageNo: 1,
+                    pageSize: 10
+                });
+                yield put({
+                    type: 'save',
+                    payload: newFetch.data,
+                });
+                notification.success({
+                    message: response.code,
+                    description: response.msg,
+                });
+            } else {
+                notification.error({
+                    message: response.code,
+                    description: response.msg,
+                });
+            }
+            return response;
+        },
+
+        *delete({ payload }, { call, put }) {
+            const response = yield call(deleteNews, payload);
+            if (response.code === 'SUCCESS') {
+                const newFetch = yield call(queryNews, {
+                    pageNo: 1,
+                    pageSize: 10
+                });
+                yield put({
+                    type: 'save',
+                    payload: newFetch.data,
+                });
+                notification.success({
+                    message: response.code,
+                    description: response.msg,
+                });
+            } else {
+                notification.error({
+                    message: response.code,
+                    description: response.msg,
+                });
+            }
+        },
+    },
+
+    reducers: {
+        save(state, action) {
+            return {
+                ...state,
+                list: action.payload,
+            };
+        },
+        saveRich(state, action) {
+            return {
+                ...state,
+                richText: action.payload,
+            };
+        },
+    }
+};

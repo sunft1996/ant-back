@@ -1,0 +1,31 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+
+export async function queryRoles() {
+  return request('/empty-item/role/roleList', {
+    method: 'POST',
+    data: {},
+  });
+}
+
+// export async function queryNotRootRoles(params) {
+//   return request('/empty-item/role/getterRoleItem',{
+//     method: 'POST',
+//     data:params,
+//   });
+// }
+
+export async function saveOrUpdateRoles(params) {
+  return request('/empty-item/role/saveOrUpdateRole', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+export async function removeRoles(params) {
+  return request(`/empty-item/role/deleteById`, {
+    method: 'POST',
+    requestType: 'json',
+    data: params,
+  });
+}

@@ -1,0 +1,766 @@
+import React from 'react';
+import { connect } from 'dva';
+import { Row, Col, Card, Table, Select, DatePicker, Form, Input, Button, Badge, Alert } from 'antd';
+// import ExportJsonExcel from 'js-export-excel';
+import Authorized from '@/utils/Authorized';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import moment from "moment";
+import PropTypes from 'prop-types';
+import styles from "./Log.less";
+import { judgePageAuth } from '@/global.js';
+
+// 用Authorized和localStorage做权限控制
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const statusMap = ['pink', 'blue', 'green', 'red', 'gold', '#ddd'];
+const status = ['创建', '支付中', '支付成功', '交易失败', '交易完成', '交易关闭'];
+const settleStatus = ['pink', 'blue', 'green', 'red', 'gold', '#ddd'];
+const settleStatusMap = ['已接受', '处理中', '打款成功', '打款失败', '已退款', '已撤销'];
+@Form.create()
+/* eslint react/no-multi-comp:0 */
+//页面权限
+@connect(({ outMerchantTrans, loading,menu: { pagePermissions } }) => ({
+  outMerchantTrans,
+  pagePermissions,
+  loading: loading.models.rule,
+}))
+class OutMerchantTran extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      pageSize: 10,
+      currentPage: 1,
+      formValues: {},
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+    //页面权限
+    dispatch({
+      type: 'menu/fetchButton',
+    });
+    dispatch({
+      type: 'outMerchantTrans/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+    dispatch({
+      type: 'outMerchantTrans/sum',
+      payload: {}
+    });
+  }
+
+
+  downloadExcel = () => {
+    const { dispatch, form,pagePermissions } = this.props;
+    form.validateFields((err, fieldsValue) => {
+      const dateStart = fieldsValue.createTime ? fieldsValue.createTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const dateEnd = fieldsValue.createTime ? fieldsValue.createTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      const finishDateStart = fieldsValue.finishTime ? fieldsValue.finishTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const finishDateEnd = fieldsValue.finishTime ? fieldsValue.finishTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      const values = {
+        merchName: fieldsValue.merchName,
+        merchNo: fieldsValue.merchNo,
+        phone: fieldsValue.phone,
+        orderNumber: fieldsValue.orderNumber,
+        payCardNo: fieldsValue.payCardNo,
+        status: fieldsValue.status,
+        dateEnd,
+        dateStart,
+        finishDateStart,
+        finishDateEnd
+      };
+      dispatch({
+        type: 'outMerchantTrans/fetch',
+        payload: {
+          ...values,
+        }
+      }).then(() => {
+        const { outMerchantTrans } = this.props;
+        const data = outMerchantTrans.list ? outMerchantTrans.list : '';// 表格数据
+        const auth = sessionStorage.getItem("auth");
+        const option = {};
+        if (data) {
+          const dataTable = data.rows.map(item => {
+            // 订单状态 0:创建 1:支付中 2:支付成功 3:交易失败 4:交易完成 5:交易关闭
+            // 结算状态 0:已接受 1:处理中 2:打款成功 3:打款失败 4:已退款 5:已撤销
+            let status = "";
+            let settleStatus = "";
+            if (item.status == 0) {
+              status = "创建"
+            } else if (item.status == 1) {
+              status = "支付中"
+            } else if (item.status == 2) {
+              status = "支付成功"
+            } else if (item.status == 3) {
+              status = "交易失败"
+            } else if (item.status == 4) {
+              status = "交易完成"
+            } else if (item.status == 5) {
+              status = "交易关闭"
+            }
+            if (item.settleStatus === 0) {
+              settleStatus = "已接受"
+            } else if (item.settleStatus === 1) {
+              settleStatus = "处理中"
+            } else if (item.settleStatus === 2) {
+              settleStatus = "打款成功"
+            } else if (item.settleStatus === 3) {
+              settleStatus = "打款失败"
+            } else if (item.settleStatus === 4) {
+              settleStatus = "已退款"
+            } else if (item.settleStatus === 5) {
+              settleStatus = "已撤销"
+            }
+            // return auth === 'operate' || auth === 'root' ? {
+              //页面权限
+            return judgePageAuth("displayMerchantTran", pagePermissions) ? ({
+              '商户编号': item.merchNo,
+              '商户名称': item.merchName,
+              '订单号': item.orderNumber,
+              '订单金额': (item.amount),
+              '平台交易手续费': (item.parentTradeCost),
+              '平台结算手续费': (item.parentWithdrawCost),
+              '外部订单号': item.outOrderNo,
+              '订单状态': status,
+              '结算状态': settleStatus,
+              '创建时间': moment(item.createTime).format('YYYY-MM-DD HH:mm:ss'),
+              '完成时间': item.finishTime ? moment(item.finishTime).format('YYYY-MM-DD HH:mm:ss') : null,
+              '支付卡号': item.payCardNo,
+              '手机号': item.phone,
+              '行别': item.bankName
+            }) :  ({
+              '子商户编号': item.merchNo,
+              '子商户名称': item.merchName,
+              '订单号': item.orderNumber,
+              '订单金额': (item.amount),
+              '交易手续费': (item.settlePoundage),
+              '结算手续费': (item.withdrawFee),
+              '外部订单号': item.outOrderNo,
+              '订单状态': status,
+              '结算状态': settleStatus,
+              '创建时间': moment(item.createTime).format('YYYY-MM-DD HH:mm:ss'),
+              '完成时间': item.finishTime ? moment(item.finishTime).format('YYYY-MM-DD HH:mm:ss') : null,
+              '支付卡号': item.payCardNo,
+              '手机号': item.phone,
+              '行别': item.bankName
+            })
+          });
+          option.fileName = moment(Date.now()).format('YYYYMMDDHHmmss')+'交易记录查询';
+          // const sheetHeader = auth === 'operate' || auth ==='root' ? ['商户编号', '商户名称', '订单号', '订单金额', '平台交易手续费', '平台结算手续费'
+          // , '外部订单号', '订单状态', '结算状态', '创建时间', '完成时间', '支付卡号', '手机号', '行别'] : ['子商户编号', '子商户名称', '订单号', '订单金额', '交易手续费', '结算手续费'
+          // , '外部订单号', '订单状态', '结算状态', '创建时间', '完成时间', '支付卡号', '手机号', '行别']
+          const sheetHeader =judgePageAuth("displayMerchantTran", pagePermissions) ? (['商户编号', '商户名称', '订单号', '订单金额', '平台交易手续费', '平台结算手续费'
+          , '外部订单号', '订单状态', '结算状态', '创建时间', '完成时间', '支付卡号', '手机号', '行别']) : (['子商户编号', '子商户名称', '订单号', '订单金额', '交易手续费', '结算手续费'
+          , '外部订单号', '订单状态', '结算状态', '创建时间', '完成时间', '支付卡号', '手机号', '行别'])
+          option.datas = [
+            {
+              sheetData: dataTable,
+              sheetName: 'sheet',
+              // sheetFilter: ['组织ID', '组织代码', '组织名称'],
+              sheetHeader,
+            }
+          ];
+          import('js-export-excel').then((module) => {
+            const toExcel = module.default(option)
+            // const toExcel = ExportJsonExcel(option);
+            toExcel.saveExcel();
+
+          })
+        }
+      })
+    })
+
+    // if (data) {
+    //   for (const i in data) {
+    //     if (data) {
+    //       const obj = {
+    //         '组织ID': data[i].id,
+    //         '组织代码': data[i].organization_code,
+    //         '组织名称': data[i].organization_name,
+    //       }
+    //       dataTable.push(obj);
+    //     }
+    //   }
+    // }
+
+
+
+  }
+
+  // from表单确认事件
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      const dateStart = fieldsValue.createTime ? fieldsValue.createTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const dateEnd = fieldsValue.createTime ? fieldsValue.createTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      const finishDateStart = fieldsValue.finishTime ? fieldsValue.finishTime[0].format('YYYY-MM-DD 00:00:00') : null;
+      const finishDateEnd = fieldsValue.finishTime ? fieldsValue.finishTime[1].format('YYYY-MM-DD 23:59:59') : null;
+      const values = {
+        merchName: fieldsValue.merchName,
+        merchNo: fieldsValue.merchNo,
+        phone: fieldsValue.phone,
+        orderNumber: fieldsValue.orderNumber,
+        payCardNo: fieldsValue.payCardNo,
+        status: fieldsValue.status,
+        dateEnd,
+        dateStart,
+        finishDateStart,
+        finishDateEnd
+      };
+      if (!err) {
+        this.setState({
+          currentPage: 1,
+          formValues: values
+        });
+        dispatch({
+          type: 'outMerchantTrans/fetch',
+          payload: {
+            ...values,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+        dispatch({
+          type: 'outMerchantTrans/sum',
+          payload: {
+            ...values,
+          }
+        });
+      }
+    })
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    this.setState({
+      formValues: {},
+      currentPage: 1
+    });
+    dispatch({
+      type: 'outMerchantTrans/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const { pagePermissions } = this.props;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+          {/* 若权限为root则显示 */}
+          {/* <Authorized authority={["operate","root"]}>
+            <Col span={24} md={24} lg={8}>
+              <FormItem label="商户名称">
+                {getFieldDecorator('merchName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+            <Col span={24} md={24} lg={8}>
+              <FormItem label="商户编号">
+                {getFieldDecorator('merchNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+          </Authorized>
+          <Authorized authority="merch">
+            <Col span={24} md={24} lg={8}>
+              <FormItem label="子商户名称">
+                {getFieldDecorator('merchName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+            <Col span={24} md={24} lg={8}>
+              <FormItem label="子商户编号">
+                {getFieldDecorator('merchNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+          </Authorized> */}
+          {
+            judgePageAuth("displayMerchantTran", pagePermissions) ? 
+            (
+            <div>
+            <Col span={24} md={24} lg={8}>
+              <FormItem label="商户名称">
+                {getFieldDecorator('merchName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+            <Col span={24} md={24} lg={8}>
+              <FormItem label="商户编号">
+                {getFieldDecorator('merchNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+            </div>
+            )
+            :
+            (
+              <div>
+              <Col span={24} md={24} lg={8}>
+              <FormItem label="子商户名称">
+                {getFieldDecorator('merchName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+            <Col span={24} md={24} lg={8}>
+              <FormItem label="子商户编号">
+                {getFieldDecorator('merchNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+              </FormItem>
+            </Col>
+              </div>
+            )   
+          }
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="手机号">
+              {getFieldDecorator('phone',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="支付卡号">
+              {getFieldDecorator('payCardNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="订单号">
+              {getFieldDecorator('orderNumber',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="订单状态">
+              {getFieldDecorator('status',
+                {
+                  rules: []
+                }
+              )(
+                <Select>
+                  <Option value="">全部</Option>
+                  <Option value="0">创建</Option>
+                  <Option value="1">支付中</Option>
+                  <Option value="2">支付成功</Option>
+                  <Option value="3">交易失败</Option>
+                  <Option value="4">交易完成</Option>
+                  <Option value="5">交易关闭</Option>
+                </Select>
+              )}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="创建时间">
+              {getFieldDecorator('createTime',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="完成时间">
+              {getFieldDecorator('finishTime',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+          <Col span={24}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+              {
+              //页面权限
+              judgePageAuth("exportMerchantTran", pagePermissions) && 
+              <Button style={{ marginLeft: 20 }} onClick={this.downloadExcel}>导出</Button>
+              }
+              {/* <Button style={{ marginLeft: 20 }} onClick={this.downloadExcel}>导出</Button> */}
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  renderCell = (text, width) => (
+    <div style={{ width: `${width}`, overflow: "hidden", display: "inline-block", whiteSpace: 'nowrap', textOverflow: "ellipsis" }}>
+      {text}
+    </div>
+  )
+
+  handleModalVisible = (flag, record) => {
+    this.setState({
+      modalVisible: !!flag,
+      currentRecord: record,
+    });
+  };
+
+  handlePageChange = (pagination, filters, sorter) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current,
+      pageSize:pagination.pageSize
+    });
+
+    formValues.amountOrderBy = sorter.columnKey == 'amount'?sorter.order=="descend"?"desc":"asc":null,
+
+    formValues.parentTradeCostOrderBy = sorter.columnKey == 'parentTradeCost'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.parentWithdrawCostOrderBy = sorter.columnKey == 'parentWithdrawCost'?sorter.order=="descend"?"desc":"asc":null,
+
+    // 非超级管理员 运营
+    formValues.settlePoundageOrderBy = sorter.columnKey == 'settlePoundage'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.poundageRateOrderBy = sorter.columnKey == 'poundageRate'?sorter.order=="descend"?"desc":"asc":null,
+
+    formValues.timeOrderBy = sorter.columnKey == 'createTime'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.successTimeOrderBy = sorter.columnKey == 'finishTime'?sorter.order=="descend"?"desc":"asc":null,
+    dispatch({
+      type: 'outMerchantTrans/fetch',
+      payload: {
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pagination.pageSize,
+      }
+    });
+  }
+
+  render() {
+    const { outMerchantTrans,pagePermissions } = this.props;
+    const { currentPage,pageSize } = this.state;
+    const auth = sessionStorage.getItem("auth");
+    // const columns = auth === 'operate' || auth === 'root' ? [
+    const columns = judgePageAuth("displayMerchantTran", pagePermissions) ? ([
+      {
+        title: '商户编号',
+        dataIndex: 'merchNo',
+        key: 'merchNo',
+        fixed:'left',
+        render: (text) => (
+          <div style={{width:150 }}>
+            {text}
+          </div>
+        ),
+      },
+      {
+        title: '商户名称',
+        dataIndex: 'merchName',
+        key: 'merchName',
+        fixed:'left',
+        render: (text) => (
+          <div style={{width:100 }}>
+            {text}
+          </div>
+        ),
+      },
+      {
+        title: '订单号',
+        dataIndex: 'orderNumber',
+        key: 'orderNumber',
+        width: 150,
+      },
+      {
+        title: '订单金额',
+        dataIndex: 'amount',
+        key: 'amount',
+        sorter:true,
+        render: (text) => (
+          <div style={{width:100 }}>
+            {(text)}
+          </div>
+        ),
+      },
+      {
+        title: '平台交易手续费',
+        dataIndex: 'parentTradeCost',
+        key: 'parentTradeCost',
+        sorter:true,
+        render: (text) => (
+          <div style={{width:100 }}>
+            {(text)}
+          </div>
+        ),
+      },
+      {
+        title: '平台结算手续费',
+        dataIndex: 'parentWithdrawCost',
+        key: 'parentWithdrawCost',
+        sorter:true,
+        render: (text) => (
+          <div style={{width:100 }}>
+            {(text)}
+          </div>
+        ),
+      },
+      {
+        title: '外部订单号',
+        dataIndex: 'outOrderNo',
+        key: 'outOrderNo',
+        render: (text) => (
+          <div style={{width:200 }}>
+            {text}
+          </div>
+        ),
+      },
+      {
+        title: '订单状态',
+        dataIndex: 'status',
+        key: 'status',
+        render(val) {
+          return <div style={{width:100 }}><Badge status={statusMap[val]} text={status[val]} /></div>;
+        },
+      },
+      {
+        title: '结算状态',
+        dataIndex: 'settleStatus',
+        key: 'settleStatus',
+        render(val) {
+          return <div style={{width:100 }}><Badge status={settleStatus[val]} text={settleStatusMap[val]} /></div>;
+        },
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        sorter:true,
+        render: val => val && 
+        <div style={{width:100 }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>,
+      },
+      {
+        title: '完成时间',
+        dataIndex: 'finishTime',
+        key: 'finishTime',
+        sorter:true,
+        render: val => val && 
+        <div style={{width:100 }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>,
+      }
+    ]) : ([
+      {
+        title: '子商户编号',
+        dataIndex: 'merchNo',
+        key: 'merchNo',
+        render: (text) => (
+          <div style={{width:150 }}>
+            {text}
+          </div>
+        ),
+      },
+      {
+        title: '子商户名称',
+        dataIndex: 'merchName',
+        key: 'merchName',
+        render: (text) => (
+          <div style={{width:100 }}>
+            {text}
+          </div>
+        ),
+      },
+      {
+        title: '订单号',
+        dataIndex: 'orderNumber',
+        key: 'orderNumber',
+        render: (text) => (
+          <div style={{width:150 }}>
+            {text}
+          </div>
+        ),
+      },
+      {
+        title: '订单金额',
+        dataIndex: 'amount',
+        key: 'amount',
+        sorter:true,
+        render: (text) => (
+          <div style={{width:100 }}>
+            {(text)}
+          </div>
+        ),
+      },
+      {
+        title: '交易手续费',
+        dataIndex: 'settlePoundage',
+        key: 'settlePoundage',
+        sorter:true,
+        render: (text) => (
+          <div style={{width:100 }}>
+            {(text)}
+          </div>
+        ),
+      },
+      {
+        title: '结算手续费',
+        dataIndex: 'poundageRate',
+        key: 'poundageRate',
+        sorter:true,
+        render: (text) => (
+          <div style={{width:100 }}>
+            {(text)}
+          </div>
+        ),
+      },
+      {
+        title: '外部订单号',
+        dataIndex: 'outOrderNo',
+        key: 'outOrderNo',
+        render: (text) => (
+          <div style={{width:150 }}>
+            {text}
+          </div>
+        ),
+      },
+      {
+        title: '订单状态',
+        dataIndex: 'status',
+        key: 'status',
+        width: 150,
+        render(val) {
+          return <div style={{width:100 }}><Badge status={statusMap[val]} text={status[val]} /></div>;
+        },
+      },
+      {
+        title: '结算状态',
+        dataIndex: 'settleStatus',
+        key: 'settleStatus',
+        render(val) {
+          return <div style={{width:100 }}><Badge status={settleStatus[val]} text={settleStatusMap[val]} /></div>;
+        },
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        sorter:true,
+        render: val => val && 
+        <div style={{width:100 }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>,
+      },
+      {
+        title: '完成时间',
+        dataIndex: 'finishTime',
+        key: 'finishTime',
+        sorter:true,
+        render: val => val && 
+        <div style={{width:100 }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>,
+      }
+    ]);
+
+    const { total } = outMerchantTrans.list;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+      showTotal:()=>`共 ${  total  } 条`, // 显示总条数
+      showQuickJumper: true, // 显示跳转指定页框
+      showSizeChanger:true // 显示指定条数
+    }
+    const {amount,parentTradeCost,parentWithdrawCost,settlePoundage,withdrawFee} = outMerchantTrans.sum;
+
+    return (
+      <PageHeaderWrapper title="交易记录查询">
+        <Card>
+          <Row>
+            {this.renderForm()}
+          </Row>
+          <Row style={{marginBottom:20}}> 
+            {/* <Authorized authority={["operate","root"]}>
+              <Alert message={`交易汇总：订单金额￥${(amount)}, 平台交易手续费￥${(parentTradeCost)}, 平台结算手续费￥${(parentWithdrawCost)}, 交易笔数 ${total}。`} type="success" showIcon />
+            </Authorized>
+            <Authorized authority="merch">
+              <Alert message={`交易汇总：订单金额￥${(amount)}, 交易手续费￥${(settlePoundage)}, 结算手续费￥${(withdrawFee)}, 交易笔数 ${total}。`} type="success" showIcon />
+            </Authorized> */}
+            {
+              //页面权限
+              judgePageAuth("displayMerchantTran", pagePermissions) ?
+              (
+                <Alert message={`交易汇总：订单金额￥${(amount)}, 平台交易手续费￥${(parentTradeCost)}, 平台结算手续费￥${(parentWithdrawCost)}, 交易笔数 ${total}。`} type="success" showIcon />
+              ):
+              (
+                <Alert message={`交易汇总：订单金额￥${(amount)}, 交易手续费￥${(settlePoundage)}, 结算手续费￥${(withdrawFee)}, 交易笔数 ${total}。`} type="success" showIcon />
+              )
+            }
+          </Row>
+          <Row>
+            <Table
+              dataSource={outMerchantTrans.list.rows}
+              expandedRowRender={record => <p>手机号:{record.phone}&nbsp;&nbsp;&nbsp;&nbsp;支付卡号:{record.payCardNo}&nbsp;&nbsp;&nbsp;&nbsp;行别:{record.bankName}</p>}
+              columns={columns}
+              rowKey="key"
+              rowClassName="textCenter"
+              pagination={pagination}
+              loading={outMerchantTrans.loading}
+              bordered={false}
+              scroll={{x:'max-content'}}
+              // style={{ overflowX: "scroll" }}
+              onChange={this.handlePageChange}
+            />
+          </Row>
+        </Card>
+      </PageHeaderWrapper>
+    )
+  }
+}
+OutMerchantTran.propTypes = {
+  outMerchantTrans: PropTypes.object
+};
+
+OutMerchantTran.defaultProps = {
+  outMerchantTrans: {
+    list: {
+      rows: [],
+      totalPage: 5
+    }
+  }
+};
+export default OutMerchantTran;

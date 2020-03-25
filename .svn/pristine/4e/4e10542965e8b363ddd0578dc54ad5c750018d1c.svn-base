@@ -1,0 +1,102 @@
+import { distributionCash, distributionExtract, distributionCashList, profitWithdrawAgentInfo } from '@/services/ICashWithdrawal';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'cash',
+  state: {
+    loading: false,
+    distributionCashInfo: {},
+    distributionExtractInfo: {
+      enableBalance: 0,
+      processFee: 0.08,
+      withdrawFee: 1,
+      householdName: "",
+      bankCard: "",
+      subBranch: null,
+      phone: ""
+    },
+    list: []
+  },
+
+
+  effects: {
+    *fetch({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(distributionCash, payload);
+      yield put({
+        type: 'save',
+        payload: response
+      });
+    },
+    *query({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(distributionExtract, payload);
+      yield put({
+        type: 'queryCash',
+        payload: response
+      });
+    },
+    *queryList({ payload }, { call, put }, ) {
+      const response = yield call(distributionCashList, payload);
+      yield put({
+        type: 'queryCashList',
+        payload: response
+      });
+    },
+    *Cash({ payload }, { call, put }, ) {
+      const response = yield call(profitWithdrawAgentInfo, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(distributionCash, {
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+
+  },
+  reducers: {
+    loading(state) {
+      return {
+        ...state,
+        loading: true
+      };
+    },
+
+    save(state, action) {
+      return {
+        ...state,
+        distributionCashInfo: action.payload,
+        loading: false
+      };
+    },
+    queryCash(state, action) {
+      return {
+        ...state,
+        distributionExtractInfo: action.payload,
+        loading: false
+      };
+    },
+    queryCashList(state, action) {
+      return {
+        ...state,
+        list: action.payload,
+        loading: false
+      };
+    },
+  }
+};

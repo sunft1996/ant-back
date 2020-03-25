@@ -1,0 +1,53 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+
+export async function queryCode(params) {
+  return request('/lazy-card/invitationCode/queryCode', {
+    method: 'GET',
+    // data:params
+  });
+};
+
+export async function getMerchInfoRAS(params) {
+  return request('/lazy-card/merchInfo/getMerchInfoRAS', {
+    method: 'GET',
+    // data:params
+  });
+};
+
+export async function updateMerchInfoRAS(params) {
+  return request('/lazy-card/merchInfo/updateMerchInfoRAS', {
+    method: 'POST',
+    data: params,
+  });
+}
+export async function againMerchInfoRAS(params) {
+  return request('/lazy-card/merchInfo/againMerchInfoRAS', {
+    method: 'POST',
+    data: params,
+  });
+}
+export async function downloadRAS(params) {
+  const merchNo = encodeURIComponent(params);
+  return request(`/lazy-card/merchInfo/downloadRAS?merchNo=${merchNo}`);
+}
+// 发布app新版本 （包含热更新和整包下载）
+export async function sendApp(params) {
+  return request(`/lazy-card/edition/savaOrUpdateEdition`, {
+    method: 'POST',
+    data: params,
+  });
+}
+// 请求app版本信息
+export async function queryAppList(params) {
+  return request(`/lazy-card/edition/editionList`, {
+    method: 'POST',
+    data: params,
+  });
+}
+export async function regenerateKey(params) {
+  return request('/lazy-card/merchInfo/regenerateKey', {
+    method: 'GET',
+    // data:params
+  });
+};

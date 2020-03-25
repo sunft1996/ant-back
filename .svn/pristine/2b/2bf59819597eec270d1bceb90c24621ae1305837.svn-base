@@ -1,0 +1,28 @@
+import request from '@/utils/request';
+
+export async function distributionCash(params) {
+  return request('/lazy-card/agent/distributionCashAgent',{
+    method: 'GET',
+    // data:params
+  });
+};
+
+export async function distributionExtract(params) {
+  return request('/lazy-card/agent/distributionExtract',{
+    method: 'POST',
+    // data:params
+  });
+};
+
+export async function distributionCashList(params) {
+  return request('/lazy-card/agent/distributionAgentList',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function profitWithdrawAgentInfo(params) {
+  return request('/lazy-card/agent/profitWithdrawAgentInfo',{
+    method: 'POST',
+    data:params
+  });
+};

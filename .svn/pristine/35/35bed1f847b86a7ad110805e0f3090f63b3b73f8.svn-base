@@ -1,0 +1,200 @@
+import React, { PureComponent, Fragment } from 'react';
+import { connect } from 'dva';
+import { Popconfirm, Row, Card, Form, Input, Select, Button, Collapse,message} from 'antd';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import imgUrl from '@/global';
+import styles from "./MerchShare.less";
+
+import { tsThisType } from '@babel/types';
+const { Panel } = Collapse;
+const FormItem = Form.Item;
+const { Option } = Select;
+const { TextArea } = Input;
+const customPanelStyle = {
+  background: '#f7f7f7',
+  borderRadius: 4,
+  marginBottom: 24,
+  border: 0,
+  overflow: 'hidden',
+};
+
+/**
+ * 接口请求
+ */
+@connect(({ seting, loading }) => ({
+  seting,
+  loading: loading.models.rule,
+}))
+
+@Form.create()
+class MerchRas extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.copyInput = React.createRef();
+    this.state = {
+      isShow: "hide",
+    }
+  }
+  /**
+   * 保存
+   */
+  handleSubmit = e => {
+    const { dispatch, form, seting } = this.props;
+    e.preventDefault();
+    form.validateFieldsAndScroll((err, values) => {
+      if (!err) {
+        if (seting.merchInfoRAS.data) {
+          values.id = seting.merchInfoRAS.data.id;
+        }
+        dispatch({
+          type: 'seting/addRAS',
+          payload: {
+            ...values
+          }
+        });
+      }
+    });
+  };
+
+  /**
+   * 初始化加载数据
+   */
+  componentDidMount() {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'seting/fetchRAS',
+    });
+  }
+  confirm = () => {
+    const { dispatch, form, seting } = this.props;
+    dispatch({
+      type: 'seting/againRAS',
+      payload: {
+        id: seting.merchInfoRAS.data.id
+      }
+    })
+    // message.info('Clicked on Yes.');
+  }
+
+  downloadRAS = () => {
+    location.href = `${imgUrl}/lazy-card/merchInfo/downloadRAS`;
+  }
+
+  regenerateKey =()=>{
+    const { dispatch, form, seting } = this.props;
+    dispatch({
+      type: 'seting/fetchKEY',
+    });
+  }
+  copy = () => {
+    this.copyInput.current.input.select();
+    document.execCommand("Copy"); // 执行浏览器复制命令
+    message.success('复制成功');
+  }
+  copyTextArea = () => {
+    document.getElementById("myTextarea").select();
+    document.execCommand("Copy"); // 执行浏览器复制命令
+    message.success('复制成功');
+  }
+  isShow = () => {
+    const  isShow  = this.state.isShow;
+    if(isShow === "show"){
+      this.setState(
+        {
+          isShow:"hide",
+        }
+      )
+    }else{
+      this.setState(
+        {
+          isShow:"show",
+        }
+      )
+    }
+      
+  }
+
+  render() {
+    const { values, form, seting } = this.props;
+    const  isShow  = this.state.isShow;
+    const row = seting.merchInfoRAS.data ? seting.merchInfoRAS.data : { "merchNo": "", "privateKey": "" };
+    return (
+      <PageHeaderWrapper title="商户秘钥配置">
+        <Card>
+          <Row>
+            <Form layout='horizontal' labelCol={{ span: 4 }} wrapperCol={{ span: 14 }} onSubmit={this.handleSubmit}>
+              <Collapse> 
+                <Panel header="RSA秘钥配置" key="1" style={customPanelStyle}>             
+                <Form.Item label="商户编号">
+                  {form.getFieldDecorator('merchNo', {
+                    // initialValue: row.merchNo,
+                    // rules: [],
+                  })(
+                    <p>&nbsp;&nbsp;{row.merchNo}</p>
+                  )}
+                </Form.Item>
+                <Form.Item label="商户公钥">
+                  {form.getFieldDecorator('publicKey', {
+                    // initialValue: row.publicKey,
+                    // rules: [],
+                  })(
+                    <p> <TextArea id="myTextarea" style={{border:0} } rows={3}  value={row.publicKey}/></p>
+                  )}
+                  <Button onClick={this.copyTextArea}>复制</Button>&nbsp;&nbsp;&nbsp;
+                  <Popconfirm placement="topLeft" title={"重置会导致当前密钥失效，确定重置吗？"} onConfirm={() => this.confirm()} okText="是" cancelText="否">
+                    <Button type="primary">重置系统公钥</Button>
+                  </Popconfirm>
+                </Form.Item>
+                <Form.Item label="对外公钥">
+                  {form.getFieldDecorator('externalPublicKey', {
+                    initialValue: row.externalPublicKey,
+                    rules: [{ required: true, message: '请输入外部公钥!' }],
+                  })(
+                    <TextArea rows={6} />
+                  )}
+                </Form.Item>
+                <Form.Item wrapperCol={{ offset: 4 }}>
+                  <Button type='primary' htmlType="submit">提交</Button>&nbsp;&nbsp;&nbsp;
+                  <Popconfirm placement="topLeft" title={"该密钥系统平台不会保存，只做生成工具提供。"} onConfirm={() => this.downloadRAS()} okText="是" cancelText="否">
+                    <Button type="primary">秘钥生成工具</Button>
+                </Popconfirm>
+                </Form.Item>
+              </Panel>
+              <Panel header="MD5秘钥" key="2" style={customPanelStyle}> 
+                <Form.Item label="秘钥:" >
+                {form.getFieldDecorator('messageKey',{
+                  })(
+                     <p>
+                       {isShow === "hide" ? 
+                        (
+                        <div>
+                        <Input  style={{ width: 280,border:0 }} value={"******"}/>
+                        <Button onClick={ this.isShow}>查看</Button></div>
+                         )
+                        :
+                        (
+                        <div>
+                        <Input  style={{ width: 280,border:0 }} value={row.messageKey} ref={this.copyInput} />
+                        <Button onClick={ this.isShow}>隐藏</Button>&nbsp;&nbsp;&nbsp;
+                        <Button onClick={this.copy}>复制</Button></div>
+                        )
+                       }  
+                     </p>
+                  )}
+                </Form.Item>
+                <Form.Item wrapperCol={{ offset: 4 }}>
+                <Popconfirm placement="topLeft" title={"重置会导致当前秘钥失效，确定重置吗？"} onConfirm={() => this.regenerateKey()} okText="是" cancelText="否">
+                    <Button type="primary">重置秘钥</Button>
+                </Popconfirm>
+                </Form.Item>  
+              </Panel>
+              </Collapse>
+            </Form>
+          </Row>
+        </Card>
+      </PageHeaderWrapper>
+    )
+  }
+
+}
+export default MerchRas;

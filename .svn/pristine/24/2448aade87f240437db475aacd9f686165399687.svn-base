@@ -1,0 +1,736 @@
+import React from 'react';
+import { connect } from 'dva';
+import { Row, Col, Badge, Card, Table, Select, DatePicker, Form, Input, Button, Alert, Modal } from 'antd';
+// import ExportJsonExcel from 'js-export-excel';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import PropTypes from 'prop-types';
+import moment from "moment";
+import Authorized from '@/utils/Authorized';
+import styles from "./Log.less";
+import { judgePageAuth } from '@/global.js';
+
+const { confirm } = Modal;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+@Form.create()
+/* eslint react/no-multi-comp:0 */
+//页面权限
+@connect(({ tran, loading,menu: { pagePermissions } }) => ({
+  tran,
+  pagePermissions,
+  loading: loading.models.rule,
+}))
+class TransactionRecord extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      formValues: {},
+      pageSize: 10,
+      currentPage: 1
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+    //页面权限
+    dispatch({
+      type: 'menu/fetchButton',
+    });
+    dispatch({
+      type: 'tran/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+    dispatch({
+      type: 'tran/sum',
+      payload: {}
+    });
+
+    dispatch({
+      type: 'tran/sumTransaction',
+      payload: {}
+    });
+  }
+
+  // from表单确认事件
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        fieldsValue.time = fieldsValue.time?fieldsValue.time:[];
+        fieldsValue.finishTime =fieldsValue.finishTime?fieldsValue.finishTime:[];
+        const value = {
+          dateStart: fieldsValue.time.length >0 ? fieldsValue.time[0].format('YYYY-MM-DD 00:00:00') : null,
+          dateEnd: fieldsValue.time.length >0 ? fieldsValue.time[1].format('YYYY-MM-DD 23:59:59') : null,
+          successStartTime: fieldsValue.finishTime.length >0 ? fieldsValue.finishTime[0].format('YYYY-MM-DD 00:00:00') : null,
+          succesEndTime: fieldsValue.finishTime.length >0? fieldsValue.finishTime[1].format('YYYY-MM-DD 23:59:59') : null,
+          agentName: fieldsValue.agentName != null ? fieldsValue.agentName.trim() : null,
+          merchName: fieldsValue.merchName != null ? fieldsValue.merchName.trim() : null,
+          orderNumber: fieldsValue.orderNumber != null ? fieldsValue.orderNumber.trim() : null,
+          outOrderNo: fieldsValue.outOrderNo != null ? fieldsValue.outOrderNo.trim() : null,
+          status: fieldsValue.status,
+        }
+
+        this.setState({
+          currentPage: 1,
+          formValues: value
+        });
+        dispatch({
+          type: 'tran/fetch',
+          payload: {
+            ...value,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+        dispatch({
+          type: 'tran/sum',
+          payload: {
+            ...value
+          }
+        });
+
+        dispatch({
+          type: 'tran/sumTransaction',
+          payload: {
+            ...value
+          }
+        });
+      }
+    })
+  }
+
+  // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    this.setState({
+      formValues: {},
+      currentPage: 1
+    });
+    dispatch({
+      type: 'tran/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+    dispatch({
+      type: 'tran/sum',
+      payload: {}
+    });
+  };
+
+  downloadExcel = () => {
+    const { dispatch, form,pagePermissions } = this.props;
+    form.validateFields((err, fieldsValue) => {
+      fieldsValue.time = fieldsValue.time?fieldsValue.time:[];
+      fieldsValue.finishTime =fieldsValue.finishTime?fieldsValue.finishTime:[];
+      const value = {
+        dateStart: fieldsValue.time.length >0 ? fieldsValue.time[0].format('YYYY-MM-DD 00:00:00') : null,
+        dateEnd: fieldsValue.time.length >0 ? fieldsValue.time[1].format('YYYY-MM-DD 23:59:59') : null,
+        successStartTime: fieldsValue.finishTime.length >0 ? fieldsValue.finishTime[0].format('YYYY-MM-DD 00:00:00') : null,
+        succesEndTime: fieldsValue.finishTime.length >0? fieldsValue.finishTime[1].format('YYYY-MM-DD 23:59:59') : null,
+        agentName: fieldsValue.agentName != null ? fieldsValue.agentName.trim() : null,
+        merchName: fieldsValue.merchName != null ? fieldsValue.merchName.trim() : null,
+        orderNumber: fieldsValue.orderNumber != null ? fieldsValue.orderNumber.trim() : null,
+        outOrderNo: fieldsValue.outOrderNo != null ? fieldsValue.outOrderNo.trim() : null,
+        status: fieldsValue.status,
+      }
+      dispatch({
+        type: 'tran/fetch',
+        payload: {
+          ...value
+        }
+      }).then(() => {
+        const { tran } = this.props;
+        const data = tran.list ? tran.list.rows : '';// 表格数据
+        // const auth = sessionStorage.getItem("auth");
+        const option = {};
+        const auth = sessionStorage.getItem("auth");
+        if (data) {
+          const dataTable = data.map(item => {
+            // 订单状态 0:创建 1:支付中 2:支付成功 3:交易失败 4:交易完成 5:交易关闭
+            // 结算状态 0:已接受 1:处理中 2:打款成功 3:打款失败 4:已退款 5:已撤销
+            let status = "";
+            let settleStatus = "";
+            if (item.status == 0) {
+              status = "创建"
+            } else if (item.status == 1) {
+              status = "支付中"
+            } else if (item.status == 2) {
+              status = "支付成功"
+            } else if (item.status == 3) {
+              status = "交易失败"
+            } else if (item.status == 4) {
+              status = "交易完成"
+            } else if (item.status == 5) {
+              status = "交易关闭"
+            }
+            if (item.settleStatus === 0) {
+              settleStatus = "已接受"
+            } else if (item.settleStatus === 1) {
+              settleStatus = "处理中"
+            } else if (item.settleStatus === 2) {
+              settleStatus = "打款成功"
+            } else if (item.settleStatus === 3) {
+              settleStatus = "打款失败"
+            } else if (item.settleStatus === 4) {
+              settleStatus = "已退款"
+            } else if (item.settleStatus === 5) {
+              settleStatus = "已撤销"
+            }
+            // return auth === 'operate' || auth === 'root' ? {
+            return judgePageAuth("displayRecord", pagePermissions) ? ({
+              '代理商名称': item.agentName,
+              '会员名称': item.merchName,
+              '商户订单号': item.orderNumber,
+              '支付流水号' : item.orderNumber,
+              '订单金额': (item.amount / 1).toFixed(2),
+              '商户交易手续费': (item.settlePoundage / 1).toFixed(2),
+              '商户结算手续费' : (item.withdrawFee / 1).toFixed(2),
+              '订单状态': status,
+              '结算状态': settleStatus,
+              '所属通道': item.channelName,
+              '创建时间': moment(item.createTime).format('YYYY-MM-DD HH:mm:ss'),
+              '完成时间': moment(item.finishTime).format('YYYY-MM-DD HH:mm:ss'),
+              '手机号' : item.phone,
+              '支付卡号' : item.payCardNo,
+              '行别' : item.bankName,
+            }) : ({
+                '会员名称': item.merchName,
+                '会员手机号': item.phone,
+                '商户订单号': item.outOrderNo,
+                '订单金额': (item.amount / 1).toFixed(2),
+                '订单状态': status,
+                '完成时间': item.finishTime == null ? '' : moment(item.finishTime).format('YYYY-MM-DD HH:mm:ss'),
+              })
+          });
+          option.fileName = moment(Date.now()).format('YYYYMMDDHHmmss')+'商户交易记录';
+          // const sheetHeader = auth === 'operate' || auth === 'root' ? ['代理商名称', '会员名称', '交易时间', '商户订单号', '订单金额',
+          //   '订单状态', '支付银行卡号', '支付银行卡号', '行别', '外部订单号', '通道', '完成时间']
+          //   : ['商户订单号', '会员名称', '手机号', '交易金额', '状态', '通道', '完成时间']
+          const sheetHeader = judgePageAuth("displayRecord", pagePermissions)? (['代理商名称', '会员名称', 
+            '商户订单号','支付流水号','订单金额','商户交易手续费','商户结算手续费','订单状态','结算状态','所属通道','创建时间','完成时间','手机号','支付卡号','行别',])
+            : (['会员名称', '会员手机号', '商户订单号', '订单金额', '订单状态', '完成时间'])
+          option.datas = [
+            {
+              sheetData: dataTable,
+              sheetName: 'sheet',
+              // sheetFilter: ['组织ID', '组织代码', '组织名称'],
+              sheetHeader,
+            }
+          ];
+          import('js-export-excel').then((module) => {
+            const toExcel = module.default(option)
+            // const toExcel = ExportJsonExcel(option);
+            toExcel.saveExcel();
+
+          })
+        }
+      })
+    })
+
+  }
+
+
+
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const { pagePermissions } = this.props;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span: 4, md: 4, lg: 8 }} wrapperCol={{ span: 19, md: 19, lg: 16 }} onSubmit={this.handleSearch}>
+        <Row>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="代理商">
+              {getFieldDecorator('agentName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="会员名称">
+              {getFieldDecorator('merchName',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="商户订单号">
+              {getFieldDecorator('outOrderNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="支付流水号">
+              {getFieldDecorator('orderNumber',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="订单状态">
+              {getFieldDecorator('status',
+                {
+                  rules: []
+                }
+              )(
+                <Select>
+                  <Option value={null}>全部</Option>
+                  <Option value={0}>创建</Option>
+                  <Option value={1}>支付中</Option>
+                  <Option value={2}>支付成功</Option>
+                  <Option value={3}>交易失败</Option>
+                  <Option value={4}>交易完成</Option>
+                  <Option value={5}>交易关闭</Option>
+                </Select>
+              )}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="创建时间">
+              {getFieldDecorator('time',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="完成时间">
+              {getFieldDecorator('finishTime',
+                {
+                  rules: []
+                }
+              )(<RangePicker />)}
+            </FormItem>
+          </Col>
+
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{ marginLeft: 20 }} onClick={this.handleFormReset}>
+                重置
+              </Button>
+              {
+                //页面权限
+                judgePageAuth("exportRecord", pagePermissions) && 
+                (
+                  <Button style={{ marginLeft: 20 }} onClick={this.downloadExcel}>导出</Button>
+                )
+              }
+              {/* <Button style={{ marginLeft: 20 }} onClick={this.downloadExcel}>导出</Button> */}
+            </FormItem>
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+  renderCell = (text, width) => (
+    <div style={{ width: `${width}`, overflow: "hidden", display: "inline-block", whiteSpace: 'nowrap', textOverflow: "ellipsis" }}>
+      {text}
+    </div>
+  )
+
+
+  handlePageChange = (pagination, filters, sorter) => {
+    const { dispatch } = this.props;
+    const { pageSize, formValues } = this.state;
+    this.setState({
+      currentPage: pagination.current,
+      pageSize:pagination.pageSize
+    });
+    formValues.orderNoOrderBy = sorter.columnKey == 'outOrderNo'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.outOrderNoOrderBy = sorter.columnKey == 'orderNumber'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.amountOrderBy = sorter.columnKey == 'amount'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.settlePoundageOrderBy = sorter.columnKey == 'settlePoundage'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.transRateOrderBy = sorter.columnKey == 'withdrawFee'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.timeOrderBy = sorter.columnKey == 'createTime'?sorter.order=="descend"?"desc":"asc":null,
+    formValues.successTimeOrderBy = sorter.columnKey == 'finishTime'?sorter.order=="descend"?"desc":"asc":null,
+    dispatch({
+      type: 'tran/fetch',
+      payload: {
+        ...formValues,
+        "pageNo": pagination.current,
+        "pageSize": pagination.pageSize,
+      }
+    });
+  }
+
+  // 补单操作
+  handlErepairOdd = (record) => {
+    const { dispatch } = this.props;
+    const title = `你确定要设置单号:${  record.orderNumber  }进行补单吗`;
+    // confirm({
+    //   title,
+    //   onOk() {
+    //     // dispatch({
+    //     //   type: 'member/seMemberRate',
+    //     //   payload: record,
+    //     //   callback: () => {
+    //     //     this.setState({
+    //     //       selectedRows: [],
+    //     //     });
+    //     //   },
+    //     // })
+
+    //   },
+    //   onCancel() { },
+    // });
+
+    dispatch({
+      type: 'tran/handlErepairOdd',
+      payload: record,
+    })
+
+
+  };
+
+  render() {
+    const { tran,pagePermissions} = this.props;
+    const { currentPage, pageSize } = this.state;
+    const auth = sessionStorage.getItem("auth");
+    // const columns = auth === 'operate' || auth === 'root' ? [
+    //页面权限
+    const columns = judgePageAuth("displayRecord", pagePermissions) ?  ([
+      {
+        title: '代理商名称',
+        dataIndex: 'agentName',
+        key: 'agentName',
+        fixed: 'left'
+      },
+      {
+        title: '会员名称',
+        dataIndex: 'merchName',
+        key: 'merchName',
+        fixed: 'left'
+      },
+
+      {
+        title: '商户订单号',
+        dataIndex: 'outOrderNo',
+        key: 'outOrderNo',
+        sorter:true
+      },
+      {
+        title: '支付流水号',
+        dataIndex: 'orderNumber',
+        key: 'orderNumber',
+        sorter:true
+      },
+      {
+        title: '订单金额',
+        dataIndex: 'amount',
+        key: 'amount',
+        sorter:true,
+        render: (text) => (
+          <div style={{ minWidth: 80 }}>
+            {(text / 100).toFixed(2)}
+          </div>
+        ),
+      },
+      
+      {
+        title: '商户交易手续费',
+        dataIndex: 'settlePoundage',
+        key: 'settlePoundage',
+        sorter:true,
+        render: (text) => (
+          <div style={{ width: 100 }}>
+            {(text / 100).toFixed(2)}
+          </div>
+        ),
+      },
+      {
+        title: '商户结算手续费',
+        dataIndex: 'withdrawFee',
+        key: 'withdrawFee',
+        sorter:true,
+        render: (text) => (
+          <div style={{ width: 100 }}>
+            {(text / 100).toFixed(2)}
+          </div>
+        ),
+      },
+      {
+        title: '订单状态',
+        dataIndex: 'status',
+        key: 'status',
+        render(val) {
+          let status;
+          let statusText;
+          switch (Number(val)) {
+            case 0:
+              statusText = "创建";
+              status = "yellow";
+              break;
+            case 1:
+              statusText = "支付中";
+              status = "blue";
+              break;
+            case 2:
+              statusText = "支付成功";
+              status = "green";
+              break;
+            case 3:
+              statusText = "交易失败";
+              status = "red";
+              break;
+            case 4:
+              statusText = "交易完成";
+              status = "gold";
+              break;
+            case 5:
+              statusText = "交易关闭";
+              status = "#ccc";
+              break;
+            default:
+              break;
+          }
+          return <Badge color={status} text={statusText} style={{ minWidth: 80 }} />
+        }
+      },
+      {
+        title: '结算状态',
+        dataIndex: 'settleStatus',
+        key: 'settleStatus',
+        render(val) {
+          let status;
+          let statusText;
+          switch (Number(val)) {
+            case 0:
+              statusText = "已接受";
+              status = "yellow";
+              break;
+            case 1:
+              statusText = "处理中";
+              status = "blue";
+              break;
+            case 2:
+              statusText = "打款成功";
+              status = "green";
+              break;
+            case 3:
+              statusText = "打款失败";
+              status = "red";
+              break;
+            case 4:
+              statusText = "已退款";
+              status = "gold";
+              break;
+            case 5:
+              statusText = "已撤销";
+              status = "#ccc";
+              break;
+            default:
+              break;
+          }
+          return <Badge color={status} text={statusText} style={{ minWidth: 80 }} />
+        }
+      },
+      {
+        title: '所属通道',
+        dataIndex: 'channelName',
+        key: 'channelName',
+      },
+      {
+        title: '创建时间',
+        dataIndex: 'createTime',
+        key: 'createTime',
+        sorter:true,
+        render: (item) => {
+          return item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+        }
+      },
+      {
+        title: '完成时间',
+        dataIndex: 'finishTime',
+        key: 'finishTime',
+        sorter:true,
+        render: item => {
+          return (
+            item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+          )
+        }
+      }, {
+        title: '操作',
+        render: (text, record) => (
+          <div style={{ width: 150, flexWrap: 'wrap' }}>
+            {
+              //页面权限
+              judgePageAuth("supplementRecord", pagePermissions) && 
+              (
+                record.status === 1 ?
+                <a onClick={() => this.handlErepairOdd(record)}>补单</a> : ""
+              )
+            }
+            {/* <Authorized authority={["operate", "root"]}>
+              {record.status === 1 ?
+                <a onClick={() => this.handlErepairOdd(record)}>补单</a> : ""
+              }
+            </Authorized> */}
+
+          </div>
+        ),
+      },
+
+    ]) :([
+        {
+          title: '会员名称',
+          dataIndex: 'merchName',
+          key: 'merchName',
+        },
+        {
+          title: '会员手机号',
+          dataIndex: 'phone',
+          key: 'phone',
+        },
+        {
+          title: '商户订单号',
+          dataIndex: 'outOrderNo',
+          key: 'outOrderNo',
+        },
+
+        {
+          title: '订单金额',
+          dataIndex: 'amount',
+          key: 'amount',
+          sorter:true,
+          render: (text) => (
+            <div style={{ minWidth: 80 }}>
+              {(text / 100).toFixed(2)}
+            </div>
+          ),
+        },
+        {
+          title: '订单状态',
+          dataIndex: 'status',
+          key: 'status',
+          render(val) {
+            let status;
+            let statusText;
+            switch (Number(val)) {
+              case 0:
+                statusText = "创建";
+                status = "yellow";
+                break;
+              case 1:
+                statusText = "支付中";
+                status = "blue";
+                break;
+              case 2:
+                statusText = "支付成功";
+                status = "green";
+                break;
+              case 3:
+                statusText = "交易失败";
+                status = "red";
+                break;
+              case 4:
+                statusText = "交易完成";
+                status = "gold";
+                break;
+              case 5:
+                statusText = "交易关闭";
+                status = "#ccc";
+                break;
+              default:
+                break;
+            }
+            return <Badge color={status} text={statusText} style={{ minWidth: 80 }} />
+          }
+        },
+        {
+          title: '完成时间',
+          dataIndex: 'finishTime',
+          key: 'finishTime',
+          sorter:true,
+          render: (item) => {
+            return item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')
+          }
+        },
+      ]);
+
+    const { total } = tran.list;
+    // 交易汇总
+    const sumTransactionRecord = tran.transactionItem;
+    const pagination = {
+      current: currentPage,
+      pageSize,
+      total,
+      showTotal:()=>"共 " + total + " 条", //显示总条数
+      showQuickJumper: true, //显示跳转指定页框
+      showSizeChanger:true //显示指定条数
+    }
+    return (
+      <PageHeaderWrapper title="商户交易记录">
+        <Card>
+          <Row>
+            {this.renderForm()}
+          </Row>
+          <Row style={{ marginBottom: 20 }}>
+
+            <Alert message={`交易汇总：订单金额￥${sumTransactionRecord.amount},商户交易手续费${(sumTransactionRecord.settlePoundage)}, 商户结算手续费${(sumTransactionRecord.withdrawFee)}, 交易笔数 ${total}。`} type="success" showIcon />
+
+          </Row>
+          <Row>
+            <Table
+              dataSource={tran.list.rows}
+              rowKey="id"
+              rowClassName="textCenter"
+              // expandedRowRender={auth === 'operate' || auth === 'root' ? record => <p>手机号 : {record.phone}&nbsp;&nbsp;&nbsp;&nbsp;
+              // 支付卡号 : {record.payCardNo}&nbsp;&nbsp;&nbsp;&nbsp;行别 : {record.bankName}
+              // </p> : ''}
+              expandedRowRender={judgePageAuth("displayRecord", pagePermissions)? (record => <p>手机号 : {record.phone}&nbsp;&nbsp;&nbsp;&nbsp;
+              支付卡号 : {record.payCardNo}&nbsp;&nbsp;&nbsp;&nbsp;行别 : {record.bankName}
+              </p> ): ''}
+              columns={columns}
+              pagination={pagination}
+              loading={tran.loading}
+              bordered={false}
+              scroll={{ x: 'max-content' }}
+              onChange={this.handlePageChange}
+            />
+          </Row>
+        </Card>
+      </PageHeaderWrapper>
+    )
+  }
+}
+TransactionRecord.propTypes = {
+  tran: PropTypes.object
+};
+
+TransactionRecord.defaultProps = {
+  tran: {
+    list: {
+      rows: [],
+      totalPage: 5
+    }
+  }
+};
+export default TransactionRecord;

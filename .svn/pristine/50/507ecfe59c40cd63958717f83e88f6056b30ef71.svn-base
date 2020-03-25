@@ -1,0 +1,36 @@
+import request from '@/utils/request';
+
+/**
+ * 编辑 or 新增
+ * @param {*} params 
+ */
+export async function saveOrUpdateCategory(params) {
+  return request('/lazy-card/productCategory/saveOrUpdateCategory',{
+    method: 'POST',
+    data:params
+  });
+}
+
+  /**
+ * 获取分类数据列表
+ * @param {*} params 
+ */
+export async function categoryList(params) {
+  return request('/lazy-card/productCategory/categoryList',{
+    method: 'POST',
+    data:params
+  });
+}
+
+ /**
+ * 删除分类数据
+ * @param {*} params 
+ */
+export async function deleteById(params) {
+  return request('/lazy-card/productCategory/deleteById',{
+    method: 'POST',
+    data:params
+  });
+}
+
+

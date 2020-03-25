@@ -1,0 +1,142 @@
+import { queryJobs, ResumeJob, PauseJob, deleteJobs, addJob, updateJobs } from '@/services/job';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'job',
+
+  state: {
+    list: [],
+  },
+
+  effects: {
+    *fetch({ payload }, { call, put }) {
+      const response = yield call(queryJobs, payload);
+      yield put({
+        type: 'save',
+        payload: response,
+      });
+    },
+    *resumejob({ payload }, { call, put }) {
+      const response = yield call(ResumeJob, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryJobs, {
+          "pageNo": 1,
+          "pageSize": 1
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    *pausejob({ payload }, { call, put }) {
+      const response = yield call(PauseJob, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryJobs, {
+          "pageNo": 1,
+          "pageSize": 1
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    *add({ payload }, { call, put }) {
+      const response = yield call(addJob, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryJobs, {
+          "pageNo": 1,
+          "pageSize": 1
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+
+    *remove({ payload }, { call, put }) {
+      const response = yield call(deleteJobs, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryJobs, {
+          "pageNo": 1,
+          "pageSize": 1
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    *update({ payload, callback }, { call, put }) {
+      const response = yield call(updateJobs, payload);
+      if (response.code === 'SUCCESS') {
+        // 判断是否是用户详情页触发的修改信息
+        const newFetch = yield call(queryJobs, {
+          "pageNo": 1,
+          "pageSize": 1
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      if (callback) callback();
+    },
+
+  },
+  reducers: {
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload,
+      };
+    },
+  },
+};

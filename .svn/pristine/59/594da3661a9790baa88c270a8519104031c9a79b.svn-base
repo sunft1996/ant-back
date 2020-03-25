@@ -1,0 +1,61 @@
+import {memberAddressListInfo,areaListInfo} from '@/services/MemberAddressList';
+
+
+export default {
+    namespace: 'address',
+    state: {
+        loading:false,
+        list: {
+            data:{
+             total:0,
+             rows: [],
+             totalPage: 5
+            }
+           },
+        areaList:[],
+      },
+
+    effects: {
+        *fetch({ payload }, { call, put } ,) {
+            yield put({
+              type: 'loading',
+            });
+            const response =  yield call(memberAddressListInfo,payload);
+            yield put({
+              type: 'save',
+              payload:response
+            });
+          },
+        *area({ payload }, { call, put } ,) {
+            const response =  yield call(areaListInfo,payload);
+            yield put({
+              type: 'queryList',
+              payload:response
+            });
+          },
+
+    },
+    reducers: {
+        loading(state){
+          return {
+            ...state,
+            loading:true
+          };
+        },
+    
+        save(state, action) {
+          return {
+            ...state,
+            list: action.payload,
+            loading:false
+          };
+        },
+        queryList(state, action) {
+            return {
+              ...state,
+              areaList: action.payload,
+            //   loading:false
+            };
+          },
+    }
+};

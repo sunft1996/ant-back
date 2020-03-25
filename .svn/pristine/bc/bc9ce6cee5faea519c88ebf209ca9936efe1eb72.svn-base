@@ -1,0 +1,82 @@
+import {  queryLogs,statisticsProfit,downloadMember } from '@/services/profitDetail';
+
+export default {
+  namespace: 'profit',
+
+  state: {
+    list: [],
+    loading:false,
+    profitCount1:[],
+    downloadList:[]
+  },
+
+  effects: {
+    *fetch({ payload }, { call, put } ,) {
+      yield put({
+        type: 'loading',
+      });
+      const response =  yield call(queryLogs,payload);
+      yield put({
+        type: 'save',
+        payload:response
+      });
+    },
+    *statisticsProfit({ payload }, { call, put } ,) {
+      yield put({
+        type: 'loading',
+      });
+      const statisticsProfit1 =  yield call(statisticsProfit,payload);
+      yield put({
+        type: 'profitCount',
+        payload:statisticsProfit1
+      });
+    },
+
+
+    *download({ payload }, { call, put } ,) {
+      yield put({
+        type: 'loading',
+      });
+      const response =  yield call(downloadMember,payload);
+      yield put({
+        type: 'downloadsave',
+        payload:response
+      });
+    },
+
+
+  },
+
+  reducers: {
+    loading(state){
+      return {
+        ...state,
+        loading:true
+      };
+    },
+
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload.data,
+        loading:false
+      };
+    },
+
+    profitCount(state, action) {
+      return {
+        ...state,
+        profitCount1: action.payload,
+        loading:false
+      };
+    },
+
+    downloadsave(state, action) {
+      return {
+        ...state,
+        downloadList: action.payload.data,
+        loading:false
+      };
+    },
+}
+};

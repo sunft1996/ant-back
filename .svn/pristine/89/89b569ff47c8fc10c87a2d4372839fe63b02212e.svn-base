@@ -1,0 +1,20 @@
+import request from '@/utils/request';
+import { stringify } from 'qs';
+
+export async function masterCardList(params) {
+  return request('/lazy-card/masterCard/masterCardList',{
+    method: 'POST',
+    data:params
+  });
+};
+export async function saveOrUpdate(params) {
+  return request('/lazy-card/masterCard/saveOrUpdate',{
+    method: 'POST',
+    data:params
+  });
+};
+// export async function areaListInfo(params) {
+//     const pid = encodeURIComponent(params);
+//     return request(`/lazy-card/area/areaList?pid=${pid}`);
+//   };
+

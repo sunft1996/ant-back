@@ -1,0 +1,72 @@
+import React ,{ PureComponent }from 'react';
+import { formatMessage, FormattedMessage } from 'umi-plugin-react/locale';
+import { Row, Col, Card, Form, Input, Button } from 'antd';
+import CryptoJS from 'crypto-js';
+import Link from 'umi/link';
+
+@Form.create()
+
+class Test extends PureComponent {
+  constructor(props) {
+    super(props)
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleEncrypt = this.handleEncrypt.bind(this);
+  }
+
+  handleSubmit(e) {
+    e.preventDefault();
+    this.props.form.validateFields((err, fieldsValue) => {
+      if (!err) {
+        const myinfo = JSON.stringify(fieldsValue)
+        localStorage.setItem('myInfo', myinfo);
+      }
+    })
+  }
+
+  handleEncrypt() {
+    const beforePwd = this.props.form.getFieldValue("name");
+    const secretKey = 'com.vcpay.foo.key';
+    const afterEncrypt = CryptoJS.DES.encrypt(beforePwd, CryptoJS.enc.Utf8.parse(secretKey), {
+      mode: CryptoJS.mode.ECB,
+      padding: CryptoJS.pad.Pkcs7
+    }).toString()
+    // const afterDecrypt = CryptoJS.DES.decrypt(afterEncrypt, CryptoJS.enc.Utf8.parse(secretKey), {
+    //   mode: CryptoJS.mode.ECB,
+    //   padding: CryptoJS.pad.Pkcs7
+    // }).toString(CryptoJS.enc.Utf8);
+  }
+
+  render() {
+    const FormItem = Form.Item;
+    const { getFieldDecorator } = this.props.form;
+    return (
+      <Card>
+        <Row>
+          <Form layout='horizontal' labelCol={{ span: 4 }} wrapperCol={{ span: 14 }} onSubmit={this.handleSubmit}>
+            <FormItem label={formatMessage({ id: 'formtest.name' })}>
+              {getFieldDecorator('name', {
+                rules: [
+                  { required: true, message: 'name is required!' }],
+              })(<Input />)}
+            </FormItem>
+            <FormItem label='电话'>
+              {
+                getFieldDecorator('phone', {
+                  rules: [
+                    { required: true, pattern: /^1\d{10}$/, message: 'wrong pattern!' }
+                  ]
+                })(<Input />)
+              }
+            </FormItem>
+            <Button type='primary' htmlType="submit">提交</Button>
+            <Button type='primary' onClick={this.handleEncrypt}>加密</Button>
+            <Link to="/test/test/nihao">
+              <Button type='primary' htmlType="submit">路由传参</Button>
+            </Link>
+          </Form>
+        </Row>
+      </Card>)
+  }
+}
+
+export default Test;

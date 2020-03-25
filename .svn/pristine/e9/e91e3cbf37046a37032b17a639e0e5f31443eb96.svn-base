@@ -1,0 +1,367 @@
+import React from 'react';
+import { Router as DefaultRouter, Route, Switch } from 'react-router-dom';
+import dynamic from 'umi/dynamic';
+import renderRoutes from 'umi/lib/renderRoutes';
+import history from '@tmp/history';
+import RendererWrapper0 from 'D:/XiangMu/demo-back/src/pages/.umi/LocaleWrapper.jsx'
+import _dvaDynamic from 'dva/dynamic'
+
+const Router = require('dva/router').routerRedux.ConnectedRouter;
+
+const routes = [
+  {
+    "path": "/user",
+    "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "layouts__UserLayout" */'../../layouts/UserLayout'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../../layouts/UserLayout').default,
+    "routes": [
+      {
+        "path": "/user",
+        "redirect": "/user/login",
+        "exact": true
+      },
+      {
+        "path": "/user/login",
+        "name": "login",
+        "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__User__models__register.js' */'D:/XiangMu/demo-back/src/pages/User/models/register.js').then(m => { return { namespace: 'register',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__User__Login" */'../User/Login'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../User/Login').default,
+        "exact": true
+      },
+      {
+        "path": "/user/register-result",
+        "name": "register.result",
+        "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__User__models__register.js' */'D:/XiangMu/demo-back/src/pages/User/models/register.js').then(m => { return { namespace: 'register',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__User__RegisterResult" */'../User/RegisterResult'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../User/RegisterResult').default,
+        "exact": true
+      },
+      {
+        "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__404" */'../404'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../404').default,
+        "exact": true
+      },
+      {
+        "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+      }
+    ]
+  },
+  {
+    "path": "/",
+    "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "layouts__BasicLayout" */'../../layouts/BasicLayout'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../../layouts/BasicLayout').default,
+    "Routes": [require('../Authorized').default],
+    "routes": [
+      {
+        "path": "/",
+        "redirect": "/general",
+        "exact": true
+      },
+      {
+        "path": "/general",
+        "name": "general",
+        "icon": "dashboard",
+        "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__General__General" */'../General/General'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../General/General').default,
+        "exact": true
+      },
+      {
+        "path": "/authoritycontrol",
+        "icon": "dashboard",
+        "routes": [
+          {
+            "path": "/authoritycontrol/authoritycontrol",
+            "icon": "dashboard",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__AuthorityControl__AuthorityControl" */'../AuthorityControl/AuthorityControl'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../AuthorityControl/AuthorityControl').default,
+            "exact": true
+          },
+          {
+            "path": "/authoritycontrol/usercontrol",
+            "icon": "dashboard",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__AuthorityControl__UserControl" */'../AuthorityControl/UserControl'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../AuthorityControl/UserControl').default,
+            "exact": true
+          },
+          {
+            "path": "/authoritycontrol/menucontrol",
+            "icon": "dashboard",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__AuthorityControl__MenuControl" */'../AuthorityControl/MenuControl'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../AuthorityControl/MenuControl').default,
+            "exact": true
+          },
+          {
+            "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+          }
+        ]
+      },
+      {
+        "path": "/article",
+        "name": "文章管理",
+        "icon": "dashboard",
+        "authority": [
+          "root"
+        ],
+        "routes": [
+          {
+            "path": "/article/articlelist",
+            "name": "文章列表",
+            "icon": "dashboard",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__Article__ArticleList" */'../Article/ArticleList'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Article/ArticleList').default,
+            "exact": true
+          },
+          {
+            "path": "/article/articleEditor",
+            "name": "文章",
+            "icon": "dashboard",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__Article__ArticleEditor" */'../Article/ArticleEditor'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Article/ArticleEditor').default,
+            "hideInMenu": true,
+            "exact": true
+          },
+          {
+            "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+          }
+        ]
+      },
+      {
+        "path": "/EditPassword",
+        "icon": "user",
+        "hideInMenu": true,
+        "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__Account__Settings__models__geographic.js' */'D:/XiangMu/demo-back/src/pages/Account/Settings/models/geographic.js').then(m => { return { namespace: 'geographic',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__Account__Settings__EditPassword" */'../Account/Settings/EditPassword'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Account/Settings/EditPassword').default,
+        "exact": true
+      },
+      {
+        "name": "exception",
+        "icon": "warning",
+        "path": "/exception",
+        "hideInMenu": true,
+        "routes": [
+          {
+            "path": "/exception/403",
+            "name": "not-permission",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__Exception__models__error.js' */'D:/XiangMu/demo-back/src/pages/Exception/models/error.js').then(m => { return { namespace: 'error',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__Exception__403" */'../Exception/403'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Exception/403').default,
+            "exact": true
+          },
+          {
+            "path": "/exception/404",
+            "name": "not-find",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__Exception__models__error.js' */'D:/XiangMu/demo-back/src/pages/Exception/models/error.js').then(m => { return { namespace: 'error',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__Exception__404" */'../Exception/404'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Exception/404').default,
+            "exact": true
+          },
+          {
+            "path": "/exception/500",
+            "name": "server-error",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__Exception__models__error.js' */'D:/XiangMu/demo-back/src/pages/Exception/models/error.js').then(m => { return { namespace: 'error',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__Exception__500" */'../Exception/500'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Exception/500').default,
+            "exact": true
+          },
+          {
+            "path": "/exception/trigger",
+            "name": "trigger",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__Exception__models__error.js' */'D:/XiangMu/demo-back/src/pages/Exception/models/error.js').then(m => { return { namespace: 'error',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__Exception__TriggerException" */'../Exception/TriggerException'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Exception/TriggerException').default,
+            "exact": true
+          },
+          {
+            "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+          }
+        ]
+      },
+      {
+        "name": "account",
+        "icon": "user",
+        "path": "/account",
+        "routes": [
+          {
+            "path": "/account/settings",
+            "name": "settings",
+            "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__Account__Settings__models__geographic.js' */'D:/XiangMu/demo-back/src/pages/Account/Settings/models/geographic.js').then(m => { return { namespace: 'geographic',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__Account__Settings__Info" */'../Account/Settings/Info'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Account/Settings/Info').default,
+            "routes": [
+              {
+                "path": "/account/settings",
+                "redirect": "/account/settings/base",
+                "exact": true
+              },
+              {
+                "path": "/account/settings/security",
+                "component": __IS_BROWSER
+    ? _dvaDynamic({
+      app: require('@tmp/dva').getApp(),
+models: () => [
+  import(/* webpackChunkName: 'p__Account__Settings__models__geographic.js' */'D:/XiangMu/demo-back/src/pages/Account/Settings/models/geographic.js').then(m => { return { namespace: 'geographic',...m.default}})
+],
+      component: () => import(/* webpackChunkName: "p__Account__Settings__Info" */'../Account/Settings/SecurityView'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../Account/Settings/SecurityView').default,
+                "exact": true
+              },
+              {
+                "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+              }
+            ]
+          },
+          {
+            "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+          }
+        ]
+      },
+      {
+        "component": __IS_BROWSER
+    ? _dvaDynamic({
+      
+      component: () => import(/* webpackChunkName: "p__404" */'../404'),
+      LoadingComponent: require('D:/XiangMu/demo-back/src/components/PageLoading/index').default,
+    })
+    : require('../404').default,
+        "exact": true
+      },
+      {
+        "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+      }
+    ]
+  },
+  {
+    "component": () => React.createElement(require('D:/XiangMu/demo-back/node_modules/umi-build-dev/lib/plugins/404/NotFound.js').default, { pagesPath: 'src/pages', hasRoutesInConfig: true })
+  }
+];
+window.g_routes = routes;
+const plugins = require('umi/_runtimePlugin');
+plugins.applyForEach('patchRoutes', { initialValue: routes });
+
+// route change handler
+function routeChangeHandler(location, action) {
+  plugins.applyForEach('onRouteChange', {
+    initialValue: {
+      routes,
+      location,
+      action,
+    },
+  });
+}
+history.listen(routeChangeHandler);
+routeChangeHandler(history.location);
+
+export { routes };
+
+export default function RouterWrapper(props = {}) {
+  return (
+<RendererWrapper0>
+          <Router history={history}>
+      { renderRoutes(routes, props) }
+    </Router>
+        </RendererWrapper0>
+  );
+}

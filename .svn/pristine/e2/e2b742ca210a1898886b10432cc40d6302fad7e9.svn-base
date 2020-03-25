@@ -1,0 +1,73 @@
+import dva from 'dva';
+import { Component } from 'react';
+import createLoading from 'dva-loading';
+import history from '@tmp/history';
+
+let app = null;
+
+export function _onCreate() {
+  const plugins = require('umi/_runtimePlugin');
+  const runtimeDva = plugins.mergeConfig('dva');
+  app = dva({
+    history,
+    
+    ...(runtimeDva.config || {}),
+    ...(window.g_useSSR ? { initialState: window.g_initialData } : {}),
+  });
+  
+  app.use(createLoading());
+  (runtimeDva.plugins || []).forEach(plugin => {
+    app.use(plugin);
+  });
+  
+  app.model({ namespace: 'AgentInfo', ...(require('E:/lazy_card/lazy-react/src/models/AgentInfo.js').default) });
+app.model({ namespace: 'bannerSetting', ...(require('E:/lazy_card/lazy-react/src/models/bannerSetting.js').default) });
+app.model({ namespace: 'CartItemList', ...(require('E:/lazy_card/lazy-react/src/models/CartItemList.js').default) });
+app.model({ namespace: 'financial', ...(require('E:/lazy_card/lazy-react/src/models/financial.js').default) });
+app.model({ namespace: 'global', ...(require('E:/lazy_card/lazy-react/src/models/global.js').default) });
+app.model({ namespace: 'goods', ...(require('E:/lazy_card/lazy-react/src/models/goods.js').default) });
+app.model({ namespace: 'ICashWithdrawal', ...(require('E:/lazy_card/lazy-react/src/models/ICashWithdrawal.js').default) });
+app.model({ namespace: 'incomeList', ...(require('E:/lazy_card/lazy-react/src/models/incomeList.js').default) });
+app.model({ namespace: 'job', ...(require('E:/lazy_card/lazy-react/src/models/job.js').default) });
+app.model({ namespace: 'list', ...(require('E:/lazy_card/lazy-react/src/models/list.js').default) });
+app.model({ namespace: 'log', ...(require('E:/lazy_card/lazy-react/src/models/log.js').default) });
+app.model({ namespace: 'login', ...(require('E:/lazy_card/lazy-react/src/models/login.js').default) });
+app.model({ namespace: 'MasterCardList', ...(require('E:/lazy_card/lazy-react/src/models/MasterCardList.js').default) });
+app.model({ namespace: 'member', ...(require('E:/lazy_card/lazy-react/src/models/member.js').default) });
+app.model({ namespace: 'MemberAddressList', ...(require('E:/lazy_card/lazy-react/src/models/MemberAddressList.js').default) });
+app.model({ namespace: 'MemberCollectionList', ...(require('E:/lazy_card/lazy-react/src/models/MemberCollectionList.js').default) });
+app.model({ namespace: 'memberLevel', ...(require('E:/lazy_card/lazy-react/src/models/memberLevel.js').default) });
+app.model({ namespace: 'menu', ...(require('E:/lazy_card/lazy-react/src/models/menu.js').default) });
+app.model({ namespace: 'merchant', ...(require('E:/lazy_card/lazy-react/src/models/merchant.js').default) });
+app.model({ namespace: 'newbie', ...(require('E:/lazy_card/lazy-react/src/models/newbie.js').default) });
+app.model({ namespace: 'news', ...(require('E:/lazy_card/lazy-react/src/models/news.js').default) });
+app.model({ namespace: 'operateRecord', ...(require('E:/lazy_card/lazy-react/src/models/operateRecord.js').default) });
+app.model({ namespace: 'outMerchantTrans', ...(require('E:/lazy_card/lazy-react/src/models/outMerchantTrans.js').default) });
+app.model({ namespace: 'payChannel', ...(require('E:/lazy_card/lazy-react/src/models/payChannel.js').default) });
+app.model({ namespace: 'productCategory', ...(require('E:/lazy_card/lazy-react/src/models/productCategory.js').default) });
+app.model({ namespace: 'profitDetail', ...(require('E:/lazy_card/lazy-react/src/models/profitDetail.js').default) });
+app.model({ namespace: 'project', ...(require('E:/lazy_card/lazy-react/src/models/project.js').default) });
+app.model({ namespace: 'role', ...(require('E:/lazy_card/lazy-react/src/models/role.js').default) });
+app.model({ namespace: 'salesmanList', ...(require('E:/lazy_card/lazy-react/src/models/salesmanList.js').default) });
+app.model({ namespace: 'seting', ...(require('E:/lazy_card/lazy-react/src/models/seting.js').default) });
+app.model({ namespace: 'setting', ...(require('E:/lazy_card/lazy-react/src/models/setting.js').default) });
+app.model({ namespace: 'statistics', ...(require('E:/lazy_card/lazy-react/src/models/statistics.js').default) });
+app.model({ namespace: 'systemSetting', ...(require('E:/lazy_card/lazy-react/src/models/systemSetting.js').default) });
+app.model({ namespace: 'TradeList', ...(require('E:/lazy_card/lazy-react/src/models/TradeList.js').default) });
+app.model({ namespace: 'TransactionRecord', ...(require('E:/lazy_card/lazy-react/src/models/TransactionRecord.js').default) });
+app.model({ namespace: 'UploadImage', ...(require('E:/lazy_card/lazy-react/src/models/UploadImage.js').default) });
+app.model({ namespace: 'user', ...(require('E:/lazy_card/lazy-react/src/models/user.js').default) });
+  return app;
+}
+
+export function getApp() {
+  return app;
+}
+
+export class _DvaContainer extends Component {
+  render() {
+    const app = getApp();
+    app.router(() => this.props.children);
+    return app.start()();
+  }
+}

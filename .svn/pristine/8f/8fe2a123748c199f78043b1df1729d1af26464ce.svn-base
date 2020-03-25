@@ -1,0 +1,222 @@
+import { queryLogs, queryNoPageData, queryMerchantInfo, sendMessage, getMyMoney, queryCashOutList,
+   queryTransactionSum, queryCashOutNoPageData,messageOrderList, merchMessageHistoryList,addMessageHistory,merchMessageHistoryDatails,} from '@/services/outMerchantTrans';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'outMerchantTrans',
+
+  state: {
+    list: [],
+    excelData: [],
+    CashOutList: {},
+    currentMerchant: {},
+    captcha: '',
+    sum: {},
+    loading: false,
+    merchMessageList:{}
+  },
+
+  effects: {
+    *fetch({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryLogs, payload);
+      yield put({
+        type: 'save',
+        payload: response.data
+      });
+    },
+    // 商户余额提现页面请求商户信息
+    *fetchMerchantInfo(_, { call, put }, ) {
+      const response = yield call(queryMerchantInfo);
+      yield put({
+        type: 'saveMerchantInfo',
+        payload: response.data
+      });
+    },
+    // 交易汇总
+    *sum({ payload }, { call, put }, ) {
+      const response = yield call(queryTransactionSum, payload);
+      yield put({
+        type: 'saveSum',
+        payload: response.data
+      });
+    },
+    // 请求vcpay提现记录
+    *fetchCashOutList({ payload }, { call, put }, ) {
+      const response = yield call(queryCashOutList, payload);
+      yield put({
+        type: 'saveCashOutList',
+        payload: response.data
+      });
+    },
+        // 请求商户提现记录
+        *fetchMallCashOutList({ payload }, { call, put }, ) {
+          const response = yield call(queryCashOutList, payload);
+          yield put({
+            type: 'saveCashOutList',
+            payload: response.data
+          });
+        },
+    // 获取验证码
+    *fetchMessage({ payload }, { call, put }, ) {
+      const response = yield call(sendMessage, payload);
+      yield put({
+        type: 'saveMessage',
+        payload: response.data
+      });
+    },
+    // 提现
+    *getMoney({ payload }, { call }, ) {
+      const response = yield call(getMyMoney, payload);
+      if (response.code === 'SUCCESS') {
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    // 商户交易查询导出
+    *downloadExcel({ payload }, { call, put }, ) {
+      // 请求当前查询条件的所有数据（不带分页）
+      const response = yield call(queryNoPageData, payload);
+      yield put({
+        type: 'saveExcelData',
+        payload: response.data
+      });
+    },
+    // 商户提现导出
+    *downloadCashOutExcel({ payload }, { call, put }, ) {
+      // 请求当前查询条件的所有数据（不带分页）
+      const response = yield call(queryCashOutNoPageData, payload);
+      yield put({
+        type: 'saveExcelData',
+        payload: response.data
+      });
+    },
+
+    //短信订单列表
+    *messageOrderList({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(messageOrderList, payload);
+      yield put({
+        type: 'save',
+        payload: response.data
+      });
+    },
+
+    
+    //商户短信记录列表
+    *merchMessageHistoryList({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(merchMessageHistoryList, payload);
+      yield put({
+        type: 'save',
+        payload: response.data
+      });
+    },
+
+    // 操作商户短信记录列表
+    *addMessageHistory({ payload }, { call,put }, ) {
+      const response = yield call(addMessageHistory, payload);
+      if (response.code === 'SUCCESS') {
+        const res = yield call(merchMessageHistoryList, {});
+        yield put({
+          type: 'save',
+          payload: res.data
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });       
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      return response;
+    },
+
+    // 商户短信记录详情列表
+    *merchMessageHistoryDatails({ payload }, { call,put }, ) {
+      const response = yield call(merchMessageHistoryDatails, payload);     
+        yield put({
+          type: 'messageItems',
+          payload: response.data
+        });   
+    },
+
+  },
+
+
+
+  reducers: {
+    loading(state) {
+      return {
+        ...state,
+        loading: true
+      };
+    },
+
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload,
+        loading: false
+      };
+    },
+
+    saveSum(state, action) {
+      return {
+        ...state,
+        sum: action.payload,
+      };
+    },
+
+    saveMerchantInfo(state, action) {
+      return {
+        ...state,
+        currentMerchant: action.payload,
+      };
+    },
+
+    saveCashOutList(state, action) {
+      return {
+        ...state,
+        CashOutList: action.payload,
+      };
+    },
+
+    saveMessage(state, action) {
+      return {
+        ...state,
+        captcha: action.payload,
+      };
+    },
+
+    saveExcelData(state, action) {
+      return {
+        ...state,
+        excelData: action.payload,
+      };
+    },
+    messageItems(state, action){
+      return {
+        ...state,
+        merchMessageList: action.payload,
+      };
+    }
+
+  }
+};

@@ -1,0 +1,25 @@
+@import '~antd/lib/style/themes/default.less';
+
+.standardTable {
+  :global {
+    .ant-table-pagination {
+      margin-top: 24px;
+    }
+  }
+
+  .tableAlert {
+    margin-bottom: 16px;
+  }
+}
+.transXlsBtnWrap{
+  overflow: hidden;
+  margin-bottom: 10px;
+  height: 40px;
+  line-height: 40px;
+  position: relative;
+  :global(.ant-switch){
+    position: absolute;
+    top: 9px;
+    right: 0;
+  }
+}

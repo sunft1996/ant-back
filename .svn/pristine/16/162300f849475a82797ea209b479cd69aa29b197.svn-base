@@ -1,0 +1,375 @@
+import {
+  queryProfit, queryProfitSum, queryCashOutList, queryCashSum, queryCaptcha, setCashOut, queryProfitMall,
+  queryProfitSumMall, accountInfoList, accountInfoHistory, accountInfoSummary, updateCashList,queryAccountInfo,
+  saveAccountInfoHistory,queryMallCashOutList, queryMallCashSum,updateMallCashList
+} from '@/services/financial';
+import { notification } from 'antd';
+
+export default {
+  // 财务管理相关
+  namespace: 'financial',
+
+  state: {
+    profitList: {
+      rows: [],
+      total: 10
+    },
+    profitMallList: {
+      rows: [],
+      total: 10
+    },
+    cashOutList: {
+      rows: [],
+      total: 10
+    },
+    mallCashOutList: {
+      rows: [],
+      total: 10
+    },
+    sum: {},
+    profitMallSum: {},
+    cashSum: {},
+    mallCashSum: {},
+    loading: false,
+
+    accountiInfoItemList: {
+      rows: [],
+      total: 0
+    },
+    accountInfoHistoryItemList: {
+      rows: [],
+      total: 0
+    },
+    accountInfoSummaryItem: {
+    },
+    merchaAccountInfoItem: {
+    },
+    accountInfoHistoryItem: {
+    }
+  },
+
+
+  effects: {
+    *fetch({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryProfit, payload);
+      yield put({
+        type: 'save',
+        payload: response.data,
+      });
+    },
+    // 获取交易汇总
+    *fetchSum({ payload }, { call, put }) {
+      const response = yield call(queryProfitSum, payload);
+      yield put({
+        type: 'saveSum',
+        payload: response.data,
+      });
+    },
+    // 获取提现列表
+    *fetchCashOutList({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryCashOutList, payload);
+      yield put({
+        type: 'saveCashOutList',
+        payload: response.data,
+      });
+    },
+    // 更新提现状态
+    *updateCashList({ payload }, { call, put }) {
+      const response = yield call(updateCashList, payload);
+      if (response.code === 'SUCCESS') {
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+        // 改
+        const res = yield call(queryCashOutList, {
+          pageNo: 1,
+          pageSize: 10
+        });
+        yield put({
+          type: 'saveCashOutList',
+          payload: res.data,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      return response;
+
+    },
+    // 获取提现汇总
+    *fetchCashSum({ payload }, { call, put }) {
+      const response = yield call(queryCashSum, payload);
+      yield put({
+        type: 'saveCashSum',
+        payload: response.data,
+      });
+    },
+    // 获取vcmall提现列表
+    *fetchMallCashOutList({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryMallCashOutList, payload);
+      yield put({
+        type: 'saveMallCashOutList',
+        payload: response.data,
+      });
+    },
+    // 更新vcmall提现状态
+    *updateMallCashList({ payload }, { call, put }) {
+      const response = yield call(updateMallCashList, payload);
+      if (response.code === 'SUCCESS') {
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+        const res = yield call(queryMallCashOutList, {
+          pageNo: 1,
+          pageSize: 10
+        });
+        yield put({
+          type: 'saveMallCashOutList',
+          payload: res.data,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      return response;
+
+    },
+    // 获取vcmall提现汇总
+    *fetchMallCashSum({ payload }, { call, put }) {
+      const response = yield call(queryMallCashSum, payload);
+      yield put({
+        type: 'saveCashSum',
+        payload: response.data,
+      });
+    },
+    // 获取vcmall分润列表
+    *fetchProfitListMall({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryProfitMall, payload);
+      yield put({
+        type: 'saveProfitMall',
+        payload: response.data,
+      });
+    },
+    // 获取vcmall分润汇总
+    *fetchProfitMallSum({ payload }, { call, put }) {
+      const response = yield call(queryProfitSumMall, payload);
+      yield put({
+        type: 'saveProfitMallSum',
+        payload: response.data,
+      });
+    },
+    // 提现短信
+    *fetchMessage({ payload }, { call }) {
+      const response = yield call(queryCaptcha, payload);
+      if (response.code === 'SUCCESS') {
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+
+    },
+
+    // 提现
+    *cashOut({ payload }, { call,put }) {
+      const response = yield call(setCashOut, payload);
+      if (response.code === 'SUCCESS') {
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+        const newFetch = call(setCashOut, payload);
+        yield put({
+          type: 'save',
+          payload: newFetch.data,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      return response;
+
+    },
+    // 财务管理余额列表
+    *queryAccountiInfoList({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(accountInfoList, payload);
+      yield put({
+        type: 'accountItems',
+        payload: response.data,
+      });
+    },
+    // 财务管理余额列表收支明细
+    *queryAccountInfoHistoryList({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(accountInfoHistory, payload);
+      yield put({
+        type: 'accountInfoHistoryItems',
+        payload: response.data,
+      });
+    },
+
+    // 财务管理余额列表收支明细汇总收支
+    *accountInfoSummary({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(accountInfoSummary, payload);
+      yield put({
+        type: 'accountInfoSummaryItems',
+        payload: response.data,
+      });
+    },
+    // 财务管理手动调账 查询商户信息
+    *queryAccountInfo({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(queryAccountInfo, payload);
+      yield put({
+        type: 'merchaAccountInfoItem',
+        payload: response.data,
+      });
+    },
+  // 财务管理手动调账 查询商户信息
+  *saveAccountInfoHistory({ payload }, { call, put }) {
+    yield put({
+      type: 'loading',
+    });
+    const response = yield call(saveAccountInfoHistory, payload);
+    if (response.code === 'SUCCESS') {
+      notification.success({
+        message: response.code,
+        description: response.msg,
+      });
+    }else{
+      notification.error({
+        message: response.code,
+        description: response.msg,
+      });
+    }
+    return response;
+  },
+  },
+   
+
+  reducers: {
+    loading(state) {
+      return {
+        ...state,
+        loading: true
+      };
+    },
+    save(state, action) {
+      return {
+        ...state,
+        profitList: action.payload,
+        loading: false
+      };
+    },
+    saveSum(state, action) {
+      return {
+        ...state,
+        sum: action.payload,
+      };
+    },
+    saveProfitMall(state, action) {
+      return {
+        ...state,
+        profitMallList: action.payload,
+        loading: false
+      };
+    },
+    saveProfitMallSum(state, action) {
+      return {
+        ...state,
+        profitMallSum: action.payload,
+      };
+    },
+    saveCashSum(state, action) {
+      return {
+        ...state,
+        mallCashSum: action.payload,
+      };
+    },
+    saveCashOutList(state, action) {
+      return {
+        ...state,
+        cashOutList: action.payload,
+        loading: false
+      };
+    },
+    saveMallCashOutList(state, action) {
+      return {
+        ...state,
+        mallCashOutList: action.payload,
+        loading: false
+      };
+    },
+    accountItems(state, action) {
+      return {
+        ...state,
+        accountiInfoItemList: action.payload,
+        loading: false
+      };
+    },
+    accountInfoHistoryItems(state, action) {
+      return {
+        ...state,
+        accountInfoHistoryItemList: action.payload,
+        loading: false
+      };
+    },
+    accountInfoSummaryItems(state, action) {
+      return {
+        ...state,
+        accountInfoSummaryItem: action.payload,
+        loading: false
+      };
+    },
+    merchaAccountInfoItem(state, action) {
+      return {
+        ...state,
+        merchaAccountInfoItem: action.payload,
+        loading: false
+      };
+    },
+    accountInfoHistoryItem(state, action) {
+      return {
+        ...state,
+        accountInfoHistoryItem: action.payload,
+        loading: false
+      };
+    },
+    
+  }
+};

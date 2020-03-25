@@ -1,0 +1,340 @@
+import React, { PureComponent,Fragment } from 'react';
+import { formatMessage, FormattedMessage } from 'umi-plugin-react/locale';
+import { connect } from 'dva';
+import { Radio,Row, Col, Avatar, Badge, Card, Table, Modal, Select, DatePicker, Carousel, Alert, Spin, Skeleton, Divider, Form, Input, Button, List, Progress } from 'antd';
+import DescriptionList from '@/components/DescriptionList';
+import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import PropTypes from 'prop-types';
+import moment from "moment";
+import CryptoJS from 'crypto-js';
+import styles from "./MasterCardList.less";
+
+const { Description } = DescriptionList;
+const { Option } = Select;
+const { RangePicker } = DatePicker;
+const FormItem = Form.Item;
+
+
+@Form.create()
+class UpdateForm extends PureComponent {
+  static defaultProps = {
+    handleUpdate: () => { },
+    handleUpdateModalVisible: () => { },
+    values: {},
+  };
+
+  render() {
+    const { updateModalVisible, handleUpdateModalVisible, handleUpdate, values, form, } = this.props;
+    const { getFieldDecorator } = this.props.form;
+    const te = values.type; // 获取类型
+    const okHandle = () => {
+      form.validateFields((err, fieldsValue) => {
+        if (err) return;
+        form.resetFields();
+        if (values.id) {
+          handleUpdate(fieldsValue, values.id);
+        }
+      });
+    };
+    return (
+      <Modal maskClosable={false}
+        width={640}
+        bodyStyle={{ padding: '32px 40px 48px' }}
+        destroyOnClose
+        title="编辑结算卡"
+        visible={updateModalVisible}
+        onOk={okHandle}
+        onCancel={() => handleUpdateModalVisible(false, values)}
+        afterClose={() => handleUpdateModalVisible()}
+      >
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="银行卡号">
+          {form.getFieldDecorator('bankNo', {
+            initialValue: values.bankNo,
+            // rules: [{ required: true, message: '最多11个字符！', max: 11 }],
+          })(<Input placeholder="请输入" />)}
+        </FormItem>
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="手机号">
+          {form.getFieldDecorator('phone', {
+            initialValue: values.phone,
+            // rules: [{ required: true, message: '最多11个字符！', max: 11 }],
+          })(<Input placeholder="请输入" />)}
+        </FormItem>
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="类型">
+            
+          {form.getFieldDecorator('type', {
+              rules: [],
+              initialValue:  Number(values.type),
+            })(
+              <Radio.Group>
+                {
+                  values.type === "0" ? <Radio value={0}>储蓄卡</Radio> : <Radio value={1}>支付卡（信用卡）</Radio>
+                }
+                {/* <Radio value={0}>储蓄卡</Radio>
+                  <Radio value={1}>支付卡（信用卡</Radio> */}
+              </Radio.Group>
+            )}
+        </FormItem> 
+        { te === "0" ? null : 
+        <div>
+            {/* <FormItem labelCol={{ span: 5}} wrapperCol={{ span: 15 }}  label="有效期">
+              {getFieldDecorator('etDate',
+                    {
+                      rules: [],
+                      // initialValue: values.etDate,
+                      initialValue:moment(values.etDate,'YYYY-MM-DD')
+                    }
+                  )(<DatePicker />)}
+              </FormItem> */}
+            <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="有效期">
+                {form.getFieldDecorator('etDate', {
+                  initialValue: values.etDate,
+                })(<Input placeholder="请输入" />)}
+              </FormItem>
+            <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="背面三位码">
+                {form.getFieldDecorator('vfCode', {
+                  initialValue: values.vfCode,
+                })(<Input placeholder="请输入" />)}
+              </FormItem>
+          </div>
+        }
+        <FormItem labelCol={{ span: 5 }}>
+          {form.getFieldDecorator('id', {
+            initialValue: values.id,
+          })}
+        </FormItem>
+      </Modal>
+
+    );
+  }
+}
+
+
+/* eslint react/no-multi-comp:0 */
+@connect(({ masterCard, loading }) => ({
+  masterCard,
+  loading: loading.models.rule,
+}))
+
+@Form.create()
+class MasterCardList extends PureComponent {
+  constructor(props) {
+    super(props)
+    this.state = {
+      modalVisible: false,
+      currentRecord: null,
+      pageSize: 10,
+    }
+  }
+
+  componentDidMount() {
+    const { dispatch } = this.props;
+    const { pageSize } = this.state;
+ 
+    dispatch({
+      type: 'masterCard/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      }
+    });
+  }
+
+  //
+  handleSearch = (e) => {
+    const { dispatch, form } = this.props;
+    const { pageSize } = this.state;
+    e.preventDefault();
+    form.validateFields((err, fieldsValue) => {
+      if (!err) {
+          const value={
+            phone: fieldsValue.phone,
+            bankNo: fieldsValue.bankNo,
+          }
+        dispatch({
+          type: 'masterCard/fetch',
+          payload: {
+            ...value,
+            "pageNo": 1,
+            "pageSize": pageSize,
+          }
+        });
+      }
+    })
+  }
+
+ // 重置
+  handleFormReset = () => {
+    const { form, dispatch } = this.props;
+    const { pageSize } = this.state;
+    form.resetFields();
+    dispatch({
+      type: 'masterCard/fetch',
+      payload: {
+        "pageNo": 1,
+        "pageSize": pageSize,
+      },
+    });
+  };
+
+  // 编辑
+  handleUpdate = (fields, encryptionId) => {
+    const { dispatch } = this.props;
+    debugger
+    dispatch({
+      type: 'masterCard/update',
+      payload: {
+        notDetail: true,
+        ...fields
+        // encryptionId,
+      },
+    });
+    this.handleUpdateModalVisible();
+  };
+  
+  renderForm = () => {
+    const { getFieldDecorator } = this.props.form;
+    const { form} = this.props;
+    const FormItem = Form.Item;
+    return (
+      <Form labelCol={{ span:4, md: 4 ,lg:8}} wrapperCol={{ span:19,md: 19,lg:16 }} onSubmit={this.handleSearch}>
+        <Row>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="手机号">
+              {getFieldDecorator('phone',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8}>
+            <FormItem label="银行卡号">
+              {getFieldDecorator('bankNo',
+                {
+                  rules: []
+                }
+              )(<Input />)}
+            </FormItem>
+          </Col>
+          <Col span={24} md={24} lg={8} offset={16}>
+            <FormItem className={styles.btnContainer}>
+              <Button type="primary" htmlType="submit">
+                查询
+              </Button>
+              <Button style={{marginLeft:20}} onClick={this.handleFormReset}>
+                重置
+              </Button>
+            </FormItem> 
+          </Col>
+        </Row>
+      </Form>
+    )
+  }
+
+// 编辑页面
+handleUpdateModalVisible = (flag, record) => {
+  debugger
+  this.setState({
+    updateModalVisible: !!flag,
+    updateFormValues: record || {},
+  });
+};
+
+  render() {
+    const { masterCard } = this.props;
+    const {updateModalVisible, updateFormValues } = this.state;
+    const columns = [
+    {
+      title: '会员名称',
+      dataIndex: 'userName',
+      key: 'userName',
+    },
+    {
+      title: '手机号',
+      dataIndex: 'phone',
+      key: 'phone',
+    },
+    {
+      title: '银行卡号',
+      dataIndex: 'bankNo',
+      key: 'bankNo',
+    },
+    {
+      title: '有效期',
+      dataIndex: 'etDate',
+      key: 'etDate',
+    },
+    {
+      title: '背面三位码',
+      dataIndex: 'vfCode',
+      key: 'vfCode',
+    },
+    {
+      title: '类型',
+      dataIndex: 'type',
+      key: 'type',
+      render: item => {
+        return (
+            item === "0" ? "储蓄卡" : "支付卡（信用卡）"
+        )
+    }
+    },
+    {
+      title: '更新时间',
+      dataIndex: 'updateTime',
+      key: 'updateTime',
+      render: item => {
+        return (
+          item == null ? "" : moment(item).format('YYYY-MM-DD HH:mm:ss')  
+        )
+      }
+    },
+
+    {
+      title: '操作',
+      render: (text, record) => (
+        <Fragment>
+          <a onClick={() => this.handleUpdateModalVisible(true, record)}>编辑</a>
+        </Fragment>
+      ),
+    },
+    ];
+    const {total} = masterCard.list.data;
+    const pagination = {
+      total
+    }
+    const updateMethods = {
+      handleUpdateModalVisible: this.handleUpdateModalVisible,
+      handleUpdate: this.handleUpdate,
+    };
+    return (
+      <PageHeaderWrapper title="">
+        <Card>
+          <Row>
+            {this.renderForm()}
+          </Row>
+          <Row>
+            <Table
+              dataSource={masterCard.list.data.rows}
+              rowKey="id"
+              columns={columns}
+              pagination={pagination}
+              loading={masterCard.loading}
+              bordered={false}
+              style={{ overflowX: "scroll" }}
+              onChange={this.handlePageChange}
+            />
+          </Row>
+        </Card>
+        {updateFormValues && Object.keys(updateFormValues).length ? (
+          <UpdateForm
+            {...updateMethods}
+            updateModalVisible={updateModalVisible}
+            values={updateFormValues}
+          />
+        ) : null}
+      </PageHeaderWrapper>
+    )
+  }
+}
+export default MasterCardList;

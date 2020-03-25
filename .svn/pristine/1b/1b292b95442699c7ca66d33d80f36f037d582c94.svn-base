@@ -1,0 +1,265 @@
+import {
+  agentInfoList, saveOrUpdateAgentInfo, saveOrUpdateAgent, agentLeveList, frozenAgent, thawAgent,
+  agentProfit, profitQueryList, queryParentAgentDetails, queryNextDeatils,queryBankName,agentDetalis
+} from '@/services/AgentInfo';
+import { notification } from 'antd';
+
+export default {
+  namespace: 'agentinfo',
+
+  state: {
+    list: {
+      rows: [],
+      total: 0
+    },
+    levelList: [],
+    loading: false,
+    profitList: {
+      data: {
+        total: 0,
+        data: [],
+        totalPage: 5
+      }
+    },
+    profitQueryList: {
+      data: {
+        total: 0,
+        data: [],
+        totalPage: 5
+      }
+    },
+    parentAgentDateilsItem: { data: {} },
+    agentNumDetailsList: {
+      data: {
+        rows: [],
+        total: 0
+      }
+    },
+    agentDetalisItem:{data:{}}
+
+  },
+
+  effects: {
+    *fetch({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(agentInfoList, payload);
+      yield put({
+        type: 'save',
+        payload: response
+      });
+    },
+    *levelA({ payload }, { call, put }, ) {
+      const response = yield call(agentLeveList, payload);
+      yield put({
+        type: 'levelAgent',
+        payload: response
+      });
+    },
+    *add({ payload }, { call, put }) {
+      const response = yield call(saveOrUpdateAgentInfo, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(agentInfoList, {
+          pageNo: 1,
+          pageSize: 10
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+      return response;
+
+    },
+    *update({ payload }, { call, put }) {
+      const response = yield call(saveOrUpdateAgent, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(agentInfoList, {
+          pageNo: 1,
+          pageSize: 10
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+
+    *statusAgent({ payload }, { call, put }) {
+      const response = yield call(frozenAgent, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(agentInfoList, {
+          pageNo: 1,
+          pageSize: 10
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    *enableAgent({ payload }, { call, put }) {
+      const response = yield call(thawAgent, payload);
+      if (response.code === 'SUCCESS') {
+        const newFetch = yield call(agentInfoList, {
+          pageNo: 1,
+          pageSize: 10
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+    },
+    // 代理商分润
+    *profit({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(agentProfit, payload);
+      yield put({
+        type: 'profitSave',
+        payload: response
+      });
+    },
+    // 代理商分润详情
+    *profitDetails({ payload }, { call, put }, ) {
+      yield put({
+        type: 'loading',
+      });
+      const response = yield call(profitQueryList, payload);
+      yield put({
+        type: 'profitDetailsSave',
+        payload: response
+      });
+    },
+    // 上级代理商详情
+    *queryParentAgentDetails({ payload }, { call, put }, ) {
+      const response = yield call(queryParentAgentDetails, payload);
+      yield put({
+        type: 'parentAgentDateils',
+        payload: response
+      });
+    },
+    // 下级代理 商户 店主详情
+    *queryNextDeatils({ payload }, { call, put }, ) {
+      const response = yield call(queryNextDeatils, payload);
+      yield put({
+        type: 'agentNextNumDateils',
+        payload: response
+      });
+    },
+    // 获取银行卡名
+    *queryBankName({ payload }, { call, put }, ) {
+      const response = yield call(queryBankName, payload);
+      return response;
+    },
+    
+    //获取代理商详情
+    *agentDetalis({ payload }, { call, put }) {
+      const response = yield call(agentDetalis, payload);
+        if (response.code === 'SUCCESS') {
+          yield put({
+              type: 'agentDetalisItem',
+              payload:response
+              });
+      } else {
+          notification.error({
+              message: response.code,
+              description: response.msg,
+          });
+      }
+  },
+
+
+
+
+  },
+
+  reducers: {
+    loading(state) {
+      return {
+        ...state,
+        loading: true
+      };
+    },
+
+    save(state, action) {
+      return {
+        ...state,
+        list: action.payload,
+        loading: false
+      };
+    },
+    profitSave(state, action) {
+      return {
+        ...state,
+        profitList: action.payload,
+        loading: false
+      };
+    },
+    profitDetailsSave(state, action) {
+      return {
+        ...state,
+        profitQueryList: action.payload,
+        loading: false
+      };
+    },
+    levelAgent(state, action) {
+      return {
+        ...state,
+        levelList: action.payload,
+        loading: false
+      };
+    },
+    parentAgentDateils(state, action) {
+      return {
+        ...state,
+        parentAgentDateilsItem: action.payload,
+      }
+    },
+    agentNextNumDateils(state, action) {
+      return {
+        ...state,
+        agentNumDetailsList: action.payload,
+      }
+    },
+    agentDetalisItem(state,action){
+      return{
+          ...state,
+          agentDetalisItem:action.payload 
+      }
+  }
+
+
+  }
+};

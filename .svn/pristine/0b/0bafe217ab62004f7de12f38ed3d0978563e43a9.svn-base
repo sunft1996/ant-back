@@ -1,0 +1,54 @@
+import request from '@/utils/request';
+
+export async function query(params) {
+  return request('/lazy-card/sysUser/userList',{
+    method: 'POST',
+    data:params
+  });
+}
+export async function queryCurrent(params) {
+  const id = encodeURIComponent(params);
+  return request(`/lazy-card/sysUser/toUserDetails?id=${id}`);
+}
+export async function queryAuthority(params) {
+  const id = encodeURIComponent(params);
+  return request(`/lazy-card/sysUser/authority?id=${id}`);
+}
+export async function resetUserPwd(params) {
+  const id = encodeURIComponent(params.id);
+  return request(`/lazy-card/sysUser/resetPassword?encryptionId=${id}`);
+}
+export async function addUser(params) {
+  return request('/lazy-card/sysUser/saveOrUpdateUser',{
+    method: 'POST',
+    data: params,
+  });
+}
+export async function deleteUser(opType,params) {
+  return request('/lazy-card/sysUser/deleteByUser/'+ opType,{
+    method: 'POST',
+    data:params
+  });
+}
+export async function updateUser(params) {
+  return request('/lazy-card/sysUser/saveOrUpdateUser',{
+    method: 'POST',
+    data: params,
+  });
+}
+export async function updateUserImg(params) {
+  return request('/lazy-card/sysUser/uploadUserImg',{
+    method: 'POST',
+    data: params,
+  });
+}
+export async function queryMsg(params) {
+  return request(`/lazy-card/sysUser/sendMsg?phone=${params}`)
+}
+export async function updatePwd(params) {
+  return request('/lazy-card/sysUser/changePassword',{
+    method: 'POST',
+    data: params,
+  });
+}
+
