@@ -1,3 +1,9 @@
+/*
+ * @Descripttion: 
+ * @Author: sunft
+ * @Date: 2019-12-18 16:59:47
+ * @LastEditTime: 2020-03-30 15:56:55
+ */
 import { queryRoles, saveOrUpdateRoles, removeRoles, queryNotRootRoles } from '@/services/role';
 import { notification } from 'antd';
 
@@ -5,7 +11,9 @@ export default {
   namespace: 'role',
 
   state: {
-    list: [],
+    list: [{
+      menuId:''
+    }],
   },
 
   effects: {

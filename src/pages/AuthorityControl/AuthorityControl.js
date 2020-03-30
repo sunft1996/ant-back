@@ -81,7 +81,9 @@ class CreateForm extends PureComponent {
           })(<Input placeholder="请输入" />)}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="可访问页面">
-          {form.getFieldDecorator('menuIds')(
+          {form.getFieldDecorator('menuIds', {
+            // rules: [{ required: true, message: '请选择！' }],
+          })(
             <Tree
               // checkedKeys={checkedKeys}
               onCheck={this.handleCheck}
@@ -99,8 +101,8 @@ class CreateForm extends PureComponent {
 @Form.create()
 class UpdateForm extends Component {
   static defaultProps = {
-    handleUpdate: () => {},
-    handleUpdateModalVisible: () => {},
+    handleUpdate: () => { },
+    handleUpdateModalVisible: () => { },
     values: {},
     record: {},
   };
@@ -132,6 +134,8 @@ class UpdateForm extends Component {
       return <TreeNode title={item.name} key={item.id} dataRef={item} />;
     });
   };
+  
+
 
   render() {
     const {
@@ -142,16 +146,16 @@ class UpdateForm extends Component {
       form,
       record,
       menu,
-      defaultMenus,
     } = this.props;
     const { checkedKeys, halfCheckedKeys } = this.state;
+    const initMenu = record.menuId ? record.menuId.split(',') : [];
     const okHandle = () => {
       form.validateFields((err, fieldsValue) => {
         if (err) return;
         form.resetFields();
         const updateValue = {
           ...fieldsValue,
-          menuIds: checkedKeys.concat(halfCheckedKeys),
+          menuIds: checkedKeys.length > 0 ? checkedKeys.concat(halfCheckedKeys) : initMenu,
         };
 
         if (record.id) {
@@ -159,6 +163,7 @@ class UpdateForm extends Component {
         }
       });
     };
+
     const allmenus = Array.isArray(menu.allmenus) ? menu.allmenus : [];
     return (
       <Modal
@@ -185,10 +190,12 @@ class UpdateForm extends Component {
           })(<Input placeholder="请输入" />)}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="可访问页面">
-          {form.getFieldDecorator('menuIds', {})(
+          {form.getFieldDecorator('menuIds', {
+            // rules: [{ required: true, message: '请选择！' }],
+          })(
             <Tree
               checkable
-              defaultCheckedKeys={defaultMenus}
+              defaultCheckedKeys={initMenu}
               // checkedKeys={checkedKeys}
               onCheck={this.handleCheck}
               checkStrictly={false}
@@ -321,12 +328,10 @@ class AuthorityControl extends Component {
   };
 
   handleUpdateModalVisible = (flag, record) => {
-    const defaultMenus = flag ? record.menuId.split(",") : [];
-    
+
     this.setState({
       updateModalVisible: !!flag,
       record: record || {},
-      defaultMenus,
     });
   };
 
@@ -365,7 +370,7 @@ class AuthorityControl extends Component {
   render() {
     const { role, loading, dispatch, menu } = this.props;
     const roleList = role.list;
-    const { selectedRows, modalVisible, updateModalVisible, record, defaultMenus } = this.state;
+    const { selectedRows, modalVisible, updateModalVisible, record } = this.state;
     const menuNode = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
@@ -425,7 +430,6 @@ class AuthorityControl extends Component {
             {...updateMethods}
             record={record}
             menu={menu}
-            defaultMenus={defaultMenus}
             updateModalVisible={updateModalVisible}
           />
         ) : null}
