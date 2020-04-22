@@ -125,8 +125,8 @@ export default {
       }
     },
 
-    *remove({ opType, payload }, { call, put }) {
-      const response = yield call(deleteUser, opType, payload);
+    *remove({ payload }, { call, put }) {
+      const response = yield call(deleteUser,  payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryUsers, {
           pageNo: 1,

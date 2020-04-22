@@ -116,9 +116,6 @@ class General extends React.PureComponent {
                   <Avatar
                     size={64}
                     src="https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png"
-                    style={{
-                      backgroundColor: '#87d068',
-                    }}
                   />
                 }
                 title="你好!"

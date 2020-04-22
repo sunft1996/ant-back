@@ -6,12 +6,13 @@ import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 
 const { Option } = Select;
 const FormItem = Form.Item;
+const { TextArea } = Input;
 
 @Form.create()
 class CreateForm extends PureComponent {
   static defaultProps = {
-    handleAdd: () => {},
-    handleAddModalVisible: () => {},
+    handleAdd: () => { },
+    handleAddModalVisible: () => { },
     menu: {
       allmenus: [],
       total: 20,
@@ -59,21 +60,21 @@ class CreateForm extends PureComponent {
         return filterData(data).map(item => {
           return item.childData
             ? {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-                children: formateData(item.childData),
-              }
+              title: item.name,
+              value: item.id,
+              key: item.id,
+              children: formateData(item.childData),
+            }
             : {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-              };
+              title: item.name,
+              value: item.id,
+              key: item.id,
+            };
         });
       }
       return [];
     };
-    // 新建页面权限->选择页面时的数据->格式化
+    // 新建按钮级权限->选择页面时的数据->格式化
     const formatePageData = data => {
       if (Array.isArray(data)) {
         return data.map(item => {
@@ -110,11 +111,11 @@ class CreateForm extends PureComponent {
           })(<Input placeholder="请输入" />)}
         </FormItem>
 
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限字符串">
+        {/* <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限字符串">
           {form.getFieldDecorator('permission', {
             rules: [{ required: true, message: '请输入权限字符串！' }],
           })(<Input placeholder="请输入" />)}
-        </FormItem>
+        </FormItem> */}
 
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单URL">
           {form.getFieldDecorator('href', {
@@ -135,11 +136,6 @@ class CreateForm extends PureComponent {
             />
           )}
         </FormItem>
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
-          {form.getFieldDecorator('remark', {
-            rules: [{ required: true, message: '请输入备注！' }],
-          })(<Input placeholder="请输入" />)}
-        </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="类型">
           {form.getFieldDecorator('resourceType', {
             rules: [{ required: true, message: '请输入类型！' }],
@@ -151,14 +147,18 @@ class CreateForm extends PureComponent {
           )}
         </FormItem>
         {menuType === 'button' && (
-          <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="页面位置">
+          <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="排序">
             {form.getFieldDecorator('sort')(<Input placeholder="请输入" />)}
           </FormItem>
         )}
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
+          {form.getFieldDecorator('remark', {
+          })(<TextArea placeholder="请输入" />)}
+        </FormItem>
       </Form>
     );
 
-    // 新建页面权限需要填的表单
+    // 新建按钮级权限需要填的表单
     const pageAuthForm = isPageAuth && (
       <Form>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限名">
@@ -197,8 +197,7 @@ class CreateForm extends PureComponent {
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
           {form.getFieldDecorator('remark', {
-            rules: [{ required: true, message: '请输入备注！' }],
-          })(<Input placeholder="请输入" />)}
+          })(<TextArea placeholder="请输入" />)}
         </FormItem>
       </Form>
     );
@@ -206,7 +205,7 @@ class CreateForm extends PureComponent {
       <Modal
         maskClosable={false}
         destroyOnClose
-        title={!isPageAuth ? '新建菜单' : '新建页面权限'}
+        title={!isPageAuth ? '新建菜单' : '新建按钮级权限'}
         visible={modalVisible}
         onOk={okHandle}
         onCancel={() => handleAddModalVisible()}
@@ -220,8 +219,8 @@ class CreateForm extends PureComponent {
 @Form.create()
 class UpdateForm extends PureComponent {
   static defaultProps = {
-    handleUpdate: () => {},
-    handleUpdateModalVisible: () => {},
+    handleUpdate: () => { },
+    handleUpdateModalVisible: () => { },
     currentRecord: {},
   };
 
@@ -257,16 +256,16 @@ class UpdateForm extends PureComponent {
         return filterData(data).map(item => {
           return item.childData
             ? {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-                children: formateData(item.childData),
-              }
+              title: item.name,
+              value: item.id,
+              key: item.id,
+              children: formateData(item.childData),
+            }
             : {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-              };
+              title: item.name,
+              value: item.id,
+              key: item.id,
+            };
         });
       }
       return [];
@@ -295,12 +294,12 @@ class UpdateForm extends PureComponent {
           })(<Input placeholder="请输入" disabled />)}
         </FormItem>
 
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限字符串">
+        {/* <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限字符串">
           {form.getFieldDecorator('permission', {
             initialValue: currentRecord.permission,
             rules: [{ required: true, message: '请输入权限字符串！' }],
           })(<Input placeholder="请输入" disabled />)}
-        </FormItem>
+        </FormItem> */}
 
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单URL">
           {form.getFieldDecorator('href', {
@@ -334,22 +333,21 @@ class UpdateForm extends PureComponent {
             </Select>
           )}
         </FormItem>
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="页面位置">
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="排序">
           {form.getFieldDecorator('sort', {
             initialValue: currentRecord.sort,
-            rules: [{ required: true, message: '请输入页面位置' }],
+            rules: [{ required: true, message: '请输入排序' }],
           })(<Input placeholder="请输入" />)}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
           {form.getFieldDecorator('remark', {
             initialValue: currentRecord.remark,
-            rules: [{ required: true, message: '请输入备注！' }],
-          })(<Input placeholder="请输入" />)}
+          })(<TextArea placeholder="请输入" />)}
         </FormItem>
       </Form>
     );
 
-    // 编辑页面权限需要填的表单
+    // 编辑按钮级权限需要填的表单
     const pageAuthForm = isPageAuth && (
       <Form>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限名">
@@ -367,7 +365,6 @@ class UpdateForm extends PureComponent {
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
           {form.getFieldDecorator('remark', {
             initialValue: currentRecord.remark,
-            rules: [{ required: true, message: '请输入备注！' }],
           })(<Input placeholder="请输入" />)}
         </FormItem>
       </Form>
@@ -379,7 +376,7 @@ class UpdateForm extends PureComponent {
         width={640}
         bodyStyle={{ padding: '32px 40px 48px' }}
         destroyOnClose
-        title={!isPageAuth ? '编辑菜单' : '编辑页面权限'}
+        title={!isPageAuth ? '编辑菜单' : '编辑按钮级权限'}
         visible={updateModalVisible}
         onOk={okHandle}
         onCancel={() => handleUpdateModalVisible(false)}
@@ -472,36 +469,36 @@ class MenuControl extends React.Component {
     return data.map(item => {
       return Array.isArray(item.childData)
         ? {
-            name: item.name,
-            code: item.code,
-            permission: item.permission,
-            href: item.href,
-            remark: item.remark,
-            resourceType: item.resourceType,
-            key: item.id,
-            id: item.id,
-            parentId: item.parentId,
-            sort: item.sort,
-            children: this.handleFormateData(item.childData),
-          }
+          name: item.name,
+          code: item.code,
+          permission: item.permission,
+          href: item.href,
+          remark: item.remark,
+          resourceType: item.resourceType,
+          key: item.id,
+          id: item.id,
+          parentId: item.parentId,
+          sort: item.sort,
+          children: this.handleFormateData(item.childData),
+        }
         : {
-            name: item.name,
-            code: item.code,
-            permission: item.permission,
-            href: item.href,
-            remark: item.remark,
-            resourceType: item.resourceType,
-            key: item.id,
-            id: item.id,
-            sort: item.sort,
-            parentId: item.parentId,
-          };
+          name: item.name,
+          code: item.code,
+          permission: item.permission,
+          href: item.href,
+          remark: item.remark,
+          resourceType: item.resourceType,
+          key: item.id,
+          id: item.id,
+          sort: item.sort,
+          parentId: item.parentId,
+        };
     });
   };
 
   handleAdd = (fields, form) => {
     const { dispatch } = this.props;
-    //add permission
+    // add permission
     fields.permission = fields.code;
     dispatch({
       type: 'menu/add',
@@ -528,8 +525,7 @@ class MenuControl extends React.Component {
 
   handleDeleteConfirm = record => {
     Modal.confirm({
-      title: 'Confirm',
-      content: '确定删除这条任务？',
+      title: '确定删除该菜单？',
       okText: '确认',
       cancelText: '取消',
       onOk: () => {
@@ -626,7 +622,7 @@ class MenuControl extends React.Component {
             onClick={() => this.handleAddModalVisible(true, true)}
             style={{ marginLeft: 20 }}
           >
-            页面权限
+            按钮级权限
           </Button>
           <Row style={{ marginTop: 20 }}>
             <Table

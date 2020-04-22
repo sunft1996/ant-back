@@ -112,8 +112,8 @@ class UpdateForm extends PureComponent {
       form.validateFields((err, fieldsValue) => {
         if (err) return;
         form.resetFields();
-        if (values.encryptionId) {
-          handleUpdate(fieldsValue, values.encryptionId);
+        if (values.id) {
+          handleUpdate(fieldsValue, values.id);
         }
       });
     };
@@ -140,7 +140,7 @@ class UpdateForm extends PureComponent {
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限">
           {form.getFieldDecorator('roleId', {
-            initialValue: values.role.id,
+            initialValue: values.roleId,
             rules: [{ required: true }],
           })(
             <Select placeholder="请选择" style={{ width: '100%' }}>
@@ -255,10 +255,10 @@ class UserControl extends PureComponent {
       render: (text, record) => (
         <div style={{ whiteSpace: 'noWrap' }}>
           <a onClick={() => this.handleUpdateModalVisible(true, record)}>编辑</a>&nbsp;&nbsp;
-          {record.status === '1' ? (
+          {/* {record.status === '1' ? (
             <Popconfirm
               title="确定启用吗"
-              onConfirm={() => this.enable(true, record, 0)}
+              onConfirm={() => this.enable(true, record)}
               onCancel={() => this.cancel(true, record)}
               okText="确定"
               cancelText="取消"
@@ -268,14 +268,14 @@ class UserControl extends PureComponent {
           ) : (
             <Popconfirm
               title="确定禁用吗"
-              onConfirm={() => this.enable(true, record, 1)}
+              onConfirm={() => this.enable(true, record)}
               onCancel={() => this.cancel(true, record)}
               okText="确定"
               cancelText="取消"
             >
               <a href="#">禁用</a> &nbsp;&nbsp;
             </Popconfirm>
-          )}
+          )} */}
           <Popconfirm
             title="确定重置该用户的密码吗?"
             onConfirm={() => this.confirmReset(record)}
@@ -318,7 +318,7 @@ class UserControl extends PureComponent {
     dispatch({
       type: 'user/resetPassword',
       payload: {
-        id: record.encryptionId,
+        id: record.id,
       },
     });
   };
@@ -353,6 +353,7 @@ class UserControl extends PureComponent {
     form.resetFields();
     this.setState({
       formValues: {},
+      currentPage:1
     });
     dispatch({
       type: 'user/fetch',
@@ -371,8 +372,7 @@ class UserControl extends PureComponent {
       case 'remove':
         dispatch({
           type: 'user/remove',
-          opType: 2,
-          payload: selectedRows.map(row => row.encryptionId),
+          payload: selectedRows.map(row => row.id),
           callback: () => {
             this.setState({
               selectedRows: [],
@@ -386,13 +386,12 @@ class UserControl extends PureComponent {
   };
 
   // 启用
-  enable = (flag, record, opType) => {
+  enable = (flag, record) => {
     const { dispatch } = this.props;
     if (flag) {
       dispatch({
-        type: 'user/remove',
-        opType,
-        payload: [record].map(row => row.encryptionId),
+        type: 'user/enable',
+        payload: [record].map(row => row.id),
       });
     }
   };
@@ -467,13 +466,13 @@ class UserControl extends PureComponent {
     });
   };
 
-  handleUpdate = (fields, encryptionId) => {
+  handleUpdate = (fields, id) => {
     const { dispatch } = this.props;
     dispatch({
       type: 'user/update',
       payload: {
         notDetail: true,
-        encryptionId,
+        id,
         realName: fields.realName,
         loginName: fields.loginName,
         roleId: fields.roleId,
@@ -487,7 +486,7 @@ class UserControl extends PureComponent {
   };
 
   handleEncrypt = beforePwd => {
-    const secretKey = 'com.vcpay.foo.key';
+    const secretKey = 'com.sunft.foo.key';
     const afterEncrypt = CryptoJS.DES.encrypt(beforePwd, CryptoJS.enc.Utf8.parse(secretKey), {
       mode: CryptoJS.mode.ECB,
       padding: CryptoJS.pad.Pkcs7,
@@ -557,7 +556,6 @@ class UserControl extends PureComponent {
     const menu = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
-        <Menu.Item key="approval">批量审批</Menu.Item>
       </Menu>
     );
     const pagination = {
@@ -585,7 +583,6 @@ class UserControl extends PureComponent {
               </Button>
               {selectedRows.length > 0 && (
                 <span>
-                  <Button>批量操作</Button>
                   <Dropdown overlay={menu}>
                     <Button>
                       更多操作 <Icon type="down" />
@@ -595,7 +592,7 @@ class UserControl extends PureComponent {
               )}
             </div>
             <StandardTable
-              rowKey="encryptionId"
+              rowKey="id"
               rowClassName="textCenter"
               selectedRows={selectedRows}
               loading={loading}

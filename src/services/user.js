@@ -1,3 +1,9 @@
+/*
+ * @Descripttion: 
+ * @Author: sunft
+ * @Date: 2019-12-18 16:59:47
+ * @LastEditTime: 2020-04-16 17:25:36
+ */
 import request from '@/utils/request';
 
 export async function query(params) {
@@ -16,7 +22,7 @@ export async function queryAuthority(params) {
 }
 export async function resetUserPwd(params) {
   const id = encodeURIComponent(params.id);
-  return request(`/empty-item/sysUser/resetPassword?encryptionId=${id}`);
+  return request(`/empty-item/sysUser/resetPassword?id=${id}`);
 }
 export async function addUser(params) {
   return request('/empty-item/sysUser/saveOrUpdateUser', {
@@ -24,8 +30,8 @@ export async function addUser(params) {
     data: params,
   });
 }
-export async function deleteUser(opType, params) {
-  return request('/empty-item/sysUser/deleteByUser/' + opType, {
+export async function deleteUser(params) {
+  return request('/empty-item/sysUser/deleteByUser/', {
     method: 'POST',
     data: params,
   });

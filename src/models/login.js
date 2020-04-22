@@ -115,8 +115,8 @@ export default {
       if (role === 'guest') {
         localStorage.clear();
       } else {
-        localStorage.setItem('token', payload.data.token);
-        localStorage.setItem('id', payload.data.encryptionId);
+        // localStorage.setItem('token', payload.data.token);
+        localStorage.setItem('id', payload.data.id);
         localStorage.setItem('auth', role);
       }
       return {
