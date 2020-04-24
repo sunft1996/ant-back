@@ -65,7 +65,7 @@ class HeaderView extends Component {
     //   return;
     // }
     if (key === 'userinfo') {
-      router.push('/account/settings/security');
+      router.push('/EditPassword');
       return;
     }
     if (key === 'logout') {

@@ -2,8 +2,6 @@ import React from 'react';
 import { Row, Card, Icon, Form, Input, Button } from 'antd';
 import { connect } from 'dva';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
-import router from 'umi/router';
-import CryptoJS from 'crypto-js';
 
 @Form.create()
 @connect(({ user }) => ({
@@ -13,27 +11,7 @@ class EditPassword extends React.PureComponent {
   constructor(props) {
     super(props);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.getcaptcha = this.getcaptcha.bind(this);
   }
-
-  getcaptcha() {
-    const { dispatch, currentUser } = this.props;
-    dispatch({
-      type: 'user/sendMsg',
-      payload: {
-        phone: currentUser.mobile,
-      },
-    });
-  }
-
-  handleEncrypt = beforePwd => {
-    const secretKey = 'com.vcpay.foo.key';
-    const afterEncrypt = CryptoJS.DES.encrypt(beforePwd, CryptoJS.enc.Utf8.parse(secretKey), {
-      mode: CryptoJS.mode.ECB,
-      padding: CryptoJS.pad.Pkcs7,
-    }).toString();
-    return afterEncrypt;
-  };
 
   compareToFirstPassword = (rule, value, callback) => {
     const { form } = this.props;
@@ -46,19 +24,15 @@ class EditPassword extends React.PureComponent {
 
   handleSubmit(e) {
     const { form } = this.props;
-    const { dispatch, currentUser } = this.props;
+    const { dispatch } = this.props;
     e.preventDefault();
     form.validateFields((err, fieldsValue) => {
       if (!err) {
         dispatch({
-          type: 'user/update',
+          type: 'user/editPassword',
           payload: {
-            password: this.handleEncrypt(fieldsValue.password),
-            newPassword: this.handleEncrypt(fieldsValue.newPassword),
-            encryptionId: currentUser.encryptionId,
-            loginName: currentUser.loginName,
-            realName: currentUser.realName,
-            roleId: currentUser.roleId,
+            password: fieldsValue.password,
+            newPassword: fieldsValue.newPassword,
           },
         });
       }
@@ -68,7 +42,6 @@ class EditPassword extends React.PureComponent {
   render() {
     const {
       form: { getFieldDecorator },
-      currentUser,
     } = this.props;
     return (
       <PageHeaderWrapper title="修改密码">

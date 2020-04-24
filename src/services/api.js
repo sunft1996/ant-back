@@ -159,9 +159,8 @@ export async function queryNotices(params = {}) {
   return request(`/api/notices?${stringify(params)}`);
 }
 
-export async function getCaptcha(params) {
-  return request(`/empty-item/sysUser/sendMsg`, {
-    method: 'POST',
-    data: params,
+export async function getCaptcha() {
+  return request(`/empty-item/getCaptcha`, {
+    method: 'GET',
   });
 }

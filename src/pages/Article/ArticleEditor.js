@@ -30,7 +30,7 @@ import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import CheckboxGroup from 'antd/lib/checkbox/Group';
-import imgUrl from '@/global';
+import {imgUrl} from '@/global';
 import E from 'wangeditor';
 import router from 'umi/router';
 
@@ -115,12 +115,12 @@ class ArticleEditor extends React.Component {
       }
       var formData = new FormData();
       formData.append('file', file);
-      fetch('/zzx/notice/uploadUserImg', {
+      fetch('/empty-item/api/uploadImg', {
         method: 'POST',
         body: formData,
       })
         .then(response => response.json())
-        .then(response => console.log(insert('/zzx/' + response.data)))
+        .then(response => console.log(insert(imgUrl + response.data.url)))
         .catch(error => console.error('Error:', error));
     };
     editor.create();
@@ -156,11 +156,8 @@ class ArticleEditor extends React.Component {
           type: 'article/saveOrUpdate',
           payload: {
             id: id != null ? id : null,
-            appEdition: values.appEdition,
+            ...values,
             content: editorContent,
-            remark: values.remark,
-            type: values.type,
-            language: values.language,
           },
         }).then(() => {
           router.push('/article/articlelist');
@@ -178,31 +175,20 @@ class ArticleEditor extends React.Component {
       <PageHeaderWrapper title={title}>
         <Card>
           <Form layout="horizontal" onSubmit={this.handleSubmit}>
-            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 17 }} label="语言">
-              {form.getFieldDecorator('language', {
-                rules: [],
-                initialValue: article.current.language,
-              })(
-                <Select>
-                  <Option value={'1'}>英文</Option>
-                  <Option value={'2'}>中文</Option>
-                </Select>
-              )}
-            </FormItem>
             <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 17 }} label="标题">
-              {form.getFieldDecorator('appEdition', {
+              {form.getFieldDecorator('title', {
                 rules: [],
-                initialValue: article.current.appEdition,
+                initialValue: article.current.title,
               })(<Input placeholder="请输入" />)}
             </FormItem>
-            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 17 }} label="公告类型">
+            <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 17 }} label="类型">
               {form.getFieldDecorator('type', {
                 rules: [],
                 initialValue: article.current.type,
               })(
                 <Select>
-                  <Option value={'1'}>汇市新闻</Option>
-                  <Option value={'2'}>公告板</Option>
+                  <Option value={1}>汇市新闻</Option>
+                  <Option value={2}>公告板</Option>
                 </Select>
               )}
             </FormItem>
@@ -213,7 +199,7 @@ class ArticleEditor extends React.Component {
               })(<TextArea placeholder="请输入" />)}
             </FormItem>
             <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 17 }} label="内容">
-              {form.getFieldDecorator('YourInputName', {
+              {form.getFieldDecorator('content', {
                 rules: [],
               })(
                 <div className="shop">

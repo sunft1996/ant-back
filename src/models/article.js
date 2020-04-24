@@ -1,27 +1,19 @@
+/*
+ * @Descripttion: 
+ * @Author: sunft
+ * @Date: 2019-12-18 16:59:47
+ * @LastEditTime: 2020-04-24 18:21:11
+ */
 import {
-  saveOrUpdNotice,
-  uploadUserImg,
-  deleteNotice,
-  getNotice,
-  topNotice,
-  getNoticeDetail,
-} from '@/services/news';
+  getArticle,deleteArticle,saveOrUpdateArticle,getArticleDetail
+} from '@/services/article';
 import { notification } from 'antd';
 
 export default {
   namespace: 'article',
   state: {
-    list: {
-      data: {
-        total: 0,
-        rows: [],
-        totalPage: 5,
-      },
-    },
+    list: [],
     current: {
-      appEdition: '',
-      type: '',
-      remark: '',
     },
   },
 
@@ -30,34 +22,32 @@ export default {
       yield put({
         type: 'loading',
       });
-      const response = yield call(getNotice, payload);
+      const response = yield call(getArticle, payload);
+      if(response.code === 'SUCCESS'){
+        yield put({
+          type: 'save',
+          payload: response.data,
+        });
+      }else{
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+ 
+    },
+    *details({ payload }, { call, put }) {
+      const response = yield call(getArticleDetail, payload);
       yield put({
-        type: 'save',
-        payload: response,
+        type: 'savedetails',
+        payload: response.data,
       });
     },
     *saveOrUpdate({ payload }, { call, put }) {
       yield put({
         type: 'loading',
       });
-      const response = yield call(saveOrUpdNotice, payload);
-      if (response.code === 'SUCCESS') {
-        notification.success({
-          message: response.code,
-          description: response.msg,
-        });
-      } else {
-        notification.error({
-          message: response.code,
-          description: response.msg,
-        });
-      }
-    },
-    *upload({ payload }, { call, put }) {
-      yield put({
-        type: 'loading',
-      });
-      const response = yield call(uploadUserImg, payload);
+      const response = yield call(saveOrUpdateArticle, payload);
       if (response.code === 'SUCCESS') {
         notification.success({
           message: response.code,
@@ -71,9 +61,9 @@ export default {
       }
     },
     *delete({ payload }, { call, put }) {
-      const response = yield call(deleteNotice, payload);
+      const response = yield call(deleteArticle, payload);
       if (response.code === 'SUCCESS') {
-        const newFetch = yield call(getNotice, {});
+        const newFetch = yield call(getArticle, {});
         yield put({
           type: 'save',
           payload: newFetch,
@@ -89,43 +79,7 @@ export default {
         });
       }
     },
-    *details({ payload }, { call, put }) {
-      const response = yield call(getNoticeDetail, payload);
-      yield put({
-        type: 'savedetails',
-        payload: response.data,
-      });
-    },
-    *clearDetails(_, { put }) {
-      yield put({
-        type: 'savedetails',
-        payload: {},
-      });
-    },
-
-    *top({ payload }, { call, put }) {
-      const response = yield call(topNotice, payload);
-      if (response.code === 'SUCCESS') {
-        const newFetch = yield call(getNotice, {});
-        yield put({
-          type: 'save',
-          payload: newFetch,
-        });
-        notification.success({
-          message: response.code,
-          description: response.msg,
-        });
-      } else {
-        notification.error({
-          message: response.code,
-          description: response.msg,
-        });
-      }
-    },
-
-    *download({ payload }, { call, put }) {
-      const response = yield call(downloadRAS, payload);
-    },
+    
   },
   reducers: {
     loading(state) {
@@ -134,7 +88,6 @@ export default {
         loading: true,
       };
     },
-
     save(state, action) {
       return {
         ...state,
@@ -146,21 +99,6 @@ export default {
       return {
         ...state,
         current: action.payload,
-        loading: false,
-      };
-    },
-    saveRAS(state, action) {
-      return {
-        ...state,
-        merchInfoRAS: action.payload,
-        loading: false,
-      };
-    },
-    again(state, action) {
-      return {
-        ...state,
-        merchInfoAgain: action.payload,
-        loading: false,
       };
     },
   },

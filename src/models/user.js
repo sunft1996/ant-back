@@ -3,11 +3,11 @@ import {
   queryCurrent,
   queryAuthority,
   addUser,
-  updatePwd,
   queryMsg,
   resetUserPwd,
   updateUser,
   deleteUser,
+  editPassword
 } from '@/services/user';
 import { notification } from 'antd';
 import router from 'umi/router';
@@ -30,8 +30,8 @@ export default {
         payload: response,
       });
     },
-    *fetchCurrent({ payload }, { call, put }) {
-      const response = yield call(queryCurrent, payload);
+    *fetchCurrent(_, { call, put }) {
+      const response = yield call(queryCurrent);
       yield put({
         type: 'saveCurrentUser',
         payload: response,
@@ -100,33 +100,11 @@ export default {
           description: response.msg,
         });
       }
-      // yield put({
-      //   type: 'save',
-      //   payload: response,
-      // });
       if (callback) callback();
-    },
-    *changePwd({ payload }, { call, put }) {
-      const response = yield call(updatePwd, payload);
-      if (response.code === 'SUCCESS') {
-        yield put({
-          type: 'save',
-          payload: response.data,
-        });
-        notification.success({
-          message: response.code,
-          description: response.msg,
-        });
-      } else {
-        notification.error({
-          message: response.code,
-          description: response.msg,
-        });
-      }
     },
 
     *remove({ payload }, { call, put }) {
-      const response = yield call(deleteUser,  payload);
+      const response = yield call(deleteUser, payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryUsers, {
           pageNo: 1,
@@ -179,13 +157,23 @@ export default {
       }
       if (callback) callback();
     },
-    *avatar({ payload, callback }, { put }) {
-      yield put({
-        type: 'saveAvatar',
-        payload,
-      });
+
+    *editPassword({ payload, callback }, { call }) {
+      const response = yield call(editPassword, payload);
+      if (response.code === 'SUCCESS') {
+        notification.success({
+          message: response.code,
+          description: response.msg,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
       if (callback) callback();
     },
+
   },
 
   reducers: {

@@ -57,7 +57,6 @@ class BasicLayout extends React.Component {
     } else {
       dispatch({
         type: 'user/fetchCurrent',
-        payload: id,
       });
       dispatch({
         type: 'setting/getSetting',

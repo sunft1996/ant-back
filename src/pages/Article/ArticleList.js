@@ -34,7 +34,7 @@ class ArticleList extends PureComponent {
     form.validateFields((err, fieldsValue) => {
       if (!err) {
         const value = {
-          appEdition: fieldsValue.appEdition,
+          title: fieldsValue.title,
           type: fieldsValue.type,
         };
         dispatch({
@@ -83,7 +83,7 @@ class ArticleList extends PureComponent {
         <Row>
           <Col span={24} md={24} lg={8}>
             <FormItem label="标题">
-              {getFieldDecorator('appEdition', {
+              {getFieldDecorator('title', {
                 rules: [],
               })(<Input />)}
             </FormItem>
@@ -152,13 +152,11 @@ class ArticleList extends PureComponent {
     const columns = [
       {
         title: '标题',
-        dataIndex: 'appEdition',
-        key: 'appEdition',
+        dataIndex: 'title',
       },
       {
         title: '摘要',
         dataIndex: 'remark',
-        key: 'remark',
         render: text => <span className="remark">{text}</span>,
       },
       {
@@ -167,10 +165,10 @@ class ArticleList extends PureComponent {
         key: 'type',
         render: item => {
           switch (item) {
-            case '1':
+            case 1:
               item = '汇市新闻';
               break;
-            case '2':
+            case 2:
               item = '公告板';
               break;
             default:
@@ -219,10 +217,7 @@ class ArticleList extends PureComponent {
         ),
       },
     ];
-    const { total } = article.list.data;
-    const pagination = {
-      total,
-    };
+
     return (
       <PageHeaderWrapper title="公告列表">
         <Card>
@@ -234,13 +229,12 @@ class ArticleList extends PureComponent {
           </Row>
           <Row>
             <Table
-              dataSource={article.list.data.rows}
+              dataSource={article.list}
               rowKey="id"
               columns={columns}
-              pagination={pagination}
               loading={article.loading}
               bordered={false}
-              onChange={this.handlePageChange}
+              // onChange={this.handlePageChange}
             />
           </Row>
         </Card>

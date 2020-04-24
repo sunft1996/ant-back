@@ -69,12 +69,12 @@ export default [
         icon: 'dashboard',
         authority: ['root'],
         routes: [
-          // {
-          //   path: '/article/articlelist',
-          //   name: '文章列表',
-          //   icon: 'dashboard',
-          //   component:'./Article/ArticleList',
-          // },
+          {
+            path: '/article/articlelist',
+            name: '文章列表',
+            icon: 'dashboard',
+            component:'./Article/ArticleList',
+          },
           {
             path: '/article/articleEditor',
             name: '文章',

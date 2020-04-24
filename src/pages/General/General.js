@@ -17,7 +17,7 @@ const linkToSetting = () => {
 const Description = props => {
   return (
     <div>
-      <p>上次登录时间：{moment(props.time).format('YYYY-MM-DD HH:mm:ss')}</p>
+      <p>上次登录时间：{moment(props.time).format('YYYY-MM-DD HH:MM:SS')}</p>
 
       <Button type="primary" onClick={linkToSetting}>
         安全设置
@@ -99,6 +99,7 @@ class General extends React.PureComponent {
     const { loading,  } = this.state;
     const { user } = this.props;
     const { currentUser } = user;
+
     return (
       <PageHeaderWrapper title="今日概况">
         <Row gutter={16}>

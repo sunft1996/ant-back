@@ -1,3 +1,9 @@
+/*
+ * @Descripttion: 
+ * @Author: sunft
+ * @Date: 2019-12-18 16:59:49
+ * @LastEditTime: 2020-04-23 15:43:02
+ */
 import React from 'react';
 import { notification, Button, message } from 'antd';
 import { formatMessage } from 'umi-plugin-react/locale';
@@ -59,12 +65,7 @@ if (pwa) {
     });
   });
 }
-// 线上图片地址统一为 http://pay.vc-group.cn/ + 相对地址
-// const imgUrl = "https://pay.vc-group.cn/"
-// const imgUrl = "http://192.168.0.242/";
-const imgUrl = 'http://192.168.0.230:8099/';
-
-export default imgUrl;
+export const imgUrl = 'http://127.0.0.1:4000';
 
 // 判断页面权限
 export const judgePageAuth = (auth, pagePermissions) => {

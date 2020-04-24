@@ -5,7 +5,7 @@ import Link from 'umi/link';
 import { Checkbox, Alert, Icon, Input, message } from 'antd';
 import Login from '@/components/Login';
 import styles from './Login.less';
-import imgUrl from '@/global';
+import { imgUrl } from '@/global';
 
 const { Tab, UserName, Password, Mobile, Captcha, Submit } = Login;
 
@@ -16,17 +16,13 @@ const { Tab, UserName, Password, Mobile, Captcha, Submit } = Login;
 class LoginPage extends Component {
   state = {
     type: 'account',
-    autoLogin: true,
-    timestamp: new Date().getTime(),
     captchaImg: ``,
     captcha: '',
   };
 
   componentDidMount() {
-    const captchaImg = `${imgUrl}/empty-item/getVerifyCode?timestamp=${this.state.timestamp}`;
-    this.setState({
-      captchaImg,
-    });
+    this.changeCode();
+
   }
 
   onTabChange = type => {
@@ -59,7 +55,7 @@ class LoginPage extends Component {
     });
 
   handleSubmit = (err, values) => {
-    const { type, captcha, timestamp } = this.state;
+    const { type, captcha } = this.state;
     if (!captcha && type === 'account') {
       message.error('请输入验证码');
       return;
@@ -72,15 +68,14 @@ class LoginPage extends Component {
       const data =
         type === 'account'
           ? {
-              ...values,
-              verifyCode: captcha,
-              loginType,
-              timestamp,
-            }
+            ...values,
+            verifyCode: captcha,
+            loginType,
+          }
           : {
-              ...values,
-              loginType,
-            };
+            ...values,
+            loginType,
+          };
       dispatch({
         type: 'login/login',
         payload: data,
@@ -93,23 +88,23 @@ class LoginPage extends Component {
     }
   };
 
-  changeAutoLogin = e => {
-    this.setState({
-      autoLogin: e.target.checked,
-    });
-  };
-
   renderMessage = content => (
     <Alert style={{ marginBottom: 24 }} message={content} type="error" showIcon />
   );
 
   changeCode = () => {
-    // debugger
-    const timestamp = new Date().getTime();
-    this.setState({
-      timestamp,
-      captchaImg: `${imgUrl}/empty-item/getVerifyCode?timestamp=${timestamp}`,
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'login/getCaptcha',
+    }).then((res)=>{
+      if(res.code === 'SUCCESS'){
+        this.setState({
+          captchaImg:res.data,
+        });
+      }
+    
     });
+    
   };
 
   handleCaptchaChange = e => {
@@ -119,8 +114,8 @@ class LoginPage extends Component {
   };
 
   render() {
-    const { login, submitting } = this.props;
-    const { type, autoLogin, captchaImg, captcha } = this.state;
+    const { submitting } = this.props;
+    const { type, captchaImg, captcha } = this.state;
     return (
       <div className={styles.main}>
         <Login
@@ -131,51 +126,48 @@ class LoginPage extends Component {
             this.loginForm = form;
           }}
         >
-          <Tab key="account" tab={formatMessage({ id: 'app.login.tab-login-credentials' })}>
+          {/* <Tab key="account" tab={formatMessage({ id: 'app.login.tab-login-credentials' })}>
             {login.status === 'error' &&
               login.type === 'account' &&
               !submitting &&
-              this.renderMessage(formatMessage({ id: 'app.login.message-invalid-credentials' }))}
-            <UserName
-              name="loginName"
-              placeholder="用户名/手机号："
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'validation.userName.required' }),
-                },
-              ]}
+              this.renderMessage(formatMessage({ id: 'app.login.message-invalid-credentials' }))} */}
+          <UserName
+            name="loginName"
+            placeholder="用户名/手机号："
+            rules={[
+              {
+                required: true,
+                message: formatMessage({ id: 'validation.userName.required' }),
+              },
+            ]}
+          />
+          <Password
+            name="password"
+            placeholder={`${formatMessage({ id: 'app.login.password' })}: `}
+            rules={[
+              {
+                required: true,
+                message: formatMessage({ id: 'validation.password.required' }),
+              },
+            ]}
+            onPressEnter={e => {
+              e.preventDefault();
+              this.loginForm.validateFields(this.handleSubmit);
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Input
+              name="verifyCode"
+              placeholder="验证码:"
+              style={{ width: 150, height: 40 }}
+              value={captcha}
+              onChange={e => this.handleCaptchaChange(e)}
             />
-            <Password
-              name="password"
-              placeholder={`${formatMessage({ id: 'app.login.password' })}: `}
-              rules={[
-                {
-                  required: true,
-                  message: formatMessage({ id: 'validation.password.required' }),
-                },
-              ]}
-              onPressEnter={e => {
-                e.preventDefault();
-                this.loginForm.validateFields(this.handleSubmit);
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Input
-                name="verifyCode"
-                placeholder="验证码:"
-                style={{ width: 150, height: 40 }}
-                value={captcha}
-                onChange={e => this.handleCaptchaChange(e)}
-              />
-              <img
-                src={captchaImg}
-                style={{ height: 40, paddingRight: 80 }}
-                onClick={() => this.changeCode()}
-              />
-            </div>
-          </Tab>
-          <Tab key="mobile" tab={formatMessage({ id: 'app.login.tab-login-mobile' })}>
+            <div style={{ height: 40 }} dangerouslySetInnerHTML={{__html:captchaImg}} onClick={() => this.changeCode()} />
+            
+          </div>
+          {/* </Tab> */}
+          {/* <Tab key="mobile" tab={formatMessage({ id: 'app.login.tab-login-mobile' })}>
             {login.status === 'error' &&
               login.type === 'mobile' &&
               !submitting &&
@@ -210,11 +202,8 @@ class LoginPage extends Component {
                 },
               ]}
             />
-          </Tab>
+          </Tab> */}
           <div>
-            {/* <Checkbox checked={autoLogin} onChange={this.changeAutoLogin}>
-              <FormattedMessage id="app.login.remember-me" />
-            </Checkbox> */}
             {/* <a style={{ float: 'right' }} href="/user/forgotpwd">
               <FormattedMessage id="app.login.forgot-password" />
             </a> */}

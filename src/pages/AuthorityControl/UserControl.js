@@ -74,14 +74,9 @@ const CreateForm = Form.create()(props => {
         )}
       </FormItem>
       <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="手机">
-        {form.getFieldDecorator('mobile', {
+        {form.getFieldDecorator('phone', {
           rules: [{ test: /^1\d{10}$/, message: '请输入正确的手机号码！', max: 11 }],
         })(<Input placeholder="请输入手机号码" />)}
-      </FormItem>
-      <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="电话">
-        {form.getFieldDecorator('phone', {
-          rules: [{ message: '最多15个字符！', max: 15 }],
-        })(<Input placeholder="请输入电话号码" />)}
       </FormItem>
       <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="邮箱">
         {form.getFieldDecorator('email', {})(<Input placeholder="请输入邮箱" />)}
@@ -156,16 +151,10 @@ class UpdateForm extends PureComponent {
           )}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="手机">
-          {form.getFieldDecorator('mobile', {
-            initialValue: values.mobile,
-            rules: [{ test: /^1\d{10}$/, message: '请输入正确的手机号码！', max: 11 }],
-          })(<Input placeholder="请输入手机号码" />)}
-        </FormItem>
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="电话">
           {form.getFieldDecorator('phone', {
             initialValue: values.phone,
-            rules: [{ message: '最多15个字符！', max: 15 }],
-          })(<Input placeholder="请输入电话号码" />)}
+            rules: [{ test: /^1\d{10}$/, message: '请输入正确的手机号码！', max: 11 }],
+          })(<Input placeholder="请输入手机号码" />)}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="邮箱">
           {form.getFieldDecorator('email', {
@@ -219,19 +208,6 @@ class UserControl extends PureComponent {
       title: '权限',
       dataIndex: 'roleName',
       key: 'roleName',
-      // filters: [
-      //   {
-      //     text: status[0],
-      //     value: 0,
-      //   },
-      //   {
-      //     text: status[1],
-      //     value: 1,
-      //   },
-      // ],
-      // render(val) {
-      //   return <Badge status={statusMap[val]} text={status[val]} />;
-      // },
     },
     {
       title: '上次登录时间',
@@ -244,7 +220,7 @@ class UserControl extends PureComponent {
     },
     {
       title: '手机号',
-      dataIndex: 'mobile',
+      dataIndex: 'phone',
     },
     {
       title: '邮箱',

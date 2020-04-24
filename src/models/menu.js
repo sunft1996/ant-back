@@ -126,7 +126,7 @@ export default {
     *getMenuData({ payload }, { call, put }) {
       const lang = getLocale();
       const menus = JSON.parse(localStorage.getItem('menu'));
-      const { routes, authority, path } = menuDatas[1];
+      const { routes, authority, path } = menus;
       // const { routes, authority, path } = test;
       const originalMenuData = memoizeOneFormatter(routes, authority, path);
       const menuData = filterMenuData(originalMenuData);

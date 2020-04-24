@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2019-12-18 16:59:47
- * @LastEditTime: 2020-04-16 17:25:36
+ * @LastEditTime: 2020-04-23 16:53:37
  */
 import request from '@/utils/request';
 
@@ -12,9 +12,8 @@ export async function query(params) {
     data: params,
   });
 }
-export async function queryCurrent(params) {
-  const id = encodeURIComponent(params);
-  return request(`/empty-item/sysUser/toUserDetails?id=${id}`);
+export async function queryCurrent() {
+  return request(`/empty-item/sysUser/toUserDetails`);
 }
 export async function queryAuthority(params) {
   const id = encodeURIComponent(params);
@@ -51,8 +50,8 @@ export async function updateUserImg(params) {
 export async function queryMsg(params) {
   return request(`/empty-item/sysUser/sendMsg?phone=${params}`);
 }
-export async function updatePwd(params) {
-  return request('/empty-item/sysUser/changePassword', {
+export async function editPassword(params) {
+  return request('/empty-item/sysUser/editPassword', {
     method: 'POST',
     data: params,
   });
