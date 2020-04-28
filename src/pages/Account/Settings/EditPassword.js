@@ -2,6 +2,7 @@ import React from 'react';
 import { Row, Card, Icon, Form, Input, Button } from 'antd';
 import { connect } from 'dva';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import router from 'umi/router';
 
 @Form.create()
 @connect(({ user }) => ({
@@ -10,6 +11,9 @@ import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 class EditPassword extends React.PureComponent {
   constructor(props) {
     super(props);
+    this.state = {
+      loading: false
+    };
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
@@ -23,9 +27,11 @@ class EditPassword extends React.PureComponent {
   };
 
   handleSubmit(e) {
-    const { form } = this.props;
-    const { dispatch } = this.props;
     e.preventDefault();
+    const { form, dispatch } = this.props;
+    this.setState({
+      loading: true
+    });
     form.validateFields((err, fieldsValue) => {
       if (!err) {
         dispatch({
@@ -34,6 +40,10 @@ class EditPassword extends React.PureComponent {
             password: fieldsValue.password,
             newPassword: fieldsValue.newPassword,
           },
+        }).then(() => {
+          this.setState({
+            loading: false
+          });
         });
       }
     });
@@ -43,6 +53,7 @@ class EditPassword extends React.PureComponent {
     const {
       form: { getFieldDecorator },
     } = this.props;
+    const { loading } = this.state;
     return (
       <PageHeaderWrapper title="修改密码">
         <Card>
@@ -55,62 +66,45 @@ class EditPassword extends React.PureComponent {
             >
               <Form.Item label="原密码">
                 {getFieldDecorator('password', {
-                  rules: [{ required: true, message: 'Please input your Password!' }],
+                  rules: [{ required: true, message: '请输入原始密码' }],
                 })(
                   <Input
                     prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
                     type="password"
-                    placeholder="Password"
+                    placeholder="请输入原始密码"
                   />
                 )}
               </Form.Item>
               <Form.Item label="新密码">
                 {getFieldDecorator('newPassword2', {
-                  rules: [{ required: true, message: 'Please input your Password!' }],
+                  rules: [{ required: true, message: '请输入新密码' }],
                 })(
                   <Input
                     prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
                     type="password"
-                    placeholder="Password"
+                    placeholder="请输入新密码"
                   />
                 )}
               </Form.Item>
               <Form.Item label="确认密码">
                 {getFieldDecorator('newPassword', {
                   rules: [
-                    { required: true, message: 'Please input your Password!' },
+                    { required: true, message: '请输入新密码' },
                     { validator: this.compareToFirstPassword },
                   ],
                 })(
                   <Input
                     prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
                     type="password"
-                    placeholder="Password"
+                    placeholder="请输入新密码"
                   />
                 )}
               </Form.Item>
-              {/* <Form.Item label="手机号">
-                  <Input placeholder="phone" value={currentUser.mobile} />
-                </Form.Item>
-                <Form.Item
-                  label="验证码"
-                  extra="We must make sure that your are a human."
-                >
-                  <Row gutter={8}>
-                    <Col span={12}>
-                      {getFieldDecorator('captcha', {
-                                        rules: [{ required: true, message: 'Please input the captcha you got!' }],
-                                    })(
-                                      <Input />
-                                    )}
-                    </Col>
-                    <Col span={12}>
-                      <Button onClick={this.getcaptcha}>Get captcha</Button>
-                    </Col>
-                  </Row>
-                </Form.Item> */}
               <Form.Item wrapperCol={{ offset: 4 }}>
-                <Button type="primary" htmlType="submit">
+                <Button onClick={()=>router.go(-1)}>
+                  取消
+                </Button>
+                <Button type="primary" className="marginLeft" htmlType="submit" loading={loading}>
                   提交
                 </Button>
               </Form.Item>

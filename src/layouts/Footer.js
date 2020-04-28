@@ -1,3 +1,9 @@
+/*
+ * @Descripttion: 
+ * @Author: sunft
+ * @Date: 2019-12-18 16:59:46
+ * @LastEditTime: 2020-04-26 13:20:28
+ */
 import React, { Fragment } from 'react';
 import { Layout, Icon } from 'antd';
 import GlobalFooter from '@/components/GlobalFooter';
@@ -14,12 +20,12 @@ const FooterView = () => (
           //   href: 'https://pro.ant.design',
           //   blankTarget: true,
           // },
-          // {
-          //   key: 'github',
-          //   title: <Icon type="github" />,
-          //   href: 'https://github.com/ant-design/ant-design-pro',
-          //   blankTarget: true,
-          // },
+          {
+            key: 'github',
+            title: '前往github',
+            href: 'https://github.com/sunfutao/ant-back',
+            blankTarget: true,
+          },
           // {
           //   key: 'Ant Design',
           //   title: 'Ant Design',
@@ -28,11 +34,11 @@ const FooterView = () => (
           // },
         ]
       }
-      copyright={
-        <Fragment>
-          Copyright <Icon type="copyright" /> 2019 厦门微辰金融技术服务有限公司
-        </Fragment>
-      }
+      // copyright={
+      //   <Fragment>
+      //     Copyright <Icon type="copyright" /> sunfutao
+      //   </Fragment>
+      // }
     />
   </Footer>
 );

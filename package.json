@@ -54,6 +54,7 @@
   ],
   "dependencies": {
     "@ant-design/pro-layout": "^4.10.0",
+    "@ant-design/pro-table": "^2.2.6",
     "@antv/data-set": "^0.10.1",
     "antd": "^3.26.4",
     "bizcharts": "^3.4.3",

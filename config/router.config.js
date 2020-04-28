@@ -56,6 +56,12 @@ export default [
             component: './AuthorityControl/UserControl',
           },
           {
+            path: '/authoritycontrol/userDetail',
+            icon: 'dashboard',
+            name: '用户详情',
+            component: './AuthorityControl/UserDetail',
+          },
+          {
             path: '/authoritycontrol/menucontrol',
             icon: 'dashboard',
             name: '菜单管理',
@@ -79,6 +85,7 @@ export default [
             path: '/article/articleEditor',
             name: '文章',
             icon: 'dashboard',
+            hideInMenu:true,
             component: './Article/ArticleEditor', // hideInMenu: true,
           },
         ],
@@ -87,8 +94,13 @@ export default [
         path: '/demo',
         name: '示例页面',
         icon: 'dashboard',
-        authority: ['root'],
         routes: [
+          {
+            name: '列表页',
+            path: '/demo/list',
+            icon: 'dashboard',
+            component: './Demo/List', 
+          },
           {
             name: '基础详情页',
             path: '/demo/profilebasic',
@@ -103,31 +115,6 @@ export default [
         hideInMenu: true,
         component: './Account/Settings/EditPassword',
       },
-      {
-        name: 'account',
-        icon: 'user',
-        path: '/account',
-        hideInMenu:true,
-        routes: [
-          {
-            path: '/account/settings',
-            name: 'settings',
-            component: './Account/Settings/Info',
-            routes: [
-              {
-                path: '/account/settings',
-                redirect: '/account/settings/base',
-              },
-              {
-                path: '/account/settings/security',
-                component: './Account/Settings/SecurityView',
-              },
-              
-            ],
-          },
-        ],
-      },
-
       {
         name: 'exception',
         icon: 'warning',

@@ -120,11 +120,12 @@ export default {
     routerData: [],
     breadcrumbNameMap: {},
     pagePermissions: [],
+    loading:true
   },
 
   effects: {
     *getMenuData({ payload }, { call, put }) {
-      const lang = getLocale();
+      // const lang = getLocale();
       const menus = JSON.parse(localStorage.getItem('menu'));
       const { routes, authority, path } = menus;
       // const { routes, authority, path } = test;
@@ -149,8 +150,16 @@ export default {
         type: 'save',
         payload: response,
       });
+      yield put({
+        type: 'loading',
+        payload: false,
+      });
     },
     *add({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+        payload: true,
+      });
       const response = yield call(addMenu, payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryMenus, {
@@ -171,6 +180,10 @@ export default {
           description: response.msg,
         });
       }
+      yield put({
+        type: 'loading',
+        payload: false,
+      });
       return response;
     },
     *remove({ payload, callback }, { call, put }) {
@@ -197,6 +210,10 @@ export default {
       if (callback) callback();
     },
     *update({ payload, callback }, { call, put }) {
+      yield put({
+        type: 'loading',
+        payload: true,
+      });
       const response = yield call(updateMenus, payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryMenus, {
@@ -217,6 +234,10 @@ export default {
           description: response.msg,
         });
       }
+      yield put({
+        type: 'loading',
+        payload: false,
+      });
       if (callback) callback();
     },
 
@@ -234,6 +255,12 @@ export default {
   },
 
   reducers: {
+    loading(state, action) {
+      return {
+        ...state,
+        loading: action.payload,
+      };
+    },
     save(state, action) {
       return {
         ...state,

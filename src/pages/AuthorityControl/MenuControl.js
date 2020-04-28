@@ -1,15 +1,20 @@
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'dva';
-import { Row, Card, Table, Modal, Select, message, Form, Input, Button, TreeSelect } from 'antd';
+import { Row, Card, Table, Modal, Select, message, Form, Input, Button, TreeSelect, Radio } from 'antd';
 import PropTypes from 'prop-types';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
+import styles from './index.less';
 
 const { Option } = Select;
 const FormItem = Form.Item;
 const { TextArea } = Input;
 
+@connect(({ menu }) => ({
+  menu,
+}))
 @Form.create()
 class CreateForm extends PureComponent {
+
   static defaultProps = {
     handleAdd: () => { },
     handleAddModalVisible: () => { },
@@ -22,8 +27,10 @@ class CreateForm extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
+      isApi: false,
       menuType: 'button',
-    };
+
+    }
   }
 
   onSelect = () => {
@@ -40,7 +47,7 @@ class CreateForm extends PureComponent {
 
   render() {
     const { form, handleAddModalVisible, handleAdd, modalVisible, menu, isPageAuth } = this.props;
-    const { menuType } = this.state;
+    const { menuType, isApi } = this.state;
     const okHandle = () => {
       form.validateFields((err, fieldsValue) => {
         if (err) return;
@@ -110,13 +117,6 @@ class CreateForm extends PureComponent {
             rules: [{ required: true, message: '请输入菜单编码！' }],
           })(<Input placeholder="请输入" />)}
         </FormItem>
-
-        {/* <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限字符串">
-          {form.getFieldDecorator('permission', {
-            rules: [{ required: true, message: '请输入权限字符串！' }],
-          })(<Input placeholder="请输入" />)}
-        </FormItem> */}
-
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单URL">
           {form.getFieldDecorator('href', {
             rules: [{ required: true, message: '请输入菜单URL！' }],
@@ -141,14 +141,19 @@ class CreateForm extends PureComponent {
             rules: [{ required: true, message: '请输入类型！' }],
           })(
             <Select style={{ width: 120 }} onChange={this.onSelect}>
-              <Option value="menu">menu</Option>
-              <Option value="button">button</Option>
+              <Option value="menu">菜单</Option>
+              <Option value="button">页面</Option>
             </Select>
           )}
         </FormItem>
         {menuType === 'button' && (
-          <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="排序">
-            {form.getFieldDecorator('sort')(<Input placeholder="请输入" />)}
+          <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单栏">
+            {form.getFieldDecorator('isShow')(
+              <Radio.Group>
+                <Radio value={0}>显示</Radio>
+                <Radio value={1}>隐藏</Radio>
+              </Radio.Group>
+            )}
           </FormItem>
         )}
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
@@ -166,12 +171,35 @@ class CreateForm extends PureComponent {
             rules: [{ required: true, message: '请输入权限名！' }],
           })(<Input placeholder="请输入" />)}
         </FormItem>
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限范围">
+          {form.getFieldDecorator('isApi', {
+            initialValue: 0,
+            rules: [{ required: true, message: '请选择权限范围！' }],
+          })(
+            <Radio.Group onChange={(e) => {
+              this.setState({
+                isApi: e.target.value === 1
+              });
+            }}
+            >
+              <Radio value={0}>页面</Radio>
+              <Radio value={1}>页面 + 接口</Radio>
+            </Radio.Group>
+          )}
+        </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限编码">
           {form.getFieldDecorator('code', {
             rules: [{ required: true, message: '请输入权限编码！' }],
-          })(<Input placeholder="请输入" />)}
+          })(<Input placeholder="前端代码根据编码判断按钮显示隐藏" />)}
         </FormItem>
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="页面">
+        {isApi &&
+          <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="接口路径">
+            {form.getFieldDecorator('apiUrl', {
+              rules: [{ required: true, message: '请输入接口路径！' }],
+            })(<Input placeholder="如：/empty-item/sysUser/editPassword" />)}
+          </FormItem>
+        }
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="所属页面">
           {form.getFieldDecorator('parentId', {
             rules: [{ required: true, message: '请选择页面！' }],
           })(
@@ -180,7 +208,7 @@ class CreateForm extends PureComponent {
               // value={this.state.value}
               dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
               treeData={pageData}
-              placeholder="Please select"
+              placeholder="请选择"
               treeDefaultExpandAll
             />
           )}
@@ -209,13 +237,18 @@ class CreateForm extends PureComponent {
         visible={modalVisible}
         onOk={okHandle}
         onCancel={() => handleAddModalVisible()}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={menu.loading}
       >
         {!isPageAuth ? menuForm : pageAuthForm}
       </Modal>
     );
   }
 }
-
+@connect(({ menu }) => ({
+  menu,
+}))
 @Form.create()
 class UpdateForm extends PureComponent {
   static defaultProps = {
@@ -293,14 +326,6 @@ class UpdateForm extends PureComponent {
             rules: [{ required: true, message: '请输入菜单编码！' }],
           })(<Input placeholder="请输入" disabled />)}
         </FormItem>
-
-        {/* <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限字符串">
-          {form.getFieldDecorator('permission', {
-            initialValue: currentRecord.permission,
-            rules: [{ required: true, message: '请输入权限字符串！' }],
-          })(<Input placeholder="请输入" disabled />)}
-        </FormItem> */}
-
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单URL">
           {form.getFieldDecorator('href', {
             initialValue: currentRecord.href,
@@ -328,16 +353,21 @@ class UpdateForm extends PureComponent {
             rules: [{ required: true, message: '请输入类型！' }],
           })(
             <Select style={{ width: 120 }} onChange={this.onSelect}>
-              <Option value="menu">menu</Option>
-              <Option value="button">button</Option>
+              <Option value="menu">菜单</Option>
+              <Option value="button">页面</Option>
             </Select>
           )}
         </FormItem>
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="排序">
-          {form.getFieldDecorator('sort', {
-            initialValue: currentRecord.sort,
-            rules: [{ required: true, message: '请输入排序' }],
-          })(<Input placeholder="请输入" />)}
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单栏">
+          {form.getFieldDecorator('isShow', {
+            initialValue: Number(!currentRecord.hideInMenu),
+            rules: [{ required: true, message: '请选择' }],
+          })(
+            <Radio.Group>
+              <Radio value={0}>隐藏</Radio>
+              <Radio value={1}>显示</Radio>
+            </Radio.Group>
+          )}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
           {form.getFieldDecorator('remark', {
@@ -362,6 +392,14 @@ class UpdateForm extends PureComponent {
             rules: [{ required: true, message: '请输入权限编码！' }],
           })(<Input placeholder="请输入" disabled />)}
         </FormItem>
+        {currentRecord.apiUrl &&
+          <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="接口路径">
+            {form.getFieldDecorator('apiUrl', {
+              initialValue: currentRecord.apiUrl,
+              rules: [{ required: true, message: '请输入接口路径！' }],
+            })(<Input placeholder="如：/empty-item/sysUser/editPassword" />)}
+          </FormItem>
+        }
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
           {form.getFieldDecorator('remark', {
             initialValue: currentRecord.remark,
@@ -381,6 +419,9 @@ class UpdateForm extends PureComponent {
         onOk={okHandle}
         onCancel={() => handleUpdateModalVisible(false)}
         afterClose={() => handleUpdateModalVisible()}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={menu.loading}
       >
         {!isPageAuth ? menuForm : pageAuthForm}
       </Modal>
@@ -390,9 +431,8 @@ class UpdateForm extends PureComponent {
 
 @Form.create()
 /* eslint react/no-multi-comp:0 */
-@connect(({ menu, loading }) => ({
+@connect(({ menu }) => ({
   menu,
-  loading: loading.models.rule,
 }))
 class MenuControl extends React.Component {
   constructor(props) {
@@ -469,30 +509,10 @@ class MenuControl extends React.Component {
     return data.map(item => {
       return Array.isArray(item.childData)
         ? {
-          name: item.name,
-          code: item.code,
-          permission: item.permission,
-          href: item.href,
-          remark: item.remark,
-          resourceType: item.resourceType,
-          key: item.id,
-          id: item.id,
-          parentId: item.parentId,
-          sort: item.sort,
+          ...item,
           children: this.handleFormateData(item.childData),
         }
-        : {
-          name: item.name,
-          code: item.code,
-          permission: item.permission,
-          href: item.href,
-          remark: item.remark,
-          resourceType: item.resourceType,
-          key: item.id,
-          id: item.id,
-          sort: item.sort,
-          parentId: item.parentId,
-        };
+        : item;
     });
   };
 
@@ -549,9 +569,9 @@ class MenuControl extends React.Component {
   };
 
   render() {
-    const { menu, dispatch } = this.props;
+    const { menu } = this.props;
     const { updateModalVisible, addmodalVisible, currentRecord, isPageAuth } = this.state;
-    const parentMethods = {
+    const addMethods = {
       handleAdd: this.handleAdd,
       handleAddModalVisible: this.handleAddModalVisible,
     };
@@ -563,6 +583,7 @@ class MenuControl extends React.Component {
       {
         title: '名称',
         dataIndex: 'name',
+        width: 200,
         render: text => <span style={{ whiteSpace: 'noWrap' }}>{text}</span>,
       },
       {
@@ -581,26 +602,40 @@ class MenuControl extends React.Component {
       {
         title: '类型',
         dataIndex: 'resourceType',
+        render(item) {
+          switch (item) {
+            case 'menu':
+              return '菜单'
+            case 'button':
+              return '页面'
+            case 'pageAuth':
+              return '按钮'
+            default:
+              return '菜单'
+          }
+        }
       },
       {
         title: '操作',
-        render: (text, record) => (
-          <p style={{ whiteSpace: 'noWrap' }}>
-            <a
-              onClick={() => {
-                if (record.resourceType === 'pageAuth') {
-                  this.handleUpdateModalVisible(true, record, true);
-                } else {
-                  this.handleUpdateModalVisible(true, record, false);
-                }
-              }}
-            >
-              编辑
-            </a>
-            &nbsp;&nbsp;
-            <a onClick={() => this.handleDeleteConfirm(record)}>删除</a>
-          </p>
-        ),
+        render: (text, record) => {
+          return (
+            <p style={{ whiteSpace: 'noWrap' }}>
+              <a
+                onClick={() => {
+                  if (record.resourceType === 'pageAuth') {
+                    this.handleUpdateModalVisible(true, record, true);
+                  } else {
+                    this.handleUpdateModalVisible(true, record, false);
+                  }
+                }}
+              >
+                编辑
+              </a>
+              &nbsp;&nbsp;
+              <a onClick={() => this.handleDeleteConfirm(record)}>删除</a>
+            </p>
+          )
+        },
       },
     ];
     const dataSource = Array.isArray(menu.rows) ? this.handleFormateData(menu.rows) : menu.rows;
@@ -626,29 +661,26 @@ class MenuControl extends React.Component {
           </Button>
           <Row style={{ marginTop: 20 }}>
             <Table
+              className={styles.menuTable}
               dataSource={dataSource}
               rowKey="id"
               rowClassName="textCenter"
               columns={columns}
               loading={menu.loading}
               bordered={false}
-              style={{ overflowX: 'scroll' }}
+              scroll={{x:'max-content'}}
             />
           </Row>
           <CreateForm
-            {...parentMethods}
+            {...addMethods}
             modalVisible={addmodalVisible}
-            menu={menu}
-            dispatch={dispatch}
             isPageAuth={isPageAuth}
           />
           {currentRecord && Object.keys(currentRecord).length ? (
             <UpdateForm
               {...updateMethods}
-              dispatch={dispatch}
               currentRecord={currentRecord}
               updateModalVisible={updateModalVisible}
-              menu={menu}
               isPageAuth={isPageAuth}
             />
           ) : null}

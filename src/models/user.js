@@ -1,9 +1,8 @@
 import {
   query as queryUsers,
   queryCurrent,
-  queryAuthority,
+  queryDetail,
   addUser,
-  queryMsg,
   resetUserPwd,
   updateUser,
   deleteUser,
@@ -20,6 +19,8 @@ export default {
     currentUser: {},
     Authority: {},
     avatar: {},
+    loading: true,
+    detail:{}
   },
 
   effects: {
@@ -29,12 +30,23 @@ export default {
         type: 'save',
         payload: response,
       });
+      yield put({
+        type: 'loading',
+        payload: false,
+      });
+    },
+    *fetchDetail({payload}, { call, put }) {
+      const response = yield call(queryDetail,payload);
+      yield put({
+        type: 'saveDetail',
+        payload: response.data,
+      });
     },
     *fetchCurrent(_, { call, put }) {
       const response = yield call(queryCurrent);
       yield put({
         type: 'saveCurrentUser',
-        payload: response,
+        payload: response.data,
       });
       if (response.data.passwordStatus === '0') {
         notification.info({
@@ -42,13 +54,6 @@ export default {
         });
         router.push('/EditPassword');
       }
-    },
-    *fetchAuthority({ payload }, { call, put }) {
-      const response = yield call(queryAuthority, payload);
-      yield put({
-        type: 'saveAuthority',
-        payload: response,
-      });
     },
     *resetPassword({ payload }, { call }) {
       const response = yield call(resetUserPwd, payload);
@@ -65,6 +70,10 @@ export default {
       }
     },
     *add({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+        payload: true,
+      });
       const response = yield call(addUser, payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryUsers, {
@@ -85,26 +94,39 @@ export default {
           description: response.msg,
         });
       }
+      yield put({
+        type: 'loading',
+        payload: false,
+      });
       return response;
     },
-    *sendMsg({ payload, callback }, { call }) {
-      const response = yield call(queryMsg, payload.mobile);
+
+    *remove({ payload, callback }, { call, put }) {
+      const response = yield call(deleteUser, payload);
       if (response.code === 'SUCCESS') {
+        const newFetch = yield call(queryUsers, {
+          pageNo: 1,
+          pageSize: 10,
+        });
+        yield put({
+          type: 'save',
+          payload: newFetch,
+        });
         notification.success({
           message: response.code,
           description: response.msg,
         });
+        if (callback) callback();
+
       } else {
         notification.error({
           message: response.code,
           description: response.msg,
         });
       }
-      if (callback) callback();
     },
-
-    *remove({ payload }, { call, put }) {
-      const response = yield call(deleteUser, payload);
+    *update({ payload, callback }, { call, put }) {
+      const response = yield call(updateUser, payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryUsers, {
           pageNo: 1,
@@ -124,41 +146,18 @@ export default {
           description: response.msg,
         });
       }
-    },
-    *update({ payload, callback }, { call, put }) {
-      const response = yield call(updateUser, payload);
-      if (response.code === 'SUCCESS') {
-        // 判断是否是用户详情页触发的修改信息
-        if (payload.notDetail) {
-          const newFetch = yield call(queryUsers, {
-            pageNo: 1,
-            pageSize: 10,
-          });
-          yield put({
-            type: 'save',
-            payload: newFetch,
-          });
-        } else {
-          const newFetch = yield call(queryCurrent, payload.encryptionId);
-          yield put({
-            type: 'saveCurrentUser',
-            payload: newFetch,
-          });
-        }
-        notification.success({
-          message: response.code,
-          description: response.msg,
-        });
-      } else {
-        notification.error({
-          message: response.code,
-          description: response.msg,
-        });
-      }
+      yield put({
+        type: 'loading',
+        payload: false,
+      });
       if (callback) callback();
     },
 
-    *editPassword({ payload, callback }, { call }) {
+    *editPassword({ payload, callback }, { call, put }) {
+      yield put({
+        type: 'loading',
+        payload: true,
+      });
       const response = yield call(editPassword, payload);
       if (response.code === 'SUCCESS') {
         notification.success({
@@ -171,44 +170,39 @@ export default {
           description: response.msg,
         });
       }
+      yield put({
+        type: 'loading',
+        payload: false,
+      });
       if (callback) callback();
     },
 
   },
 
   reducers: {
+    loading(state, action) {
+      return {
+        ...state,
+        loading: action.payload,
+      };
+    },
+
     save(state, action) {
       return {
         ...state,
         list: action.payload,
       };
     },
-    saveAvatar(state, action) {
-      return {
-        ...state,
-        avatar: action.payload,
-      };
-    },
     saveCurrentUser(state, action) {
       return {
         ...state,
-        currentUser: action.payload.data || {},
+        currentUser: action.payload || {},
       };
     },
-    saveAuthority(state, action) {
+    saveDetail(state, action) {
       return {
         ...state,
-        Authority: action.payload || {},
-      };
-    },
-    changeNotifyCount(state, action) {
-      return {
-        ...state,
-        currentUser: {
-          ...state.currentUser,
-          notifyCount: action.payload.totalCount,
-          unreadCount: action.payload.unreadCount,
-        },
+        detail: action.payload,
       };
     },
   },

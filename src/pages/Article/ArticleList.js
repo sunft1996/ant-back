@@ -4,7 +4,6 @@ import { Row, Col, Card, Table, Select, Form, Input, Button, Popconfirm } from '
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import moment from 'moment';
 import router from 'umi/router';
-import styles from './ArticleList.less';
 
 const { Option } = Select;
 
@@ -57,20 +56,6 @@ class ArticleList extends PureComponent {
     });
   };
 
-  // // 编辑
-  // handleUpdate = (fields, encryptionId) => {
-  //   const { dispatch } = this.props;
-  //   dispatch({
-  //     type: 'masterCard/update',
-  //     payload: {
-  //       notDetail: true,
-  //       ...fields
-  //       // encryptionId,
-  //     },
-  //   });
-  //   // this.handleUpdateModalVisible();
-  // };
-
   renderForm = () => {
     const { getFieldDecorator } = this.props.form;
     const FormItem = Form.Item;
@@ -82,27 +67,27 @@ class ArticleList extends PureComponent {
       >
         <Row>
           <Col span={24} md={24} lg={8}>
-            <FormItem label="标题">
+            <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="标题">
               {getFieldDecorator('title', {
                 rules: [],
               })(<Input />)}
             </FormItem>
           </Col>
           <Col span={24} md={24} lg={8}>
-            <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="公告类型">
+            <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="文章类型">
               {getFieldDecorator('type', {
                 rules: [],
               })(
                 <Select>
                   <Option value={null}>全部</Option>
-                  <Option value="1">汇市新闻</Option>
-                  <Option value="2">公告板</Option>
+                  <Option value={1}>笔记</Option>
+                  <Option value={2}>博客</Option>
                 </Select>
               )}
             </FormItem>
           </Col>
-          <Col span={24} md={24} lg={8} offset={16}>
-            <FormItem className={styles.btnContainer}>
+          <Col span={24} md={24} lg={8}>
+            <FormItem style={{float:'right',whiteSpace:'nowrap'}}>
               <Button type="primary" htmlType="submit">
                 查询
               </Button>
@@ -162,14 +147,13 @@ class ArticleList extends PureComponent {
       {
         title: '类型',
         dataIndex: 'type',
-        key: 'type',
         render: item => {
           switch (item) {
             case 1:
-              item = '汇市新闻';
+              item = '笔记';
               break;
             case 2:
-              item = '公告板';
+              item = '博客';
               break;
             default:
               item = '';
@@ -177,20 +161,9 @@ class ArticleList extends PureComponent {
           return item;
         },
       },
-      // {
-      //   title: '置顶',
-      //   dataIndex: 'isTop',
-      //   key: 'isTop',
-      //   render: item => {
-      //     return (
-      //       item === "0" ? "是" : "否"
-      //     )
-      //   }
-      // },
       {
         title: '创建时间',
-        dataIndex: 'insTime',
-        key: 'insTime',
+        dataIndex: 'createdAt',
         render: item => {
           return item == null ? '' : moment(item).format('YYYY-MM-DD HH:mm:ss');
         },
@@ -200,34 +173,30 @@ class ArticleList extends PureComponent {
         render: (text, record) => (
           <Fragment>
             <a onClick={() => this.handleUpdateModalVisible(true, record)}>编辑</a>
-            &nbsp;&nbsp;&nbsp;
             <Popconfirm
-              title="确定删除这条公告？"
+              title="确定删除这条文章？"
               onConfirm={() => this.deleteModalVisible(true, record)}
-              okText="Yes"
-              cancelText="No"
+              okText="确定"
+              cancelText="取消"
+              className="marginLeft"
             >
               <a>删除</a>&nbsp;&nbsp;&nbsp;
             </Popconfirm>
-            {/* {record.isTop == '1' ?
-              <a onClick={() => this.top(true, record)}>置顶</a> :
-              <a onClick={() => this.top(false, record)}>取消置顶</a>
-            } */}
           </Fragment>
         ),
       },
     ];
 
     return (
-      <PageHeaderWrapper title="公告列表">
+      <PageHeaderWrapper title="文章列表">
         <Card>
           <Row>
             {this.renderForm()}
             <Button icon="plus" type="primary" onClick={() => this.handleAdd()}>
-              添加
+              写文章
             </Button>
           </Row>
-          <Row>
+          <Row className="marginTop">
             <Table
               dataSource={article.list}
               rowKey="id"

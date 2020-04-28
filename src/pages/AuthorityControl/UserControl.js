@@ -1,4 +1,4 @@
-import React, { PureComponent, Fragment } from 'react';
+import React, { PureComponent } from 'react';
 import { connect } from 'dva';
 import moment from 'moment';
 import router from 'umi/router';
@@ -20,12 +20,12 @@ import StandardTable from '@/components/StandardTable';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import CryptoJS from 'crypto-js';
 
-import styles from './UserControl.less';
+import styles from './index.less';
 
 const FormItem = Form.Item;
 const { Option } = Select;
 const CreateForm = Form.create()(props => {
-  const { modalVisible, form, handleAdd, handleModalVisible, roleList } = props;
+  const { modalVisible, form, handleAdd, handleModalVisible, roleList, loading } = props;
   const okHandle = () => {
     form.validateFields((err, fieldsValue) => {
       if (err) return;
@@ -41,6 +41,9 @@ const CreateForm = Form.create()(props => {
       visible={modalVisible}
       onOk={okHandle}
       onCancel={() => handleModalVisible()}
+      okText="确定"
+      cancelText="取消"
+      confirmLoading={loading}
     >
       <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="用户名">
         {form.getFieldDecorator('loginName', {
@@ -88,10 +91,11 @@ const CreateForm = Form.create()(props => {
 @Form.create()
 class UpdateForm extends PureComponent {
   static defaultProps = {
-    handleUpdate: () => {},
-    handleUpdateModalVisible: () => {},
+    handleUpdate: () => { },
+    handleUpdateModalVisible: () => { },
     values: {},
     roleList: [],
+    loading: true
   };
 
   render() {
@@ -102,6 +106,7 @@ class UpdateForm extends PureComponent {
       values,
       form,
       roleList,
+      loading
     } = this.props;
     const okHandle = () => {
       form.validateFields((err, fieldsValue) => {
@@ -123,6 +128,9 @@ class UpdateForm extends PureComponent {
         onOk={okHandle}
         onCancel={() => handleUpdateModalVisible(false, values)}
         afterClose={() => handleUpdateModalVisible()}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={loading}
       >
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="用户名">
           <Input placeholder="请输入" value={values.loginName} />
@@ -167,10 +175,9 @@ class UpdateForm extends PureComponent {
 }
 
 /* eslint react/no-multi-comp:0 */
-@connect(({ user, role, loading }) => ({
+@connect(({ user, role }) => ({
   user,
   role,
-  loading: loading.models.rule,
 }))
 @Form.create()
 class UserControl extends PureComponent {
@@ -181,6 +188,7 @@ class UserControl extends PureComponent {
     formValues: {},
     updateFormValues: {},
     currentPage: 1,
+    
   };
 
   static defaultProps = {
@@ -192,83 +200,9 @@ class UserControl extends PureComponent {
     },
   };
 
-  columns = [
-    {
-      title: '用户名',
-      dataIndex: 'loginName',
-      key: 'loginName',
-      render: name => <a onClick={() => this.previewItem(name)}>{name}</a>,
-    },
-    {
-      title: '昵称',
-      dataIndex: 'realName',
-      key: 'realName',
-    },
-    {
-      title: '权限',
-      dataIndex: 'roleName',
-      key: 'roleName',
-    },
-    {
-      title: '上次登录时间',
-      dataIndex: 'loginDate',
-      // sorter: true,
-      render: val =>
-        val && (
-          <div style={{ whiteSpace: 'noWrap' }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>
-        ),
-    },
-    {
-      title: '手机号',
-      dataIndex: 'phone',
-    },
-    {
-      title: '邮箱',
-      dataIndex: 'email',
-    },
-    {
-      title: '操作',
-      render: (text, record) => (
-        <div style={{ whiteSpace: 'noWrap' }}>
-          <a onClick={() => this.handleUpdateModalVisible(true, record)}>编辑</a>&nbsp;&nbsp;
-          {/* {record.status === '1' ? (
-            <Popconfirm
-              title="确定启用吗"
-              onConfirm={() => this.enable(true, record)}
-              onCancel={() => this.cancel(true, record)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <a href="#">启用</a> &nbsp;&nbsp;
-            </Popconfirm>
-          ) : (
-            <Popconfirm
-              title="确定禁用吗"
-              onConfirm={() => this.enable(true, record)}
-              onCancel={() => this.cancel(true, record)}
-              okText="确定"
-              cancelText="取消"
-            >
-              <a href="#">禁用</a> &nbsp;&nbsp;
-            </Popconfirm>
-          )} */}
-          <Popconfirm
-            title="确定重置该用户的密码吗?"
-            onConfirm={() => this.confirmReset(record)}
-            okText="Yes"
-            cancelText="No"
-          >
-            <a href="#">重置密码</a>
-          </Popconfirm>
-        </div>
-      ),
-    },
-  ];
-
   componentDidMount() {
     const { dispatch } = this.props;
-    // const auth = localStorage.getItem("auth");
-    // if(auth === "root"){
+
     dispatch({
       type: 'user/fetch',
       payload: {
@@ -279,14 +213,7 @@ class UserControl extends PureComponent {
     dispatch({
       type: 'role/fetch',
     });
-    // }else{
-    //   dispatch({
-    //     type: 'role/fetchNotRoot',
-    //     payload:{
-    //       role:auth
-    //     }
-    //   });
-    // }
+
   }
 
   confirmReset = record => {
@@ -310,9 +237,6 @@ class UserControl extends PureComponent {
       pageSize: pagination.pageSize,
       ...formValues,
     };
-    // if (sorter.field) {
-    //   params.sorter = `${sorter.field}_${sorter.order}`;
-    // }
 
     dispatch({
       type: 'user/fetch',
@@ -321,7 +245,7 @@ class UserControl extends PureComponent {
   };
 
   previewItem = id => {
-    router.push(`/profile/basic/${id}`);
+    router.push(`/authoritycontrol/userDetail?id=${id}`);
   };
 
   handleFormReset = () => {
@@ -329,7 +253,7 @@ class UserControl extends PureComponent {
     form.resetFields();
     this.setState({
       formValues: {},
-      currentPage:1
+      currentPage: 1
     });
     dispatch({
       type: 'user/fetch',
@@ -346,35 +270,26 @@ class UserControl extends PureComponent {
     if (selectedRows.length === 0) return;
     switch (e.key) {
       case 'remove':
-        dispatch({
-          type: 'user/remove',
-          payload: selectedRows.map(row => row.id),
-          callback: () => {
-            this.setState({
-              selectedRows: [],
+        Modal.confirm({
+          title: '确定删除吗？',
+          onOk: () => {
+            dispatch({
+              type: 'user/remove',
+              payload: selectedRows.map(row => row.id),
+              callback: () => {
+                this.setState({
+                  selectedRows: [],
+                });
+              },
             });
           },
+          okText: '确定',
+          cancelText: '取消'
         });
         break;
       default:
         break;
     }
-  };
-
-  // 启用
-  enable = (flag, record) => {
-    const { dispatch } = this.props;
-    if (flag) {
-      dispatch({
-        type: 'user/enable',
-        payload: [record].map(row => row.id),
-      });
-    }
-  };
-
-  // 取消提示
-  cancel = e => {
-    // message.error('Click on No');
   };
 
   handleSelectRows = rows => {
@@ -425,14 +340,8 @@ class UserControl extends PureComponent {
     dispatch({
       type: 'user/add',
       payload: {
-        loginName: fields.loginName,
         password: EncryptPassword,
-        realName: fields.realName,
-        roleId: fields.roleId,
-        userType: fields.userType,
-        phone: fields.phone,
-        email: fields.email,
-        mobile: fields.mobile,
+        ...fields
       },
     }).then(res => {
       if (res.code === 'SUCCESS') {
@@ -449,12 +358,7 @@ class UserControl extends PureComponent {
       payload: {
         notDetail: true,
         id,
-        realName: fields.realName,
-        loginName: fields.loginName,
-        roleId: fields.roleId,
-        phone: fields.phone,
-        email: fields.email,
-        mobile: fields.mobile,
+        ...fields
       },
     });
 
@@ -517,9 +421,8 @@ class UserControl extends PureComponent {
 
   render() {
     const {
-      user: { list },
+      user: { list, loading },
       role,
-      loading,
     } = this.props;
     const roleList = role.list;
     const {
@@ -548,6 +451,57 @@ class UserControl extends PureComponent {
       handleUpdateModalVisible: this.handleUpdateModalVisible,
       handleUpdate: this.handleUpdate,
     };
+    const columns = [
+      {
+        title: '用户名',
+        dataIndex: 'loginName',
+        key: 'loginName',
+      },
+      {
+        title: '昵称',
+        dataIndex: 'realName',
+        key: 'realName',
+      },
+      {
+        title: '权限',
+        dataIndex: 'roleName',
+        key: 'roleName',
+      },
+      {
+        title: '上次登录时间',
+        dataIndex: 'loginDate',
+        render: val =>
+          val && (
+            <div style={{ whiteSpace: 'noWrap' }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>
+          ),
+      },
+      {
+        title: '手机号',
+        dataIndex: 'phone',
+      },
+      {
+        title: '邮箱',
+        dataIndex: 'email',
+      },
+      {
+        title: '操作',
+        render: (text, record) => (
+          <div style={{ whiteSpace: 'noWrap' }}>
+            <a onClick={() => this.previewItem(record.id)}>查看</a>
+            <a onClick={() => this.handleUpdateModalVisible(true, record)} className="marginLeft">编辑</a>
+            <Popconfirm
+              title="确定重置该用户的密码吗?"
+              onConfirm={() => this.confirmReset(record)}
+              okText="确定"
+              cancelText="取消"
+              className="marginLeft"
+            >
+              <a href="#">重置密码</a>
+            </Popconfirm>
+          </div>
+        ),
+      },
+    ];
     return (
       <PageHeaderWrapper title="用户管理">
         <Card bordered={false}>
@@ -567,6 +521,7 @@ class UserControl extends PureComponent {
                 </span>
               )}
             </div>
+    
             <StandardTable
               rowKey="id"
               rowClassName="textCenter"
@@ -574,19 +529,20 @@ class UserControl extends PureComponent {
               loading={loading}
               data={list.rows}
               pagination={pagination}
-              columns={this.columns}
+              columns={columns}
               onSelectRow={this.handleSelectRows}
               onChange={this.handleStandardTableChange}
             />
           </div>
         </Card>
-        <CreateForm {...parentMethods} modalVisible={modalVisible} roleList={roleList} />
+        <CreateForm {...parentMethods} modalVisible={modalVisible} roleList={roleList} loading={loading} />
         {updateFormValues && Object.keys(updateFormValues).length ? (
           <UpdateForm
             {...updateMethods}
             updateModalVisible={updateModalVisible}
             values={updateFormValues}
             roleList={roleList}
+            loading={loading}
           />
         ) : null}
       </PageHeaderWrapper>

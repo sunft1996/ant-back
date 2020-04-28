@@ -1,20 +1,23 @@
 import React, { Component, Fragment, PureComponent } from 'react';
 import { connect } from 'dva';
-import { Card, Form, Input, Icon, Button, Dropdown, Menu, Modal, Tree } from 'antd';
+import { Card, Form, Input, Icon, Button, Dropdown, Menu, Modal, Tree, message } from 'antd';
 import StandardTable from '@/components/StandardTable';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
-import styles from './UserControl.less';
+import styles from './index.less';
 
 const FormItem = Form.Item;
 const { TreeNode } = Tree;
 
+@connect(({ menu, role }) => ({
+  menu,
+  role
+}))
 @Form.create()
 class CreateForm extends PureComponent {
   constructor(props) {
     super(props);
     this.state = {
       checkedKeys: [],
-      halfCheckedKeys: [],
     };
   }
 
@@ -27,8 +30,7 @@ class CreateForm extends PureComponent {
 
   handleCheck = (checkedKeys, e) => {
     this.setState({
-      checkedKeys: checkedKeys.map(item => Number(item)),
-      halfCheckedKeys: e.halfCheckedKeys,
+      checkedKeys: checkedKeys.checked.map(item => Number(item)),
     });
   };
 
@@ -46,14 +48,18 @@ class CreateForm extends PureComponent {
   };
 
   render() {
-    const { modalVisible, form, handleAdd, handleModalVisible, menu } = this.props;
-    const { checkedKeys, halfCheckedKeys } = this.state;
+    const { modalVisible, form, handleAdd, handleModalVisible, menu, role: { loading } } = this.props;
+    const { checkedKeys } = this.state;
     const okHandle = () => {
       form.validateFields((err, fieldsValue) => {
         if (err) return;
+        if (checkedKeys.length === 0) {
+          message.error('请选择可访问页面');
+          return;
+        }
         const addValue = {
           ...fieldsValue,
-          menuIds: checkedKeys.concat(halfCheckedKeys),
+          menuIds: checkedKeys
         };
         handleAdd(addValue, form);
       });
@@ -69,6 +75,9 @@ class CreateForm extends PureComponent {
         visible={modalVisible}
         onOk={okHandle}
         onCancel={() => handleModalVisible()}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={loading}
       >
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="角色名">
           {form.getFieldDecorator('description', {
@@ -85,9 +94,10 @@ class CreateForm extends PureComponent {
             // rules: [{ required: true, message: '请选择！' }],
           })(
             <Tree
-              // checkedKeys={checkedKeys}
+              checkedKeys={checkedKeys}
               onCheck={this.handleCheck}
               checkable
+              checkStrictly
             >
               {this.renderTreeNodes(allmenus)}
             </Tree>
@@ -97,7 +107,10 @@ class CreateForm extends PureComponent {
     );
   }
 }
-
+@connect(({ menu,role }) => ({
+  menu,
+  role
+}))
 @Form.create()
 class UpdateForm extends Component {
   static defaultProps = {
@@ -111,14 +124,19 @@ class UpdateForm extends Component {
     super(props);
     this.state = {
       checkedKeys: [],
-      halfCheckedKeys: [],
     };
+  }
+
+  componentDidMount() {
+    const { record } = this.props;
+    this.setState({
+      checkedKeys: record.menuId.split(',')
+    })
   }
 
   handleCheck = (checkedKeys, e) => {
     this.setState({
-      checkedKeys: checkedKeys.map(item => Number(item)),
-      halfCheckedKeys: e.halfCheckedKeys.map(item => Number(item)),
+      checkedKeys: checkedKeys.checked.map(item => Number(item)),
     });
   };
 
@@ -134,7 +152,7 @@ class UpdateForm extends Component {
       return <TreeNode title={item.name} key={item.id} dataRef={item} />;
     });
   };
-  
+
 
 
   render() {
@@ -146,16 +164,20 @@ class UpdateForm extends Component {
       form,
       record,
       menu,
+      role: { loading }
     } = this.props;
-    const { checkedKeys, halfCheckedKeys } = this.state;
-    const initMenu = record.menuId ? record.menuId.split(',') : [];
+    const { checkedKeys } = this.state;
     const okHandle = () => {
       form.validateFields((err, fieldsValue) => {
         if (err) return;
+        if (checkedKeys.length === 0) {
+          message.error('请选择可访问页面');
+          return;
+        }
         form.resetFields();
         const updateValue = {
           ...fieldsValue,
-          menuIds: checkedKeys.length > 0 ? checkedKeys.concat(halfCheckedKeys) : initMenu,
+          menuIds: checkedKeys
         };
 
         if (record.id) {
@@ -176,6 +198,9 @@ class UpdateForm extends Component {
         onOk={okHandle}
         onCancel={() => handleUpdateModalVisible(false, values)}
         afterClose={() => handleUpdateModalVisible()}
+        okText="确定"
+        cancelText="取消"
+        confirmLoading={loading}
       >
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="角色名">
           {form.getFieldDecorator('description', {
@@ -195,10 +220,9 @@ class UpdateForm extends Component {
           })(
             <Tree
               checkable
-              defaultCheckedKeys={initMenu}
-              // checkedKeys={checkedKeys}
+              checkedKeys={checkedKeys}
               onCheck={this.handleCheck}
-              checkStrictly={false}
+              checkStrictly
             >
               {this.renderTreeNodes(allmenus)}
             </Tree>
@@ -210,10 +234,9 @@ class UpdateForm extends Component {
 }
 
 /* eslint react/no-multi-comp:0 */
-@connect(({ role, menu, loading }) => ({
+@connect(({ role, menu }) => ({
   role,
   menu,
-  loading: loading.models.rule,
 }))
 @Form.create()
 class AuthorityControl extends Component {
@@ -300,15 +323,23 @@ class AuthorityControl extends Component {
     });
     switch (e.key) {
       case 'remove':
-        dispatch({
-          type: 'role/remove',
-          payload: selectedRowKeys,
-          callback: () => {
-            this.setState({
-              selectedRows: [],
+        Modal.confirm({
+          title:'确定删除吗？',
+          onOk:()=>{
+            dispatch({
+              type: 'role/remove',
+              payload: selectedRowKeys,
+              callback: () => {
+                this.setState({
+                  selectedRows: [],
+                });
+              },
             });
           },
+          okText:'确定',
+          cancelText:'取消'
         });
+        
         break;
       default:
         break;
@@ -368,17 +399,16 @@ class AuthorityControl extends Component {
   };
 
   render() {
-    const { role, loading, dispatch, menu } = this.props;
+    const { role } = this.props;
     const roleList = role.list;
     const { selectedRows, modalVisible, updateModalVisible, record } = this.state;
     const menuNode = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
-        <Menu.Item key="approval">批量审批</Menu.Item>
       </Menu>
     );
 
-    const parentMethods = {
+    const addMethods = {
       handleAdd: this.handleAdd,
       handleModalVisible: this.handleModalVisible,
     };
@@ -395,21 +425,18 @@ class AuthorityControl extends Component {
                 新建
               </Button>
               {selectedRows.length > 0 && (
-                <span>
-                  <Button>批量操作</Button>
-                  <Dropdown overlay={menuNode}>
-                    <Button>
-                      更多操作 <Icon type="down" />
-                    </Button>
-                  </Dropdown>
-                </span>
+                <Dropdown overlay={menuNode}>
+                  <Button>
+                    更多操作 <Icon type="down" />
+                  </Button>
+                </Dropdown>
               )}
             </div>
             <StandardTable
               rowKey="id"
               rowClassName="textCenter"
               selectedRows={selectedRows}
-              loading={loading}
+              loading={role.loading}
               data={roleList}
               columns={this.columns}
               onSelectRow={this.handleSelectRows}
@@ -418,18 +445,15 @@ class AuthorityControl extends Component {
           </div>
         </Card>
         <CreateForm
-          {...parentMethods}
+          {...addMethods}
           modalVisible={modalVisible}
           roleList={roleList}
           values={record}
-          dispatch={dispatch}
-          menu={menu}
         />
         {record && Object.keys(record).length ? (
           <UpdateForm
             {...updateMethods}
             record={record}
-            menu={menu}
             updateModalVisible={updateModalVisible}
           />
         ) : null}

@@ -11,13 +11,13 @@ const { Meta } = Card;
 const { TreeNode } = Tree;
 
 const linkToSetting = () => {
-  router.push('/account/settings/security');
+  router.push('/EditPassword');
 };
 
 const Description = props => {
   return (
     <div>
-      <p>上次登录时间：{moment(props.time).format('YYYY-MM-DD HH:MM:SS')}</p>
+      <p>上次登录时间：{props.time ? moment(props.time).format('YYYY-MM-DD HH:mm:ss') : '无'}</p>
 
       <Button type="primary" onClick={linkToSetting}>
         安全设置
@@ -119,7 +119,7 @@ class General extends React.PureComponent {
                     src="https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png"
                   />
                 }
-                title="你好!"
+                title={<span>你好！{currentUser.realName}</span>}
                 description={
                   <Description onLogout={this.handleLogout} time={currentUser.loginDate} />
                 }

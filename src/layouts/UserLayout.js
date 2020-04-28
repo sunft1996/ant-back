@@ -1,3 +1,9 @@
+/*
+ * @Descripttion: 
+ * @Author: sunft
+ * @Date: 2019-12-18 16:59:46
+ * @LastEditTime: 2020-04-28 10:13:31
+ */
 import React, { Component, Fragment } from 'react';
 import { formatMessage } from 'umi-plugin-react/locale';
 import { connect } from 'dva';
@@ -30,7 +36,7 @@ const links = [
 
 const copyright = (
   <Fragment>
-    Copyright <Icon type="copyright" /> 2019 厦门微辰金融技术服务有限公司
+    Copyright <Icon type="copyright" /> 2019 xxxxx 有限公司
   </Fragment>
 );
 

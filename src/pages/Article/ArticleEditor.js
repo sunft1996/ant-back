@@ -3,6 +3,7 @@ import React, { PureComponent, Fragment } from 'react';
 import { formatMessage, FormattedMessage } from 'umi-plugin-react/locale';
 import Authorized from '@/utils/Authorized';
 import { connect } from 'dva';
+import styles from './index.less';
 import {
   message,
   Popconfirm,
@@ -25,19 +26,17 @@ import {
   Button,
   List,
 } from 'antd';
-import DescriptionList from '@/components/DescriptionList';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import PropTypes from 'prop-types';
 import moment from 'moment';
 import CheckboxGroup from 'antd/lib/checkbox/Group';
-import {imgUrl} from '@/global';
+import { imgUrl } from '@/global';
 import E from 'wangeditor';
 import router from 'umi/router';
 
 const FormItem = Form.Item;
 const { TextArea } = Input;
 const { Option } = Select;
-const { Description } = DescriptionList;
 const { RangePicker } = DatePicker;
 @connect(({ article, loading }) => ({
   article,
@@ -104,7 +103,7 @@ class ArticleEditor extends React.Component {
       'redo', // 重复
     ];
     editor.customConfig.uploadImgShowBase64 = false;
-    editor.customConfig.customUploadImg = function(files, insert) {
+    editor.customConfig.customUploadImg = function (files, insert) {
       // files 是 input 中选中的文件列表
       // insert 是获取图片 url 后，插入到编辑器的方法
       let file;
@@ -166,11 +165,11 @@ class ArticleEditor extends React.Component {
     });
   };
   cancel = () => {
-    router.push('/article/MerchShare');
+    router.go(-1);
   };
   render() {
     const { form, location, article } = this.props;
-    const title = location.query.type === 'add' ? '新增公告' : '编辑公告';
+    const title = location.query.type === 'add' ? '新增' : '编辑';
     return (
       <PageHeaderWrapper title={title}>
         <Card>
@@ -187,8 +186,8 @@ class ArticleEditor extends React.Component {
                 initialValue: article.current.type,
               })(
                 <Select>
-                  <Option value={1}>汇市新闻</Option>
-                  <Option value={2}>公告板</Option>
+                  <Option value={1}>笔记</Option>
+                  <Option value={2}>博客</Option>
                 </Select>
               )}
             </FormItem>
@@ -207,7 +206,7 @@ class ArticleEditor extends React.Component {
                     <div
                       ref="editorElemMenu"
                       style={{ backgroundColor: '#f1f1f1', border: '1px solid #ccc' }}
-                      className="editorElem-menu"
+                      className={styles.editorElemMenu}
                     ></div>
                     <div
                       style={{

@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2019-12-18 16:59:47
- * @LastEditTime: 2020-03-30 15:56:55
+ * @LastEditTime: 2020-04-27 11:33:24
  */
 import { queryRoles, saveOrUpdateRoles, removeRoles, queryNotRootRoles } from '@/services/role';
 import { notification } from 'antd';
@@ -12,8 +12,9 @@ export default {
 
   state: {
     list: [{
-      menuId:''
+      menuId: ''
     }],
+    loading: true
   },
 
   effects: {
@@ -23,15 +24,16 @@ export default {
         type: 'save',
         payload: response,
       });
+      yield put({
+        type: 'loading',
+        payload: false
+      });
     },
-    // *fetchNotRoot({ payload }, { call, put }) {
-    //   const response =  yield call(queryNotRootRoles,payload);
-    //   yield put({
-    //     type: 'save',
-    //     payload:response
-    //   });
-    // },
     *add({ payload }, { call, put }) {
+      yield put({
+        type: 'loading',
+        payload: true
+      });
       const response = yield call(saveOrUpdateRoles, payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryRoles, {});
@@ -49,6 +51,10 @@ export default {
           description: response.msg,
         });
       }
+      yield put({
+        type: 'loading',
+        payload: false
+      });
       return response;
     },
     *remove({ payload, callback }, { call, put }) {
@@ -63,15 +69,20 @@ export default {
           message: response.code,
           description: response.msg,
         });
+        if (callback) callback();
+
       } else {
         notification.error({
           message: response.code,
           description: response.msg,
         });
       }
-      if (callback) callback();
     },
     *update({ payload, callback }, { call, put }) {
+      yield put({
+        type: 'loading',
+        payload: true
+      });
       const response = yield call(saveOrUpdateRoles, payload);
       if (response.code === 'SUCCESS') {
         const newFetch = yield call(queryRoles, {});
@@ -89,11 +100,21 @@ export default {
           description: response.msg,
         });
       }
+      yield put({
+        type: 'loading',
+        payload: false
+      });
       if (callback) callback();
     },
   },
 
   reducers: {
+    loading(state, action) {
+      return {
+        ...state,
+        loading: action.payload,
+      };
+    },
     save(state, action) {
       return {
         ...state,

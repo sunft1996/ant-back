@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2019-12-18 16:59:47
- * @LastEditTime: 2020-04-24 18:21:11
+ * @LastEditTime: 2020-04-27 13:01:08
  */
 import {
   getArticle,deleteArticle,saveOrUpdateArticle,getArticleDetail
@@ -36,6 +36,12 @@ export default {
       }
  
     },
+    *clearDetails(_, { put }) {
+      yield put({
+        type: 'savedetails',
+        payload: {},
+      });
+    },
     *details({ payload }, { call, put }) {
       const response = yield call(getArticleDetail, payload);
       yield put({
@@ -66,7 +72,7 @@ export default {
         const newFetch = yield call(getArticle, {});
         yield put({
           type: 'save',
-          payload: newFetch,
+          payload: newFetch.data,
         });
         notification.success({
           message: response.code,
