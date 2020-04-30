@@ -79,13 +79,13 @@ export default [
             path: '/article/articlelist',
             name: '文章列表',
             icon: 'dashboard',
-            component:'./Article/ArticleList',
+            component: './Article/ArticleList',
           },
           {
             path: '/article/articleEditor',
             name: '文章',
             icon: 'dashboard',
-            hideInMenu:true,
+            hideInMenu: true,
             component: './Article/ArticleEditor', // hideInMenu: true,
           },
         ],
@@ -97,15 +97,31 @@ export default [
         routes: [
           {
             name: '列表页',
+            // url
             path: '/demo/list',
             icon: 'dashboard',
-            component: './Demo/List', 
+            // 组件路径
+            component: './Demo/List',
+          },
+          {
+            name: '新增页',
+            path: '/demo/add',
+            icon: 'dashboard',
+            hideInMenu: true,
+            component: './Demo/Add',
+          },
+          {
+            name: '修改页',
+            path: '/demo/update',
+            icon: 'dashboard',
+            hideInMenu: true,
+            component: './Demo/Update',
           },
           {
             name: '基础详情页',
-            path: '/demo/profilebasic',
+            path: '/demo/detail',
             icon: 'dashboard',
-            component: './ProfileBasic', 
+            component: './Demo/Detail',
           },
         ],
       },
@@ -144,7 +160,7 @@ export default [
           },
         ],
       },
-     
+
       {
         component: '404',
       },

@@ -1,11 +1,14 @@
 /*
- * @Descripttion: 
+ * @Descripttion:
  * @Author: sunft
  * @Date: 2019-12-18 16:59:47
- * @LastEditTime: 2020-04-27 13:01:08
+ * @LastEditTime: 2020-04-30 16:32:00
  */
 import {
-  getArticle,deleteArticle,saveOrUpdateArticle,getArticleDetail
+  getArticle,
+  deleteArticle,
+  saveOrUpdateArticle,
+  getArticleDetail,
 } from '@/services/article';
 import { notification } from 'antd';
 
@@ -13,8 +16,7 @@ export default {
   namespace: 'article',
   state: {
     list: [],
-    current: {
-    },
+    current: {},
   },
 
   effects: {
@@ -23,18 +25,17 @@ export default {
         type: 'loading',
       });
       const response = yield call(getArticle, payload);
-      if(response.code === 'SUCCESS'){
+      if (response.code === 'SUCCESS') {
         yield put({
           type: 'save',
           payload: response.data,
         });
-      }else{
+      } else {
         notification.error({
           message: response.code,
           description: response.msg,
         });
       }
- 
     },
     *clearDetails(_, { put }) {
       yield put({
@@ -65,6 +66,7 @@ export default {
           description: response.msg,
         });
       }
+      return response;
     },
     *delete({ payload }, { call, put }) {
       const response = yield call(deleteArticle, payload);
@@ -85,7 +87,6 @@ export default {
         });
       }
     },
-    
   },
   reducers: {
     loading(state) {

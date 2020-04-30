@@ -1,6 +1,18 @@
 import React, { Fragment, PureComponent } from 'react';
 import { connect } from 'dva';
-import { Row, Card, Table, Modal, Select, message, Form, Input, Button, TreeSelect, Radio } from 'antd';
+import {
+  Row,
+  Card,
+  Table,
+  Modal,
+  Select,
+  message,
+  Form,
+  Input,
+  Button,
+  TreeSelect,
+  Radio,
+} from 'antd';
 import PropTypes from 'prop-types';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import styles from './index.less';
@@ -14,10 +26,9 @@ const { TextArea } = Input;
 }))
 @Form.create()
 class CreateForm extends PureComponent {
-
   static defaultProps = {
-    handleAdd: () => { },
-    handleAddModalVisible: () => { },
+    handleAdd: () => {},
+    handleAddModalVisible: () => {},
     menu: {
       allmenus: [],
       total: 20,
@@ -29,8 +40,7 @@ class CreateForm extends PureComponent {
     this.state = {
       isApi: false,
       menuType: 'button',
-
-    }
+    };
   }
 
   onSelect = () => {
@@ -67,16 +77,16 @@ class CreateForm extends PureComponent {
         return filterData(data).map(item => {
           return item.childData
             ? {
-              title: item.name,
-              value: item.id,
-              key: item.id,
-              children: formateData(item.childData),
-            }
+                title: item.name,
+                value: item.id,
+                key: item.id,
+                children: formateData(item.childData),
+              }
             : {
-              title: item.name,
-              value: item.id,
-              key: item.id,
-            };
+                title: item.name,
+                value: item.id,
+                key: item.id,
+              };
         });
       }
       return [];
@@ -150,15 +160,14 @@ class CreateForm extends PureComponent {
           <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单栏">
             {form.getFieldDecorator('isShow')(
               <Radio.Group>
-                <Radio value={0}>显示</Radio>
-                <Radio value={1}>隐藏</Radio>
+                <Radio value={1}>显示</Radio>
+                <Radio value={0}>隐藏</Radio>
               </Radio.Group>
             )}
           </FormItem>
         )}
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
-          {form.getFieldDecorator('remark', {
-          })(<TextArea placeholder="请输入" />)}
+          {form.getFieldDecorator('remark', {})(<TextArea placeholder="请输入" />)}
         </FormItem>
       </Form>
     );
@@ -176,11 +185,12 @@ class CreateForm extends PureComponent {
             initialValue: 0,
             rules: [{ required: true, message: '请选择权限范围！' }],
           })(
-            <Radio.Group onChange={(e) => {
-              this.setState({
-                isApi: e.target.value === 1
-              });
-            }}
+            <Radio.Group
+              onChange={e => {
+                this.setState({
+                  isApi: e.target.value === 1,
+                });
+              }}
             >
               <Radio value={0}>页面</Radio>
               <Radio value={1}>页面 + 接口</Radio>
@@ -192,13 +202,13 @@ class CreateForm extends PureComponent {
             rules: [{ required: true, message: '请输入权限编码！' }],
           })(<Input placeholder="前端代码根据编码判断按钮显示隐藏" />)}
         </FormItem>
-        {isApi &&
+        {isApi && (
           <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="接口路径">
             {form.getFieldDecorator('apiUrl', {
               rules: [{ required: true, message: '请输入接口路径！' }],
             })(<Input placeholder="如：/empty-item/sysUser/editPassword" />)}
           </FormItem>
-        }
+        )}
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="所属页面">
           {form.getFieldDecorator('parentId', {
             rules: [{ required: true, message: '请选择页面！' }],
@@ -224,8 +234,7 @@ class CreateForm extends PureComponent {
           )}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
-          {form.getFieldDecorator('remark', {
-          })(<TextArea placeholder="请输入" />)}
+          {form.getFieldDecorator('remark', {})(<TextArea placeholder="请输入" />)}
         </FormItem>
       </Form>
     );
@@ -252,8 +261,8 @@ class CreateForm extends PureComponent {
 @Form.create()
 class UpdateForm extends PureComponent {
   static defaultProps = {
-    handleUpdate: () => { },
-    handleUpdateModalVisible: () => { },
+    handleUpdate: () => {},
+    handleUpdateModalVisible: () => {},
     currentRecord: {},
   };
 
@@ -289,16 +298,16 @@ class UpdateForm extends PureComponent {
         return filterData(data).map(item => {
           return item.childData
             ? {
-              title: item.name,
-              value: item.id,
-              key: item.id,
-              children: formateData(item.childData),
-            }
+                title: item.name,
+                value: item.id,
+                key: item.id,
+                children: formateData(item.childData),
+              }
             : {
-              title: item.name,
-              value: item.id,
-              key: item.id,
-            };
+                title: item.name,
+                value: item.id,
+                key: item.id,
+              };
         });
       }
       return [];
@@ -392,14 +401,14 @@ class UpdateForm extends PureComponent {
             rules: [{ required: true, message: '请输入权限编码！' }],
           })(<Input placeholder="请输入" disabled />)}
         </FormItem>
-        {currentRecord.apiUrl &&
+        {currentRecord.apiUrl && (
           <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="接口路径">
             {form.getFieldDecorator('apiUrl', {
               initialValue: currentRecord.apiUrl,
               rules: [{ required: true, message: '请输入接口路径！' }],
             })(<Input placeholder="如：/empty-item/sysUser/editPassword" />)}
           </FormItem>
-        }
+        )}
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="备注">
           {form.getFieldDecorator('remark', {
             initialValue: currentRecord.remark,
@@ -509,9 +518,9 @@ class MenuControl extends React.Component {
     return data.map(item => {
       return Array.isArray(item.childData)
         ? {
-          ...item,
-          children: this.handleFormateData(item.childData),
-        }
+            ...item,
+            children: this.handleFormateData(item.childData),
+          }
         : item;
     });
   };
@@ -605,15 +614,15 @@ class MenuControl extends React.Component {
         render(item) {
           switch (item) {
             case 'menu':
-              return '菜单'
+              return '菜单';
             case 'button':
-              return '页面'
+              return '页面';
             case 'pageAuth':
-              return '按钮'
+              return '按钮';
             default:
-              return '菜单'
+              return '菜单';
           }
-        }
+        },
       },
       {
         title: '操作',
@@ -634,7 +643,7 @@ class MenuControl extends React.Component {
               &nbsp;&nbsp;
               <a onClick={() => this.handleDeleteConfirm(record)}>删除</a>
             </p>
-          )
+          );
         },
       },
     ];
@@ -668,14 +677,10 @@ class MenuControl extends React.Component {
               columns={columns}
               loading={menu.loading}
               bordered={false}
-              scroll={{x:'max-content'}}
+              scroll={{ x: 'max-content' }}
             />
           </Row>
-          <CreateForm
-            {...addMethods}
-            modalVisible={addmodalVisible}
-            isPageAuth={isPageAuth}
-          />
+          <CreateForm {...addMethods} modalVisible={addmodalVisible} isPageAuth={isPageAuth} />
           {currentRecord && Object.keys(currentRecord).length ? (
             <UpdateForm
               {...updateMethods}

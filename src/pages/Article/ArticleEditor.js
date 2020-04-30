@@ -103,7 +103,7 @@ class ArticleEditor extends React.Component {
       'redo', // 重复
     ];
     editor.customConfig.uploadImgShowBase64 = false;
-    editor.customConfig.customUploadImg = function (files, insert) {
+    editor.customConfig.customUploadImg = function(files, insert) {
       // files 是 input 中选中的文件列表
       // insert 是获取图片 url 后，插入到编辑器的方法
       let file;
@@ -158,8 +158,10 @@ class ArticleEditor extends React.Component {
             ...values,
             content: editorContent,
           },
-        }).then(() => {
-          router.push('/article/articlelist');
+        }).then(res => {
+          if (res.code === 'SUCCESS') {
+            router.go(-1);
+          }
         });
       }
     });
@@ -176,13 +178,13 @@ class ArticleEditor extends React.Component {
           <Form layout="horizontal" onSubmit={this.handleSubmit}>
             <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 17 }} label="标题">
               {form.getFieldDecorator('title', {
-                rules: [],
+                rules: [{ required: true, message: '请输入！' }],
                 initialValue: article.current.title,
               })(<Input placeholder="请输入" />)}
             </FormItem>
             <FormItem labelCol={{ span: 3 }} wrapperCol={{ span: 17 }} label="类型">
               {form.getFieldDecorator('type', {
-                rules: [],
+                rules: [{ required: true, message: '请选择！' }],
                 initialValue: article.current.type,
               })(
                 <Select>
