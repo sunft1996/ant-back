@@ -12,12 +12,7 @@ export default [
         path: '/user/login',
         name: 'login',
         component: './User/Login',
-      }, // { path: '/user/forgotpwd', name: 'forgotpwd', component: './User/ForgotPwd' },
-      {
-        path: '/user/register-result',
-        name: 'register.result',
-        component: './User/RegisterResult',
-      },
+      }, 
       {
         component: '404',
       },
@@ -123,6 +118,18 @@ export default [
             icon: 'dashboard',
             component: './Demo/Detail',
           },
+          {
+            name: '成功页',
+            path: '/demo/success',
+            icon: 'dashboard',
+            component: './Result/Success',
+          },
+          {
+            name: '失败页',
+            path: '/demo/error',
+            icon: 'dashboard',
+            component: './Result/Error',
+          }
         ],
       },
       {

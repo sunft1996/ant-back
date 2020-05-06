@@ -28,7 +28,6 @@ function formatter(data, parentAuthority, parentName) {
       }
 
       let locale = 'menu';
-      // 改了这里
       // if (parentName && parentName !== '/') {
       //   locale = `${parentName}.${item.name}`;
       // } else {

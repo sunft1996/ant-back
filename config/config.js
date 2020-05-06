@@ -78,8 +78,6 @@ export default {
   },
   proxy: {
     '/empty-item/': {
-      // target: 'http://192.168.1.111/',
-      // target: 'http://pay.vc-group.cn/',
       target: 'http://127.0.0.1:4000/',
     },
     '/api/': {
