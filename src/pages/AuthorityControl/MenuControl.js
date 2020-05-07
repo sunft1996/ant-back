@@ -27,8 +27,8 @@ const { TextArea } = Input;
 @Form.create()
 class CreateForm extends PureComponent {
   static defaultProps = {
-    handleAdd: () => {},
-    handleAddModalVisible: () => {},
+    handleAdd: () => { },
+    handleAddModalVisible: () => { },
     menu: {
       allmenus: [],
       total: 20,
@@ -77,16 +77,16 @@ class CreateForm extends PureComponent {
         return filterData(data).map(item => {
           return item.childData
             ? {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-                children: formateData(item.childData),
-              }
+              title: item.name,
+              value: item.id,
+              key: item.id,
+              children: formateData(item.childData),
+            }
             : {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-              };
+              title: item.name,
+              value: item.id,
+              key: item.id,
+            };
         });
       }
       return [];
@@ -120,17 +120,17 @@ class CreateForm extends PureComponent {
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单名">
           {form.getFieldDecorator('name', {
             rules: [{ required: true, message: '请输入菜单名！' }],
-          })(<Input placeholder="请输入" />)}
+          })(<Input placeholder="用于菜单栏中名称显示" />)}
         </FormItem>
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单编码">
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限编码">
           {form.getFieldDecorator('code', {
-            rules: [{ required: true, message: '请输入菜单编码！' }],
-          })(<Input placeholder="请输入" />)}
+            rules: [{ required: true, message: '请输入权限编码！' }],
+          })(<Input placeholder="前端代码根据编码判断按钮显示隐藏" />)}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单URL">
           {form.getFieldDecorator('href', {
             rules: [{ required: true, message: '请输入菜单URL！' }],
-          })(<Input placeholder="请输入" />)}
+          })(<Input placeholder="应与router.config.js中path路径一致" />)}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="父级菜单">
           {form.getFieldDecorator('parentId', {
@@ -141,7 +141,7 @@ class CreateForm extends PureComponent {
               // value={this.state.value}
               dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
               treeData={treeData}
-              placeholder="Please select"
+              placeholder="请选择"
               treeDefaultExpandAll
             />
           )}
@@ -150,15 +150,17 @@ class CreateForm extends PureComponent {
           {form.getFieldDecorator('resourceType', {
             rules: [{ required: true, message: '请输入类型！' }],
           })(
-            <Select style={{ width: 120 }} onChange={this.onSelect}>
-              <Option value="menu">菜单</Option>
+            <Select style={{ width: 120 }} onChange={this.onSelect} placeholder="请选择">
+              <Option value="menu">父级菜单</Option>
               <Option value="button">页面</Option>
             </Select>
           )}
         </FormItem>
         {menuType === 'button' && (
           <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单栏">
-            {form.getFieldDecorator('isShow')(
+            {form.getFieldDecorator('isShow',{
+              rules: [{ required: true, message: '请选择！' }],
+            })(
               <Radio.Group>
                 <Radio value={1}>显示</Radio>
                 <Radio value={0}>隐藏</Radio>
@@ -261,8 +263,8 @@ class CreateForm extends PureComponent {
 @Form.create()
 class UpdateForm extends PureComponent {
   static defaultProps = {
-    handleUpdate: () => {},
-    handleUpdateModalVisible: () => {},
+    handleUpdate: () => { },
+    handleUpdateModalVisible: () => { },
     currentRecord: {},
   };
 
@@ -298,16 +300,16 @@ class UpdateForm extends PureComponent {
         return filterData(data).map(item => {
           return item.childData
             ? {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-                children: formateData(item.childData),
-              }
+              title: item.name,
+              value: item.id,
+              key: item.id,
+              children: formateData(item.childData),
+            }
             : {
-                title: item.name,
-                value: item.id,
-                key: item.id,
-              };
+              title: item.name,
+              value: item.id,
+              key: item.id,
+            };
         });
       }
       return [];
@@ -329,10 +331,10 @@ class UpdateForm extends PureComponent {
             rules: [{ required: true, message: '请输入菜单名！' }],
           })(<Input placeholder="请输入" />)}
         </FormItem>
-        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单编码">
+        <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="权限编码">
           {form.getFieldDecorator('code', {
             initialValue: currentRecord.code,
-            rules: [{ required: true, message: '请输入菜单编码！' }],
+            rules: [{ required: true, message: '请输入权限编码！' }],
           })(<Input placeholder="请输入" disabled />)}
         </FormItem>
         <FormItem labelCol={{ span: 5 }} wrapperCol={{ span: 15 }} label="菜单URL">
@@ -351,7 +353,7 @@ class UpdateForm extends PureComponent {
               // value={this.state.value}
               dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
               treeData={treeData}
-              placeholder="Please select"
+              placeholder="请选择"
               treeDefaultExpandAll
             />
           )}
@@ -361,8 +363,8 @@ class UpdateForm extends PureComponent {
             initialValue: currentRecord.resourceType,
             rules: [{ required: true, message: '请输入类型！' }],
           })(
-            <Select style={{ width: 120 }} onChange={this.onSelect}>
-              <Option value="menu">菜单</Option>
+            <Select style={{ width: 120 }} onChange={this.onSelect} placeholder="请选择">
+              <Option value="menu">父级菜单</Option>
               <Option value="button">页面</Option>
             </Select>
           )}
@@ -518,9 +520,9 @@ class MenuControl extends React.Component {
     return data.map(item => {
       return Array.isArray(item.childData)
         ? {
-            ...item,
-            children: this.handleFormateData(item.childData),
-          }
+          ...item,
+          children: this.handleFormateData(item.childData),
+        }
         : item;
     });
   };
@@ -601,7 +603,7 @@ class MenuControl extends React.Component {
         render: text => <span style={{ whiteSpace: 'noWrap' }}>{text}</span>,
       },
       {
-        title: '菜单编码',
+        title: '权限编码',
         dataIndex: 'code',
       },
       {

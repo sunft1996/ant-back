@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2019-12-18 16:59:46
- * @LastEditTime: 2020-04-28 10:13:31
+ * @LastEditTime: 2020-05-07 09:41:42
  */
 import React, { Component, Fragment } from 'react';
 import { formatMessage } from 'umi-plugin-react/locale';
@@ -72,7 +72,7 @@ class UserLayout extends Component {
                     className={styles.logo}
                     src={logo}
                   />
-                  <span className={styles.title}>VC-PAY</span>
+                  <span className={styles.title}>ant-back</span>
                 </Link>
               </div>
               <div className={styles.desc}> </div>

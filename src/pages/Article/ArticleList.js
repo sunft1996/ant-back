@@ -122,15 +122,10 @@ class ArticleList extends PureComponent {
     });
   };
 
-  // top = (flag, record) => {
-  //   const { dispatch } = this.props;
-  //   dispatch({
-  //     type: 'article/top',
-  //     payload: {
-  //       "id": record.id
-  //     }
-  //   });
-  // }
+  // 查看详情
+  detail = record => {
+    router.push(`/article/detail?id=${record.id}`);
+  };
 
   render() {
     const { article } = this.props;
@@ -172,7 +167,8 @@ class ArticleList extends PureComponent {
         title: '操作',
         render: (text, record) => (
           <Fragment>
-            <a onClick={() => this.handleUpdateModalVisible(true, record)}>编辑</a>
+            <a onClick={() => this.detail(record)}>查看</a>
+            <a className="marginLeft" onClick={() => this.handleUpdateModalVisible(true, record)}>编辑</a>
             <Popconfirm
               title="确定删除这条文章？"
               onConfirm={() => this.deleteModalVisible(true, record)}

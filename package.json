@@ -1,8 +1,8 @@
 {
-  "name": "vc-pay",
+  "name": "ant-back",
   "version": "1.0.0",
   "private": true,
-  "description": "vc-pay",
+  "description": "基于ant design的通用后台",
   "scripts": {
     "analyze": "cross-env ANALYZE=1 umi build",
     "build": "umi build && npm run functions:build",

@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2019-12-18 16:59:49
- * @LastEditTime: 2020-05-06 10:12:09
+ * @LastEditTime: 2020-05-07 14:58:45
  */
 import React from 'react';
 import { notification, Button, message } from 'antd';
@@ -65,9 +65,7 @@ if (pwa) {
     });
   });
 }
-// export const imgUrl = 'http://127.0.0.1:4000';
-export const imgUrl = 'http://back.1cloud.xyz';
-
+export const imgUrl = 'http://127.0.0.1:4000';
 
 // 判断页面权限
 export const judgePageAuth = (auth, pagePermissions) => {

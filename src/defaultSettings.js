@@ -1,3 +1,9 @@
+/*
+ * @Descripttion: 
+ * @Author: sunft
+ * @Date: 2019-12-18 16:59:46
+ * @LastEditTime: 2020-05-07 09:41:23
+ */
 module.exports = {
   navTheme: 'dark', // theme for nav menu
   primaryColor: '#1890FF', // primary color of ant design
@@ -9,7 +15,7 @@ module.exports = {
   menu: {
     disableLocal: true,
   },
-  title: 'VC-PAY',
+  title: 'ant-back',
   pwa: true,
   // Your custom iconfont Symbol script Url
   // eg：//at.alicdn.com/t/font_1039637_btcrd5co4w.js

@@ -2,7 +2,7 @@
  * @Descripttion:
  * @Author: sunft
  * @Date: 2020-04-29 15:58:56
- * @LastEditTime: 2020-04-30 16:03:51
+ * @LastEditTime: 2020-05-07 14:10:38
  */
 import React, { PureComponent, Fragment } from 'react';
 import { connect } from 'dva';
@@ -174,6 +174,7 @@ class List extends PureComponent {
 
   render() {
     const { list, loading } = this.state;
+    // 定义表格各列
     const columns = [
       {
         title: '图片',
@@ -243,7 +244,7 @@ class List extends PureComponent {
     ];
 
     return (
-      <PageHeaderWrapper title="文章列表">
+      <PageHeaderWrapper title="基础列表">
         <Card>
           <Row>
             {this.renderForm()}

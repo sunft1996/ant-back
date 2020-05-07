@@ -217,7 +217,7 @@ class ArticleEditor extends React.Component {
                         borderTop: 'none',
                       }}
                       ref="editorElemBody"
-                      className="editorElem-body"
+                      className={styles.editorElemBody}
                     ></div>
                   </div>
                 </div>

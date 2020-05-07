@@ -41,7 +41,7 @@ export default [
           {
             path: '/authoritycontrol/authoritycontrol',
             icon: 'dashboard',
-            name: '权限管理',
+            name: '角色管理',
             component: './AuthorityControl/AuthorityControl',
           },
           {
@@ -63,7 +63,7 @@ export default [
             component: './AuthorityControl/MenuControl',
           },
         ],
-      }, // 新路由写这里
+      }, 
       {
         path: '/article',
         name: '文章管理',
@@ -83,19 +83,31 @@ export default [
             hideInMenu: true,
             component: './Article/ArticleEditor', // hideInMenu: true,
           },
+          {
+            name: '文章详情',
+            path: '/article/detail',
+            hideInMenu: true,
+            icon: 'dashboard',
+            component: './Article/Detail',
+          },
         ],
       },
+      // 一级菜单
       {
+        // 菜单路径
         path: '/demo',
+        // 菜单名
         name: '示例页面',
+        // 左侧菜单栏中的图标
         icon: 'dashboard',
+        // 二级菜单
         routes: [
           {
             name: '列表页',
             // url
             path: '/demo/list',
             icon: 'dashboard',
-            // 组件路径
+            // 组件在文件中的路径
             component: './Demo/List',
           },
           {
@@ -132,6 +144,8 @@ export default [
           }
         ],
       },
+      // 新路由写这里
+
       {
         path: '/EditPassword',
         icon: 'user',

@@ -417,7 +417,7 @@ class AuthorityControl extends Component {
       handleUpdate: this.handleUpdate,
     };
     return (
-      <PageHeaderWrapper title="权限控制">
+      <PageHeaderWrapper title="角色管理">
         <Card bordered={false}>
           <div className={styles.tableList}>
             <div className={styles.tableListOperator}>
