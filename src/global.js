@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2019-12-18 16:59:49
- * @LastEditTime: 2020-05-07 14:58:45
+ * @LastEditTime: 2020-05-19 14:21:50
  */
 import React from 'react';
 import { notification, Button, message } from 'antd';
@@ -65,11 +65,7 @@ if (pwa) {
     });
   });
 }
+// 图片地址，路径为后端项目运行地址
 export const imgUrl = 'http://127.0.0.1:4000';
 
-// 判断页面权限
-export const judgePageAuth = (auth, pagePermissions) => {
-  if (pagePermissions.indexOf(auth) !== -1) {
-    return true;
-  }
-};
+

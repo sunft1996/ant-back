@@ -1,21 +1,81 @@
 <h1 align="center">ant-back</h1>
-  
-![image](https://img.shields.io/badge/license-MIT-green)
 
-基于ant-design-pro实现的通用后台，后端使用Koa实现。目前仍在开发中。
-<br>
-本项目的开发目的在于快速开发一个网站后台。
+![react](https://img.shields.io/badge/react-%5E16.8.6-green)
+![MIT](https://img.shields.io/badge/license-MIT-red)
+![antd](https://img.shields.io/badge/antd-%5E3.26.4-blue)
+
+网站后台项目，实现了多角色登录、角色管理、用户管理、富文本、图片上传等常用功能。你可以在本项目基础上定制自己的后台系统。
+
+:rocket: [查看效果点这里](http://back.1cloud.xyz/)
+
+:gem: [后端项目地址点这里](https://github.com/sunfutao/ant-back-server/)
+
+## 说明
+> 项目跑起来后首页有使用说明，里面有接口文档，还有添加页面、添加接口的教程。
+> 
+> 数据库文件在后端项目中。
+> 
+> 如果对您对此项目有兴趣，可以点 "Star" 支持一下 谢谢！:stuck_out_tongue_closed_eyes:
+
+## 技术栈
+前端：react + ant-design-pro
+
+后端：node.js + koa + sequelize + mysql
+
+## 部分截图
+
+#### 首页：
+
+![页面图片-首页](http://back.1cloud.xyz/uploadImg/1589860390617_%E9%A6%96%E9%A1%B5.png)
+
+#### 角色管理：
+
+![页面图片-角色管理](http://back.1cloud.xyz/uploadImg/1589860607304_角色管理.png)
+#### 写文章：
+
+![页面图片-写文章](http://back.1cloud.xyz/uploadImg/1589862137858_%E5%86%99%E6%96%87%E7%AB%A0.png)
+
+## 安装和运行
+> 请确保已安装node
+
+```
+git clone git@github.com:sunfutao/ant-back.git
+cd ant-back
+npm install 
+// 安装依赖后项目运行
+npm start 
+```
+## 项目部署
+
+```
+// 执行构建命令，生成的dist文件夹放在服务器下即可访问
+npm run build
+```
 
 ## 功能
-- 权限管理（按钮级）
-- 菜单管理
-- 用户管理
-- 文章管理
+- [x] 登录/注销
+- [x] 修改密码
+- [x] 新增用户
+- [x] 用户管理
+- [x] 角色管理
+- [x] 权限按钮级别
+- [x] 菜单管理
+- [x] 文章管理
+- [x] 成功页/失败页
+- [x] 403页/404页/500页
+- [x] 富文本编辑器
+- [x] 图片上传
+- [x] 图表
 
-## 项目演示
 
-![image](http://chuantu.xyz/t6/726/1585419062x989499252.png)
+## 关于权限
+项目实现了多角色登录，你可以用root账号给角色分配权限。你可以给一个页面添加新增、删除、修改等功能添加子权限，具体看项目首页的使用说明。
 
-## 后端项目地址
+## 如何添加页面
 
-https://github.com/sunfutao/ant-back-server
+后台项目通常是列表和对应的增删改查，我写了一个示例列表页提供参考，你可以直接复制它来添加页面。
+**跟着项目首页的教程走一遍即可。**
+
+
+## License
+[MIT](https://github.com/sunfutao/ant-back/blob/master/LICENSE)

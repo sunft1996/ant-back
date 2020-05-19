@@ -2,19 +2,15 @@
  * @Descripttion:
  * @Author: sunft
  * @Date: 2020-04-27 13:16:13
- * @LastEditTime: 2020-05-07 13:55:35
+ * @LastEditTime: 2020-05-18 15:17:10
  */
 import React, { PureComponent } from 'react';
-import DescriptionList from '@/components/DescriptionList';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
-import { Card, Divider, Button, Row, notification } from 'antd';
+import { Card, Button, Row, notification } from 'antd';
 import moment from 'moment';
 import router from 'umi/router';
 import request from '@/utils/request';
-import { imgUrl } from '@/global';
 import styles from './index.less';
-
-const { Description } = DescriptionList;
 
 class Detail extends PureComponent {
   constructor() {
@@ -60,7 +56,7 @@ class Detail extends PureComponent {
           <div className={styles.articleContent}>
             <h2 className="marginTop textCenter">{current.title}</h2>
             <p className="textRight" style={{color:'#6c757d'}}>最后编辑于 {moment(current.updatedAt).format('YYYY-MM-DD HH:mm')}</p>
-            <div dangerouslySetInnerHTML={{ __html: current.content }}></div>
+            <div dangerouslySetInnerHTML={{ __html: current.content }} />
           </div>
           <Row className="marginTop textCenter">
             <Button type="primary" onClick={() => router.go(-1)}>

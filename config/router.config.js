@@ -111,6 +111,12 @@ export default [
             component: './Demo/List',
           },
           {
+            name: '权限可控的列表页',
+            path: '/demo/authList',
+            icon: 'dashboard',
+            component: './Demo/AuthList',
+          },
+          {
             name: '新增页',
             path: '/demo/add',
             icon: 'dashboard',
@@ -145,7 +151,6 @@ export default [
         ],
       },
       // 新路由写这里
-
       {
         path: '/EditPassword',
         icon: 'user',

@@ -5,10 +5,10 @@ import Link from 'umi/link';
 import { Checkbox, Alert, Icon, Input, message } from 'antd';
 import Login from '@/components/Login';
 import styles from './Login.less';
-import { imgUrl } from '@/global';
 
 const { Tab, UserName, Password, Mobile, Captcha, Submit } = Login;
 
+// 短信登录已废弃
 @connect(({ login, loading }) => ({
   login,
   submitting: loading.effects['login/login'],
@@ -63,6 +63,7 @@ class LoginPage extends Component {
     if (!err) {
       const { dispatch } = this.props;
       // 1是账号登陆,0是短信登陆
+      // 短信登录已废弃，忽略
       const loginType = type === 'account' ? 1 : 0;
       type === 'mobile' ? (values.loginName = values.phone) : '';
       const data =
@@ -133,7 +134,7 @@ class LoginPage extends Component {
               this.renderMessage(formatMessage({ id: 'app.login.message-invalid-credentials' }))} */}
           <UserName
             name="loginName"
-            placeholder="用户名/手机号："
+            placeholder="用户名：user"
             rules={[
               {
                 required: true,
@@ -143,7 +144,7 @@ class LoginPage extends Component {
           />
           <Password
             name="password"
-            placeholder={`${formatMessage({ id: 'app.login.password' })}: `}
+            placeholder="密码：123456"
             rules={[
               {
                 required: true,

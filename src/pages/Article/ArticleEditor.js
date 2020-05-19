@@ -171,7 +171,7 @@ class ArticleEditor extends React.Component {
   };
   render() {
     const { form, location, article } = this.props;
-    const title = location.query.type === 'add' ? '新增' : '编辑';
+    const title = location.query.type === 'add' ? '写文章' : '编辑文章';
     return (
       <PageHeaderWrapper title={title}>
         <Card>

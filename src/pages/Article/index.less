@@ -1,17 +1,20 @@
 @import '~antd/lib/style/themes/default.less';
 @import '~@/utils/utils.less';
+
 .centered {
   padding-left: 30px;
 }
+
 .col-sql {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
+  overflow          : hidden;
+  text-overflow     : ellipsis;
+  display           : -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
+
 .w-e-toolbar {
-  flex-wrap: wrap;
+  flex-wrap        : wrap;
   -webkit-box-lines: multiple;
 }
 
@@ -24,20 +27,77 @@
 }
 
 .editorElemBody {
-  ul,ol{
+
+  ul,
+  ol {
     list-style: decimal !important;
   }
 }
 
 .articleContent {
   max-width: 650px;
-  margin:0 auto;
-  ul,ol{
+  margin   : 0 auto;
+  color: #212529;
+  text-align: justify;
+  ul,
+  ol {
     list-style: decimal !important;
+  }
+
+
+  
+  table {
+    border-top : 1px solid #ccc;
+    border-left: 1px solid #ccc;
+  }
+
+  table td,
+  table th {
+    border-bottom: 1px solid #ccc;
+    border-right : 1px solid #ccc;
+    padding      : 3px 5px;
+  }
+
+  table th {
+    border-bottom: 2px solid #ccc;
+    text-align   : center;
+  }
+
+  /* blockquote 样式 */
+  blockquote {
+    display         : block;
+    border-left     : 8px solid #d0e5f2;
+    padding         : 5px 10px;
+    margin          : 10px 0;
+    line-height     : 1.4;
+    font-size       : 100%;
+    background-color: #f1f1f1;
+  }
+
+  /* code 样式 */
+  code {
+    color:rgb(51, 51, 51);
+    display         : inline-block;
+    *display        : inline;
+    *zoom           : 1;
+    background-color:rgb(233, 236, 239);
+    border-radius   : 3px;
+    padding         : 10px;
+    margin          : 5px;
+  }
+
+  pre code {
+    display: block;
+  }
+
+  /* ul ol 样式 */
+  ul,
+  ol {
+    margin: 10px 0 10px 20px;
   }
 }
 
 
-.editorElemMenu{
+.editorElemMenu {
   // overflow-x: scroll;
 }

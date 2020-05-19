@@ -2,8 +2,6 @@ import { routerRedux } from 'dva/router';
 import { stringify } from 'qs';
 import { AccountLogin, AccountLogOut, getCaptcha } from '@/services/api';
 import { notification } from 'antd';
-import { setAuthority } from '@/utils/authority';
-import { getPageQuery } from '@/utils/utils';
 import { reloadAuthorized } from '@/utils/Authorized';
 
 export default {
@@ -25,22 +23,10 @@ export default {
         reloadAuthorized(response.data.roleCode);
         yield put(routerRedux.replace('/'));
         const menu = JSON.stringify(response.data.menuItem);
+        const pageAuth = JSON.stringify(response.data.pageAuth);
         localStorage.setItem('menu', menu);
-        // const urlParams = new URL(window.location.href);
-        // const params = getPageQuery();
-        // let { redirect } = params;
-        // if (redirect) {
-        //   const redirectUrlParams = new URL(redirect);
-        //   if (redirectUrlParams.origin === urlParams.origin) {
-        //     redirect = redirect.substr(urlParams.origin.length);
-        //     if (redirect.match(/^\/.*#/)) {
-        //       redirect = redirect.substr(redirect.indexOf('#') + 1);
-        //     }
-        //   } else {
-        //     redirect = null;
-        //   }
-        // }
-        // yield put(routerRedux.replace(redirect || '/'));
+        localStorage.setItem('pageAuth', pageAuth);
+
       } else {
         notification.error({
           message: response.code,
@@ -111,11 +97,9 @@ export default {
   reducers: {
     changeLoginStatus(state, { payload }) {
       const role = payload.currentAuthority ? payload.currentAuthority : payload.data.roleCode;
-      // setAuthority(role);
       if (role === 'guest') {
         localStorage.clear();
       } else {
-        // localStorage.setItem('token', payload.data.token);
         localStorage.setItem('id', payload.data.id);
         localStorage.setItem('auth', role);
       }

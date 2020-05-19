@@ -2,19 +2,16 @@
  * @Descripttion:
  * @Author: sunft
  * @Date: 2020-04-27 13:16:13
- * @LastEditTime: 2020-04-30 16:12:49
+ * @LastEditTime: 2020-05-18 15:06:49
  */
 import React, { PureComponent } from 'react';
-import DescriptionList from '@/components/DescriptionList';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
-import { Card, Divider, Button, Row, notification } from 'antd';
+import { Card, Divider, Button, Row, notification,Descriptions  } from 'antd';
 import moment from 'moment';
 import router from 'umi/router';
 import request from '@/utils/request';
 import { imgUrl } from '@/global';
 import styles from './index.less';
-
-const { Description } = DescriptionList;
 
 class Detail extends PureComponent {
   constructor() {
@@ -52,27 +49,27 @@ class Detail extends PureComponent {
     return (
       <PageHeaderWrapper title="详情">
         <Card loading={loading}>
-          <DescriptionList size="large" title="基本信息">
-            <Description term="存放路径">{current.url} </Description>
-            <Description term="访问链接">
+          <Descriptions size="large" title="基本信息">
+            <Descriptions.Item label="存放路径">{current.url} </Descriptions.Item> 
+            <Descriptions.Item label="访问链接">
               <a target="_blank" href={imgUrl + current.url}>
                 {imgUrl + current.url}{' '}
               </a>
-            </Description>
-          </DescriptionList>
+            </Descriptions.Item> 
+          </Descriptions>
           <Divider dashed />
-          <DescriptionList size="large" title="其他信息">
-            <Description term="创建时间">
+          <Descriptions size="large" title="其他信息">
+            <Descriptions.Item label="创建时间">
               {moment(current.createdAt).format('YYYY-MM-DD HH:mm:ss')}{' '}
-            </Description>
-            <Description term="上次修改时间">
+            </Descriptions.Item> 
+            <Descriptions.Item label="上次修改时间">
               {moment(current.updatedAt).format('YYYY-MM-DD HH:mm:ss')}{' '}
-            </Description>
-          </DescriptionList>
+            </Descriptions.Item> 
+          </Descriptions>
           <Divider dashed />
-          <DescriptionList size="remark" title="备注">
-            <Description>{current.remark}</Description>
-          </DescriptionList>
+          <Descriptions size="remark" title="备注">
+            <Descriptions.Item> {current.remark}</Descriptions.Item> 
+          </Descriptions>
           <Divider dashed />
           <img src={imgUrl + current.url} className={styles.detailImg} alt="img" />
           <Row className="marginTop textRight">

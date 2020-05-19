@@ -2,7 +2,7 @@
  * @Descripttion:
  * @Author: sunft
  * @Date: 2020-04-29 15:58:56
- * @LastEditTime: 2020-05-18 10:58:24
+ * @LastEditTime: 2020-05-19 10:18:45
  */
 import React, { PureComponent, Fragment } from 'react';
 import {
@@ -24,6 +24,7 @@ import moment from 'moment';
 import router from 'umi/router';
 import request from '@/utils/request';
 import { imgUrl } from '@/global';
+import judgePageAuth from '@/utils/judgePageAuth';
 
 const { RangePicker } = DatePicker;
 /* eslint react/no-multi-comp:0 */
@@ -39,6 +40,7 @@ class List extends PureComponent {
   componentDidMount() {
     // 组件首次加载时请求列表
     this.handleSearch();
+    console.log(judgePageAuth('editAuthList'))
   }
 
   loading = flag => {
@@ -222,31 +224,37 @@ class List extends PureComponent {
         render: (text, record) => (
           <Fragment>
             <a onClick={() => this.detail(record)}>查看</a>
-            <a onClick={() => this.update(true, record)} className="marginLeft">
-              编辑
-            </a>
-            <Popconfirm
-              title="确定删除？"
-              onConfirm={() => this.delete(record)}
-              okText="确定"
-              cancelText="取消"
-              className="marginLeft"
-            >
-              <a>删除</a>
-            </Popconfirm>
+            {judgePageAuth('editAuthList') &&
+              <a onClick={() => this.update(true, record)} className="marginLeft">
+                编辑
+              </a>
+            }
+            {judgePageAuth('deleteAuthList') &&
+              <Popconfirm
+                title="确定删除？"
+                onConfirm={() => this.delete(record)}
+                okText="确定"
+                cancelText="取消"
+                className="marginLeft"
+              >
+                <a>删除</a>
+              </Popconfirm>
+            }
           </Fragment>
         ),
       },
     ];
 
     return (
-      <PageHeaderWrapper title="基础列表">
+      <PageHeaderWrapper title="权限可控的列表页">
         <Card>
           <Row>
             {this.renderForm()}
-            <Button icon="plus" type="primary" onClick={() => this.add()}>
-              新建
-            </Button>
+            {judgePageAuth('addAuthList') &&
+              <Button icon="plus" type="primary" onClick={() => this.add()}>
+                新建
+              </Button>
+            }
           </Row>
           <Row className="marginTop">
             <Table

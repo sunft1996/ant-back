@@ -11,14 +11,13 @@ const plugins = [
   [
     'umi-plugin-react',
     {
-      // 打包时设为false
       antd: true,
       dva: {
         hmr: true,
       },
       locale: {
         enable: false, // default false
-        //default: 'zh-CN', // default zh-CN
+        default: 'zh-CN', // default zh-CN
         baseNavigator: true, // default true, when it is true, will use `navigator.language` overwrite default
       },
       dynamicImport: {
@@ -79,10 +78,6 @@ export default {
   proxy: {
     '/empty-item/': {
       target: 'http://127.0.0.1:4000/',
-    },
-    '/api/': {
-      // target: 'http://192.168.0.172/',
-      target: 'http://127.0.0.1/',
     },
   },
 
