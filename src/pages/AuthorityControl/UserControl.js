@@ -191,15 +191,6 @@ class UserControl extends PureComponent {
     
   };
 
-  static defaultProps = {
-    user: {
-      list: [],
-    },
-    role: {
-      list: [],
-    },
-  };
-
   componentDidMount() {
     const { dispatch } = this.props;
 

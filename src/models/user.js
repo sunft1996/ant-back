@@ -15,7 +15,9 @@ export default {
   namespace: 'user',
 
   state: {
-    list: [],
+    list: {
+      rows:[]
+    },
     currentUser: {},
     Authority: {},
     avatar: {},
@@ -174,7 +176,7 @@ export default {
         type: 'loading',
         payload: false,
       });
-      if (callback) callback();
+      return response;
     },
 
   },

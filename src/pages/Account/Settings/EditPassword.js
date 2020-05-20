@@ -19,8 +19,8 @@ class EditPassword extends React.PureComponent {
 
   compareToFirstPassword = (rule, value, callback) => {
     const { form } = this.props;
-    if (value && value !== form.getFieldValue('newPassword2')) {
-      callback('Two passwords that you enter is inconsistent!');
+    if (value && value.length >= 6 && value !== form.getFieldValue('newPassword1')) {
+      callback('两次输入的新密码不一致');
     } else {
       callback();
     }
@@ -38,12 +38,15 @@ class EditPassword extends React.PureComponent {
           type: 'user/editPassword',
           payload: {
             password: fieldsValue.password,
-            newPassword: fieldsValue.newPassword,
+            newPassword: fieldsValue.newPassword2,
           },
-        }).then(() => {
+        }).then(res => {
           this.setState({
             loading: false
           });
+          if(res.code === "SUCCESS"){
+            router.go(-1);
+          }
         });
       }
     });
@@ -76,8 +79,8 @@ class EditPassword extends React.PureComponent {
                 )}
               </Form.Item>
               <Form.Item label="新密码">
-                {getFieldDecorator('newPassword2', {
-                  rules: [{ required: true, message: '请输入新密码' }],
+                {getFieldDecorator('newPassword1', {
+                  rules: [{ required: true, message: '请输入不小于6位的新密码',min:6 }],
                 })(
                   <Input
                     prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
@@ -87,9 +90,9 @@ class EditPassword extends React.PureComponent {
                 )}
               </Form.Item>
               <Form.Item label="确认密码">
-                {getFieldDecorator('newPassword', {
+                {getFieldDecorator('newPassword2', {
                   rules: [
-                    { required: true, message: '请输入新密码' },
+                    { required: true, message: '请输入不小于6位的新密码',min:6 },
                     { validator: this.compareToFirstPassword },
                   ],
                 })(

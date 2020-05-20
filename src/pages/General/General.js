@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2020-04-29 13:56:15
- * @LastEditTime: 2020-05-19 11:26:18
+ * @LastEditTime: 2020-05-20 10:04:52
  */
 import React from 'react';
 import { Row, Col, Avatar, Card, Button, Tree, Divider, Form } from 'antd';
@@ -109,9 +109,10 @@ class General extends React.PureComponent {
     this.getChartData();
   }
 
-  // 请求图标数据，这里是mock的数据
+  // 请求图表数据
   getChartData = () => {
-    request('/api/general/chartList', {
+    // 如果你想模拟请求，url切换到/api/general/chartList
+    request('/empty-item/general/chartList', {
       method: 'POST',
       data: JSON.stringify({})
     }).then(res => {
