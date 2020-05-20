@@ -1,9 +1,3 @@
-<!--
- * @Descripttion: 
- * @Author: sunft
- * @Date: 2020-03-30 18:26:12
- * @LastEditTime: 2020-05-20 13:47:48
---> 
 <h1 align="center">ant-back</h1>
 
 ![react](https://img.shields.io/badge/react-%5E16.8.6-green)
@@ -32,14 +26,14 @@
 
 #### 首页：
 
-![页面图片-首页](http://back.1cloud.xyz/uploadImg/1589860390617_%E9%A6%96%E9%A1%B5.png)
+![页面图片-首页](http://back.1cloud.xyz/uploadImg/1589959969430_index.png)
 
 #### 角色管理：
 
-![页面图片-角色管理](http://back.1cloud.xyz/uploadImg/1589860607304_角色管理.png)
+![页面图片-角色管理](http://back.1cloud.xyz/uploadImg/1589959890213_role.png)
 #### 写文章：
 
-![页面图片-写文章](http://back.1cloud.xyz/uploadImg/1589862137858_%E5%86%99%E6%96%87%E7%AB%A0.png)
+![页面图片-写文章](http://back.1cloud.xyz/uploadImg/1589959795874_article.png)
 
 ## 安装和运行
 > 请确保已安装node
@@ -53,6 +47,14 @@ npm start
 ```
 ## 项目部署
 
+修改路径 
+```
+// src/global.js
+
+// 后端项目运行地址
+export const imgUrl = 'http://back.1cloud.xyz';
+```
+执行命令
 ```
 // 执行构建命令，生成的dist文件夹放在服务器下即可访问
 npm run build
