@@ -45,6 +45,29 @@ npm install
 // 安装依赖后项目运行
 npm start 
 ```
+如果npm install或者时间太长，配置npm registry到国内镜像
+```
+npm config set registry https://registry.npm.taobao.org/
+npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass/
+// 重新install
+npm install 
+```
+实在不行你就用yarn下载
+```
+npm install -g yarn
+yarn install
+// 运行项目
+yarn start
+```
+
+**项目跑起来后你可以用以下两个账号登录：**
+
+管理员 账号：root
+，密码：123456
+
+游客 账号：user，
+密码：123456
+
 ## 项目部署
 
 修改路径 

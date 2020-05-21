@@ -2,7 +2,7 @@
  * @Descripttion:
  * @Author: sunft
  * @Date: 2020-04-29 15:58:56
- * @LastEditTime: 2020-05-19 10:18:45
+ * @LastEditTime: 2020-05-21 13:46:27
  */
 import React, { PureComponent, Fragment } from 'react';
 import {
@@ -17,6 +17,7 @@ import {
   Popconfirm,
   DatePicker,
   Tooltip,
+  Alert,
   notification,
 } from 'antd';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
@@ -257,7 +258,9 @@ class List extends PureComponent {
             }
           </Row>
           <Row className="marginTop">
+            <Alert message="本页面的新增、编辑、删除按钮可在角色管理页配置，如果修改当前角色权限，请重新登录" type="info" showIcon />
             <Table
+              className="marginTop"
               dataSource={list}
               rowKey="id"
               columns={columns}
