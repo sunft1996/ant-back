@@ -1,7 +1,6 @@
 import React, { Component, Fragment } from 'react';
 import PropTypes from 'prop-types';
-import { Table, Alert, Switch } from 'antd';
-import ReactHTMLTableToExcel from 'react-html-table-to-excel';
+import { Table, Alert } from 'antd';
 import styles from './index.less';
 
 function initTotalList(columns) {
@@ -81,7 +80,7 @@ class StandardTable extends Component {
   render() {
     const { selectedRowKeys, needTotalList, pagination } = this.state;
     const realPagination = this.props.pagination ? this.props.pagination : pagination;
-    const { data, selectedRows, rowKey, isDownload, ...rest } = this.props;
+    const { data, selectedRows, rowKey, ...rest } = this.props;
     const rowSelection = selectedRows
       ? {
           selectedRowKeys,
@@ -119,18 +118,7 @@ class StandardTable extends Component {
             />
           </div>
         ) : null}
-        {isDownload && (
-          <div className={styles.transXlsBtnWrap}>
-            <ReactHTMLTableToExcel
-              className={`ant-btn ant-btn-primary ${styles.transXlsBtn}`}
-              table="trans-table"
-              filename="商户交易"
-              sheet="商户交易"
-              buttonText="Download as XLS"
-            />
-            <Switch checkedChildren="分页" defaultChecked onChange={this.handleSizeChange} />
-          </div>
-        )}
+        
         <Table
           rowKey={rowKey || 'key'}
           rowSelection={rowSelection}

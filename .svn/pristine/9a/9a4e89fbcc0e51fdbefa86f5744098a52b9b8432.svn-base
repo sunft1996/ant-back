@@ -1,7 +1,0 @@
-.container {
-  :global {
-    .ant-modal p {
-      margin: 0;
-    }
-  }
-}
