@@ -39,24 +39,24 @@
 > 请确保已安装node
 
 ```
-git clone git@github.com:sunfutao/ant-back.git
+git clone https://github.com/sunft1996/ant-back-server.git
 cd ant-back
 npm install 
-// 安装依赖后项目运行
+<!--安装依赖后项目运行-->
 npm start 
 ```
 如果npm install或者时间太长，配置npm registry到国内镜像
 ```
 npm config set registry https://registry.npm.taobao.org/
 npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass/
-// 重新install
+<!--重新install-->
 npm install 
 ```
 实在不行你就用yarn下载
 ```
 npm install -g yarn
 yarn install
-// 运行项目
+<!--运行项目-->
 yarn start
 ```
 
@@ -74,7 +74,7 @@ yarn start
 ```
 // src/global.js
 
-// 后端项目运行地址
+// 修改为你的后端项目运行地址
 export const imgUrl = 'http://back.1cloud.xyz';
 ```
 执行命令
