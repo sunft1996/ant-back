@@ -4,7 +4,7 @@
 ![MIT](https://img.shields.io/badge/license-MIT-red)
 ![antd](https://img.shields.io/badge/antd-%5E3.26.4-blue)
 
-网站后台项目，实现了多角色登录、角色管理、用户管理、文章管理、富文本、图片上传等常用功能。你可以在本项目基础上定制自己的后台系统。
+网站后台项目，实现了多角色登录、权限管理、用户管理、菜单管理、文章管理、富文本、图片上传等常用功能。你可以在本项目基础上定制自己的后台系统。
 
 :rocket: [查看效果点这里](http://back.1cloud.xyz/)
 
