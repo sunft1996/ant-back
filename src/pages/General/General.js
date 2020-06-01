@@ -2,7 +2,7 @@
  * @Descripttion: 
  * @Author: sunft
  * @Date: 2020-04-29 13:56:15
- * @LastEditTime: 2020-05-20 10:04:52
+ * @LastEditTime: 2020-06-01 16:49:59
  */
 import React from 'react';
 import { Row, Col, Avatar, Card, Button, Tree, Divider, Form } from 'antd';
@@ -192,7 +192,7 @@ class General extends React.PureComponent {
                 <Divider type="vertical" />
                 <Link to="/article/detail?id=7" className="remark">如何添加新的接口</Link>
                 <Divider type="vertical" />
-                <Link to="/article/detail?id=7" className="remark">如何给页面添加子权限</Link>
+                <Link to="/article/detail?id=8" className="remark">如何给页面添加子权限</Link>
               </Row>
               <Row className="flexSpace marginTop">
                 <Link to="/article/detail?id=5" className="remark">接口文档——基础列表页</Link>
