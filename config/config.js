@@ -81,15 +81,6 @@ export default {
     },
   },
 
-  // 配置外部包,打包时不会引入
-  externals: {
-    // react: 'window.React',
-    // 'react-dom': 'window.ReactDOM',
-    // moment: 'window.moment',
-    // antd: 'window.antd',
-    // echarts: 'window.echarts',
-  },
-
   ignoreMomentLocale: true,
   lessLoaderOptions: {
     javascriptEnabled: true,

@@ -2,7 +2,7 @@
  * @Descripttion:
  * @Author: sunft
  * @Date: 2020-04-29 13:56:15
- * @LastEditTime: 2020-06-05 18:36:00
+ * @LastEditTime: 2020-06-17 11:37:44
  * 图表使用ant design pro封装的图表，也有使用bizcharts
  * ant design pro 图表预览地址：https://v2-pro.ant.design/components/charts-cn
  */
@@ -173,11 +173,10 @@ class General extends React.PureComponent {
     return (
       <PageHeaderWrapper title="今日概况">
         <Row gutter={16}>
-          <Col xl={8} lg={24}>
+          <Col xl={8} lg={24} style={{ marginBottom: 20 }}>
             <Card
               style={{
                 height: '210px',
-                // minWidth: '320px',
               }}
               loading={loading}
             >
@@ -196,7 +195,7 @@ class General extends React.PureComponent {
               />
             </Card>
           </Col>
-          <Col xl={16} lg={24}>
+          <Col xl={16} lg={24} style={{ marginBottom: 20 }}>
             <Card style={{ height: '210px' }} loading={loading} title="使用说明">
               <Row className="flexSpace">
                 <Link to="/article/detail?id=2" className="remark">
@@ -228,7 +227,7 @@ class General extends React.PureComponent {
             </Card>
           </Col>
         </Row>
-        <Row gutter={16} style={{ marginTop: 20 }}>
+        <Row gutter={16}>
           <Col xl={6} lg={24}>
             <ChartCard
               bordered={false}
