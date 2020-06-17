@@ -46,7 +46,7 @@
 > 请确保已安装node
 
 ```
-git clone https://github.com/sunft1996/ant-back-server.git
+git clone https://github.com/sunft1996/ant-back.git
 cd ant-back
 npm install 
 <!--安装依赖后项目运行-->
