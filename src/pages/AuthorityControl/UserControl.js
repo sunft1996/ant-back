@@ -191,6 +191,15 @@ class UserControl extends PureComponent {
     
   };
 
+  static defaultProps = {
+    user: {
+      list: {
+        rows:[],
+        total:0
+      },
+    },
+  };
+
   componentDidMount() {
     const { dispatch } = this.props;
 
@@ -226,6 +235,8 @@ class UserControl extends PureComponent {
     const params = {
       pageNo: pagination.current,
       pageSize: pagination.pageSize,
+      columnKey:sorter.columnKey,
+      order:sorter.order,
       ...formValues,
     };
 
@@ -461,6 +472,8 @@ class UserControl extends PureComponent {
       {
         title: '上次登录时间',
         dataIndex: 'loginDate',
+        sortDirections: ['descend', 'ascend'],
+        sorter: true,
         render: val =>
           val && (
             <div style={{ whiteSpace: 'noWrap' }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>

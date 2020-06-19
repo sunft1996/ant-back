@@ -127,6 +127,21 @@ class ArticleList extends PureComponent {
     router.push(`/article/detail?id=${record.id}`);
   };
 
+  handleTableChange = (pagination, filtersArg, sorter) => {
+    const { dispatch } = this.props;
+    const { formValues } = this.state;
+    const params = {
+      columnKey:sorter.columnKey,
+      order:sorter.order,
+      ...formValues,
+    };
+
+    dispatch({
+      type: 'article/fetch',
+      payload: params,
+    });
+  };
+
   render() {
     const { article } = this.props;
     const columns = [
@@ -159,6 +174,8 @@ class ArticleList extends PureComponent {
       {
         title: '创建时间',
         dataIndex: 'createdAt',
+        sortDirections: ['descend', 'ascend'],
+        sorter: true,
         render: item => {
           return item == null ? '' : moment(item).format('YYYY-MM-DD HH:mm:ss');
         },
@@ -183,6 +200,10 @@ class ArticleList extends PureComponent {
       },
     ];
 
+    const pagination = {
+      pageSize: 10,
+    };
+
     return (
       <PageHeaderWrapper title="文章列表">
         <Card>
@@ -196,10 +217,11 @@ class ArticleList extends PureComponent {
             <Table
               dataSource={article.list}
               rowKey="id"
+              pagination={pagination}
               columns={columns}
               loading={article.loading}
               bordered={false}
-              // onChange={this.handlePageChange}
+              onChange={this.handleTableChange}
             />
           </Row>
         </Card>

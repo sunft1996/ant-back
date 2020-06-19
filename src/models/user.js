@@ -16,46 +16,70 @@ export default {
 
   state: {
     list: {
-      rows:[]
+      rows: [],
+      total:0
     },
     currentUser: {},
     Authority: {},
     avatar: {},
     loading: true,
-    detail:{}
+    detail: {}
   },
 
   effects: {
     *fetch({ payload }, { call, put }) {
       const response = yield call(queryUsers, payload);
-      yield put({
-        type: 'save',
-        payload: response,
-      });
+      if (response.code === 'SUCCESS') {
+        yield put({
+          type: 'save',
+          payload: response.data,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
+
       yield put({
         type: 'loading',
         payload: false,
       });
     },
-    *fetchDetail({payload}, { call, put }) {
-      const response = yield call(queryDetail,payload);
-      yield put({
-        type: 'saveDetail',
-        payload: response.data,
-      });
+    *fetchDetail({ payload }, { call, put }) {
+      const response = yield call(queryDetail, payload);
+      if (response.code === 'SUCCESS') {
+        yield put({
+          type: 'saveDetail',
+          payload: response.data,
+        });
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
+      }
     },
     *fetchCurrent(_, { call, put }) {
       const response = yield call(queryCurrent);
-      yield put({
-        type: 'saveCurrentUser',
-        payload: response.data,
-      });
-      if (response.data.passwordStatus === '0') {
-        notification.info({
-          message: '首次登陆，请修改登陆密码！',
+      if (response.code === 'SUCCESS') {
+        yield put({
+          type: 'saveCurrentUser',
+          payload: response.data,
         });
-        router.push('/EditPassword');
+        if (response.data.passwordStatus === '0') {
+          notification.info({
+            message: '首次登陆，请修改登陆密码！',
+          });
+          router.push('/EditPassword');
+        }
+      } else {
+        notification.error({
+          message: response.code,
+          description: response.msg,
+        });
       }
+
     },
     *resetPassword({ payload }, { call }) {
       const response = yield call(resetUserPwd, payload);

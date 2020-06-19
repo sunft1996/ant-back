@@ -23,6 +23,19 @@ const codeMessage = {
   503: '服务不可用，服务器暂时过载或维护。',
   504: '网关超时。',
 };
+let expireTimeout;
+
+function loginExpire() {
+  notification.error({
+    message: '未登录或登录已过期，请重新登录。',
+  });
+  // @HACK
+  /* eslint-disable no-underscore-dangle */
+  window.g_app._store.dispatch({
+    type: 'login/loginExpire',
+  });
+  return;
+}
 
 /**
  * 异常处理程序
@@ -32,15 +45,15 @@ const errorHandler = error => {
   const errortext = codeMessage[response.status] || response.statusText;
   const { status, url, body } = response;
 
-  if (status === 401 || body.code === 'FAILED') {
-    notification.error({
-      message: '未登录或登录已过期，请重新登录。',
-    });
-    // @HACK
-    /* eslint-disable no-underscore-dangle */
-    window.g_app._store.dispatch({
-      type: 'login/loginExpire',
-    });
+  if (status === 401) {
+    // 防抖
+    if(expireTimeout){
+      clearTimeout(expireTimeout);
+    }
+    expireTimeout = setTimeout(()=>{
+      loginExpire();
+    },500);
+    
     return;
   }
   notification.error({
@@ -52,17 +65,14 @@ const errorHandler = error => {
     router.push('/exception/403');
     return;
   }
-  // if (status <= 504 && status >= 500) {
-  //   router.push('/exception/500');
-  //   return;
-  // }
+  if (status <= 504 && status >= 500) {
+    router.push('/exception/500');
+    return;
+  }
   if (status >= 404 && status < 422) {
     router.push('/exception/404');
   }
 
-  if (status === 500) {
-    router.push('/exception/500');
-  }
 };
 
 /**
@@ -77,7 +87,7 @@ request.interceptors.request.use((url, options) => {
   const token = localStorage.getItem('token');
   options.headers.Authorization = token;
   options.headers.RefererPath = window.document.location.pathname;
-  options.headers.Terminal = 'client'; // 后台管理统一
+  options.headers.Terminal = 'client'; 
   return { url, options };
 });
 
