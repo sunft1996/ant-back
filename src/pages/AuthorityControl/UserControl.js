@@ -239,7 +239,9 @@ class UserControl extends PureComponent {
       order:sorter.order,
       ...formValues,
     };
-
+    this.setState({
+      sortedInfo: sorter,
+    });
     dispatch({
       type: 'user/fetch',
       payload: params,
@@ -255,6 +257,7 @@ class UserControl extends PureComponent {
     form.resetFields();
     this.setState({
       formValues: {},
+      sortedInfo:null,
       currentPage: 1
     });
     dispatch({
@@ -314,6 +317,7 @@ class UserControl extends PureComponent {
 
       this.setState({
         formValues: fieldsValue,
+        sortedInfo:null
       });
 
       dispatch({
@@ -427,13 +431,15 @@ class UserControl extends PureComponent {
       role,
     } = this.props;
     const roleList = role.list;
-    const {
+    let {
       selectedRows,
       modalVisible,
       updateModalVisible,
       updateFormValues,
       currentPage,
+      sortedInfo
     } = this.state;
+    sortedInfo = sortedInfo || {};
     const menu = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
         <Menu.Item key="remove">删除</Menu.Item>
@@ -474,6 +480,7 @@ class UserControl extends PureComponent {
         dataIndex: 'loginDate',
         sortDirections: ['descend', 'ascend'],
         sorter: true,
+        sortOrder: sortedInfo.columnKey === 'loginDate' && sortedInfo.order,
         render: val =>
           val && (
             <div style={{ whiteSpace: 'noWrap' }}>{moment(val).format('YYYY-MM-DD HH:mm:ss')}</div>

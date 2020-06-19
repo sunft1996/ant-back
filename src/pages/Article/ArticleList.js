@@ -16,7 +16,10 @@ const { Option } = Select;
 class ArticleList extends PureComponent {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      formValues: {},
+      sortedInfo: null,
+    };
   }
 
   componentDidMount() {
@@ -36,6 +39,11 @@ class ArticleList extends PureComponent {
           title: fieldsValue.title,
           type: fieldsValue.type,
         };
+
+        this.setState({
+          formValues: fieldsValue,
+          sortedInfo:null
+        });
         dispatch({
           type: 'article/fetch',
           payload: {
@@ -50,6 +58,10 @@ class ArticleList extends PureComponent {
   handleFormReset = () => {
     const { form, dispatch } = this.props;
     form.resetFields();
+    this.setState({
+      formValues: {},
+      sortedInfo:null
+    });
     dispatch({
       type: 'article/fetch',
       payload: {},
@@ -87,7 +99,7 @@ class ArticleList extends PureComponent {
             </FormItem>
           </Col>
           <Col span={24} md={24} lg={8}>
-            <FormItem style={{float:'right',whiteSpace:'nowrap'}}>
+            <FormItem style={{ float: 'right', whiteSpace: 'nowrap' }}>
               <Button type="primary" htmlType="submit">
                 查询
               </Button>
@@ -128,22 +140,32 @@ class ArticleList extends PureComponent {
   };
 
   handleTableChange = (pagination, filtersArg, sorter) => {
-    const { dispatch } = this.props;
-    const { formValues } = this.state;
-    const params = {
-      columnKey:sorter.columnKey,
-      order:sorter.order,
-      ...formValues,
-    };
 
-    dispatch({
-      type: 'article/fetch',
-      payload: params,
-    });
+    if (sorter.columnKey) {
+      const { dispatch } = this.props;
+      const { formValues } = this.state;
+      const params = {
+        columnKey: sorter.columnKey,
+        order: sorter.order,
+        ...formValues,
+      };
+
+      this.setState({
+        sortedInfo: sorter,
+      });
+
+      dispatch({
+        type: 'article/fetch',
+        payload: params,
+      });
+    }
+
   };
 
   render() {
     const { article } = this.props;
+    let { sortedInfo } = this.state;
+    sortedInfo = sortedInfo || {};
     const columns = [
       {
         title: '标题',
@@ -176,6 +198,7 @@ class ArticleList extends PureComponent {
         dataIndex: 'createdAt',
         sortDirections: ['descend', 'ascend'],
         sorter: true,
+        sortOrder: sortedInfo.columnKey === 'createdAt' && sortedInfo.order,
         render: item => {
           return item == null ? '' : moment(item).format('YYYY-MM-DD HH:mm:ss');
         },
