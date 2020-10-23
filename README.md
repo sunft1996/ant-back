@@ -49,21 +49,21 @@
 git clone https://github.com/sunft1996/ant-back.git
 cd ant-back
 npm install 
-<!--安装依赖后项目运行-->
+# 安装依赖后项目运行
 npm start 
 ```
 如果npm install或者时间太长，配置npm registry到国内镜像
 ```
 npm config set registry https://registry.npm.taobao.org/
 npm config set sass_binary_site https://npm.taobao.org/mirrors/node-sass/
-<!--重新install-->
+# 重新install
 npm install 
 ```
 实在不行你就用yarn下载
 ```
 npm install -g yarn
 yarn install
-<!--运行项目-->
+# 运行项目
 yarn start
 ```
 
@@ -86,7 +86,7 @@ export const imgUrl = 'http://back.1cloud.xyz';
 ```
 执行命令
 ```
-// 执行构建命令，生成的dist文件夹放在服务器下即可访问
+# 执行构建命令，生成的dist文件夹放在服务器下即可访问
 npm run build
 ```
 
